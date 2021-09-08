@@ -9,15 +9,15 @@ import org.apache.spark.{SparkConf, SparkContext}
 
 import java.io.{File, FileWriter, PrintWriter}
 import java.text.{NumberFormat, ParsePosition}
-import java.util.{ArrayList, HashMap, Random, UUID}
 import java.util.concurrent.TimeUnit
+import java.util.{Random, UUID}
 import scala.collection.JavaConversions._
 
 //import scala.tools.nsc.transform.SpecializeTypes.Implementation
 
 class DBTrademaker extends AstronautFramework {
 
-  var isDebugOn = AppConfig.getDebug
+  val isDebugOn: Boolean = AppConfig.getDebug
   var timeInterval: Long = 1
   var startTime: Long = 1
   var endTime: Long = 1
@@ -27,7 +27,7 @@ class DBTrademaker extends AstronautFramework {
   type FormalSpecificationType >: DBFormalSpecification
   type FormalImplementationType >: DBFormalImplementation
 
-  def run() = {
+  def run(): Unit = {
 
     if (isDebugOn) {
       println("hello world")
@@ -52,7 +52,7 @@ class DBTrademaker extends AstronautFramework {
       var resultTail = tl[Pair[ImplementationType, MeasurementResultSetType]](castedResults)
 
       if (resultHead != defaultValue) {
-        var implPath: String = fst(resultHead).asInstanceOf[DBImplementation].getImPath
+        var implPath: String = fst(resultHead).asInstanceOf[DBImplementation].getImPath()
         val startIdx = implPath.lastIndexOf(File.separator) + 1
         // get solution file name, which is like: customerOrderObjectModel_Sol_2.sql
         val tmpPath = implPath.substring(startIdx)
@@ -69,11 +69,11 @@ class DBTrademaker extends AstronautFramework {
           val impl = fst(resultHead)
           val mr = snd(resultHead)
 
-          val sol = impl.asInstanceOf[DBImplementation].getImPath
+          val sol = impl.asInstanceOf[DBImplementation].getImPath()
           val solName = sol.substring(sol.lastIndexOf(File.separator) + 1, sol.lastIndexOf("."))
-          pw.println(solName + ":" + mr.asInstanceOf[DBMeasurementResult].getTmr().getInsertTime() + ":" +
-            mr.asInstanceOf[DBMeasurementResult].getTmr().getSelectTime() + ":" +
-            mr.asInstanceOf[DBMeasurementResult].getSmr().getDbSpace())
+          pw.println(solName + ":" + mr.asInstanceOf[DBMeasurementResult].getTmr.getInsertTime + ":" +
+            mr.asInstanceOf[DBMeasurementResult].getTmr.getSelectTime + ":" +
+            mr.asInstanceOf[DBMeasurementResult].getSmr.getDbSpace)
 
           resultHead = hd[Pair[ImplementationType, MeasurementResultSetType]](defaultValue)(resultTail)
           resultTail = tl[Pair[ImplementationType, MeasurementResultSetType]](resultTail)
@@ -93,29 +93,30 @@ class DBTrademaker extends AstronautFramework {
     }
   }
 
-  def mySynthesizer(spec: SpecificationType): (List[Prod[ImplementationType, MeasurementFunctionSetType]]) = {
+  def mySynthesizer(spec: SpecificationType): List[Prod[ImplementationType, MeasurementFunctionSetType]] = {
     println("mySynthesizer starts")
-    var fSpec: FormalSpecificationType = mySFunction(spec)
+    val fSpec: FormalSpecificationType = mySFunction(spec)
 
-    var fImpl: List[FormalImplementationType] = myCFunction(fSpec)
+    val fImpl: List[FormalImplementationType] = myCFunction(fSpec)
 
-    var impls = myIFunctionHelper(fImpl)
+    val impls = myIFunctionHelper(fImpl)
 
     if (AppConfig.getIsRandom == 0) {
-      var fAbsMF: FormalAbstractMeasurementFunctionSet = myLFunction(fSpec)
-      var fConMF: List[FormalConcreteMeasurementFunctionSet] = myTFunction(fAbsMF)(impls)
-      var mfs = myBFunctionHelper(fConMF)
-      var zipped = combine(impls)(mfs)
+      val fAbsMF: FormalAbstractMeasurementFunctionSet = myLFunction(fSpec)
+      val fConMF: List[FormalConcreteMeasurementFunctionSet] = myTFunction(fAbsMF)(impls)
+      val mfs = myBFunctionHelper(fConMF)
+      val zipped = combine(impls)(mfs)
       return zipped
     } else if (AppConfig.getIsRandom == 1) {
       // get concrete measurement function by random generator
-      var mfs = genRandomConcreteMF(impls)
+      val mfs = genRandomConcreteMF(impls)
       // Chong: copy self-defined list to Scala list while reversed
-      var defaultValue = Nil[MeasurementFunctionSetType]()
+      val defaultValue = Nil[MeasurementFunctionSetType]()
       var head = hd[MeasurementFunctionSetType](defaultValue)(mfs)
       var tail = tl[MeasurementFunctionSetType](mfs)
 
       var reversedMfs: List[MeasurementFunctionSetType] = Nil[MeasurementFunctionSetType]()
+      //noinspection ComparingUnrelatedTypes
       while (head != defaultValue) {
         reversedMfs = Cons[MeasurementFunctionSetType](head, reversedMfs)
         head = hd[MeasurementFunctionSetType](defaultValue)(tail)
@@ -123,7 +124,7 @@ class DBTrademaker extends AstronautFramework {
       }
 
       // iterate to create list of pairs, call "combine" will result in StackOverFlowError
-      var zipped = combine(impls)(reversedMfs)
+      val zipped = combine(impls)(reversedMfs)
       return zipped
     }
     null
@@ -141,8 +142,8 @@ class DBTrademaker extends AstronautFramework {
      */
     var mfSets: List[MeasurementFunctionSetType] = Nil()
 
-    var dbImpls: ArrayList[DBImplementation] = new ArrayList
-    var defaultValue: ImplementationType = Option.empty[ImplementationType].orNull // = new ImplementationType
+    val dbImpls: java.util.ArrayList[DBImplementation] = new java.util.ArrayList
+    val defaultValue: ImplementationType = Option.empty[ImplementationType].orNull // = new ImplementationType
     var head = hd[ImplementationType](defaultValue)(impls)
     var tail = tl[ImplementationType](impls)
     while (head != defaultValue) {
@@ -152,8 +153,8 @@ class DBTrademaker extends AstronautFramework {
     }
 
     // create random instance range by range
-    var subRange = AppConfig.getSubRange
-    var range = AppConfig.getRandomRange
+    val range = AppConfig.getRandomRange
+    //var subRange = AppConfig.getSubRange
     //    for (i <- 0 to range by subRange) {
     //      var lowRange = i + 1
     //      var highRange = -1
@@ -163,12 +164,12 @@ class DBTrademaker extends AstronautFramework {
     //        highRange = i + subRange
     //      }
 
-    var allInstances = generateRandomInstances(dbImpls.get(0).getSigs(), dbImpls.get(0).getTypeMap(), 1, range)
-    var implIt = dbImpls.iterator()
+    val allInstances = generateRandomInstances(dbImpls.get(0).getSigs(), dbImpls.get(0).getTypeMap(), 1, range)
+    val implIt = dbImpls.iterator()
     var i = 0
-    while (implIt.hasNext()) {
+    while (implIt.hasNext) {
       i = i + 1
-      var singleImpl = implIt.next()
+      val singleImpl = implIt.next()
       // create abstract loads for impl
       // call getRandomAbsMeasurementFunctionSet for each impl
       // call getConcreteMeasurementFunctionSets for each abstract load
@@ -187,16 +188,16 @@ class DBTrademaker extends AstronautFramework {
       //          spaceLoads.add(insertLoad)
 
       //          var ctmf: DBConcreteTimeMeasurementFunction = new DBConcreteTimeMeasurementFunction(timeLoads)
-      var ctmf: DBConcreteTimeMeasurementFunction = new DBConcreteTimeMeasurementFunction()
+      val ctmf: DBConcreteTimeMeasurementFunction = new DBConcreteTimeMeasurementFunction()
       ctmf.setInstances(allInstances)
       ctmf.setImpl(singleImpl)
       // create select statements      
       //          var csmf: DBConcreteSpaceMeasurementFunction = new DBConcreteSpaceMeasurementFunction(spaceLoads)
-      var csmf: DBConcreteSpaceMeasurementFunction = new DBConcreteSpaceMeasurementFunction()
+      val csmf: DBConcreteSpaceMeasurementFunction = new DBConcreteSpaceMeasurementFunction()
       csmf.setInstances(allInstances)
       csmf.setImpl(singleImpl)
 
-      var mfs: DBConcreteMeasurementFunctionSet = new DBConcreteMeasurementFunctionSet(ctmf, csmf)
+      val mfs: DBConcreteMeasurementFunctionSet = new DBConcreteMeasurementFunctionSet(ctmf, csmf)
       mfSets = Cons[MeasurementFunctionSetType](mfs, mfSets)
       //println("add all instances to impl " + i)
       //        }
@@ -206,36 +207,36 @@ class DBTrademaker extends AstronautFramework {
       println("genRandomConcreteMF ends")
     }
 
-    return mfSets
+    mfSets
   }
 
   // get the random instances, and return insertFilePath
-  def generateRandomInsertStatements(impl: DBImplementation, instances: HashMap[String, HashMap[String, ArrayList[CodeNamePair]]]): ConcreteLoad = {
-    var insertSpecializedQuery: SpecializedQuery = specializeInsertQuery(null, impl, instances)
-    var cq = new ConcreteQuery()
+  def generateRandomInsertStatements(impl: DBImplementation, instances: java.util.HashMap[String, java.util.HashMap[String, java.util.ArrayList[CodeNamePair]]]): ConcreteLoad = {
+    val insertSpecializedQuery: SpecializedQuery = specializeInsertQuery(null, impl, instances)
+    val cq = new ConcreteQuery()
     cq.setAction(Action.INSERT)
     cq.setSq(insertSpecializedQuery)
-    var cqs = new ArrayList[ConcreteQuery](1)
+    val cqs = new java.util.ArrayList[ConcreteQuery](1)
     cqs.add(cq)
     /**
      * print out insert scripts
      */
-    var insCL = new ConcreteLoad()
+    val insCL = new ConcreteLoad()
     insCL.setQuerySet(cqs)
 
-    var implPath = impl.getImPath
+    val implPath = impl.getImPath()
     var pathBase = implPath.substring(0, implPath.lastIndexOf(File.separator))
-    var implFileName = implPath.substring(implPath.lastIndexOf(File.separator) + 1, implPath.lastIndexOf("."))
+    val implFileName = implPath.substring(implPath.lastIndexOf(File.separator) + 1, implPath.lastIndexOf("."))
     pathBase += File.separator + "TestCases"
     if (!new File(pathBase).exists()) {
-      new File(pathBase).mkdirs();
+      new File(pathBase).mkdirs()
     }
-    var insertPath = pathBase + File.separator + implFileName + "_insert.sql"
+    val insertPath = pathBase + File.separator + implFileName + "_insert.sql"
     //    var compressedInsertPath = pathBase + File.separator + implFileName + "_insert.sql.tar.gz"
     //    var tmpInsertPath = pathBase + File.separator + implFileName + "_insert_tmp.sql"
     insCL.setInsertPath(insertPath)
     insCL.setSelectPath("")
-    var insertFile: File = new File(insertPath)
+    val insertFile: File = new File(insertPath)
     if (!insertFile.exists()) {
       insertFile.createNewFile()
     }
@@ -246,10 +247,10 @@ class DBTrademaker extends AstronautFramework {
     } else if (AppConfig.getTestDB.equalsIgnoreCase("postgres")) {
       insertPw.println("BEGIN;")
     }
-    var allInsertStmts = new ArrayList[HashMap[String, HashMap[Integer, String]]]()
-    for (elem <- insCL.getQuerySet()) {
-      val sq = elem.getSq()
-      val sqInOneObject = sq.getInsertStmtsInOneObject()
+    val allInsertStmts = new java.util.ArrayList[java.util.HashMap[String, java.util.HashMap[Integer, String]]]()
+    for (elem <- insCL.getQuerySet) {
+      val sq = elem.getSq
+      val sqInOneObject = sq.getInsertStmtsInOneObject
       allInsertStmts.add(sqInOneObject)
     }
 
@@ -264,7 +265,7 @@ class DBTrademaker extends AstronautFramework {
             val stmtIt = stmt.iterator
             while (stmtIt.hasNext) {
               val idStmt = stmtIt.next
-              val stmtStr: String = String.valueOf(idStmt._2.toCharArray())
+              val stmtStr: String = String.valueOf(idStmt._2.toCharArray)
               insertPw.println(stmtStr)
             }
             insertPw.flush()
@@ -284,29 +285,29 @@ class DBTrademaker extends AstronautFramework {
     insertSpecializedQuery.getInsertStmtsInOneObject.clear()
     insertSpecializedQuery.getSelectStmtsInOneObject.clear()
 
-    return insCL
+    insCL
   }
 
   // get the random instances, and return insertFilePath
-  def generateRandomSelectStatements(impl: DBImplementation, instances: HashMap[String, HashMap[String, ArrayList[CodeNamePair]]]): ConcreteLoad = {
-    var selectSpecializedQuery: SpecializedQuery = specializeSelectQuery(null, impl, instances)
+  def generateRandomSelectStatements(impl: DBImplementation, instances: java.util.HashMap[String, java.util.HashMap[String, java.util.ArrayList[CodeNamePair]]]): ConcreteLoad = {
+    val selectSpecializedQuery: SpecializedQuery = specializeSelectQuery(null, impl, instances)
 
-    var cq = new ConcreteQuery()
+    val cq = new ConcreteQuery()
     cq.setAction(Action.SELECT)
     cq.setSq(selectSpecializedQuery)
-    var cqs = new ArrayList[ConcreteQuery]()
+    val cqs = new java.util.ArrayList[ConcreteQuery]()
     cqs.add(cq)
-    var selCL = new ConcreteLoad()
+    val selCL = new ConcreteLoad()
     selCL.setQuerySet(cqs)
 
     // convert select statements
 
-    var implPath = impl.getImPath
+    val implPath = impl.getImPath()
     var pathBase = implPath.substring(0, implPath.lastIndexOf(File.separator))
-    var implFileName = implPath.substring(implPath.lastIndexOf(File.separator) + 1, implPath.lastIndexOf("."))
+    val implFileName = implPath.substring(implPath.lastIndexOf(File.separator) + 1, implPath.lastIndexOf("."))
     pathBase += File.separator + "TestCases"
     if (!new File(pathBase).exists()) {
-      new File(pathBase).mkdirs();
+      new File(pathBase).mkdirs()
     }
     val printOrder = PrintOrder.getOutPutOrders(pathBase)
 
@@ -325,11 +326,11 @@ class DBTrademaker extends AstronautFramework {
     if (AppConfig.getTestDB.equalsIgnoreCase("mysql")) {
       selectPw.println("USE " + implFileName + ";")
     }
-    val allSelectStmts = new ArrayList[HashMap[String, HashMap[Integer, String]]]()
+    val allSelectStmts = new java.util.ArrayList[java.util.HashMap[String, java.util.HashMap[Integer, String]]]()
 
-    for (elem <- selCL.getQuerySet()) {
-      val sq = elem.getSq()
-      val sqInOneObject = sq.getSelectStmtsInOneObject()
+    for (elem <- selCL.getQuerySet) {
+      val sq = elem.getSq
+      val sqInOneObject = sq.getSelectStmtsInOneObject
       allSelectStmts.add(sqInOneObject)
     }
 
@@ -343,7 +344,7 @@ class DBTrademaker extends AstronautFramework {
             val tmpIt = tmp.iterator
             while (tmpIt.hasNext) {
               val stmt = tmpIt.next
-              val stmtStr = String.valueOf(stmt._2.toCharArray())
+              val stmtStr = String.valueOf(stmt._2.toCharArray)
               selectPw.println(stmtStr)
             }
             selectPw.flush()
@@ -365,69 +366,66 @@ class DBTrademaker extends AstronautFramework {
     selectSpecializedQuery.getInsertStmtsInOneObject.clear()
     selectSpecializedQuery.getSelectStmtsInOneObject.clear()
 
-    return selCL
+    selCL
   }
 
   //  def generateRandomInstances(impl: DBImplementation, low: Integer, high: Integer): HashMap[String, HashMap[String, ArrayList[CodeNamePair]]] = {
-  def generateRandomInstances(sigs: ArrayList[Sig], types: HashMap[String, String], low: Integer, high: Integer): HashMap[String, HashMap[String, ArrayList[CodeNamePair]]] = {
+  def generateRandomInstances(sigs: java.util.ArrayList[Sig], types: java.util.HashMap[String, String], low: Integer, high: Integer): java.util.HashMap[String, java.util.HashMap[String, java.util.ArrayList[CodeNamePair]]] = {
     if (isDebugOn) {
       println("Random Instance generator starts....")
     }
 
-    var instances = new HashMap[String, HashMap[String, ArrayList[CodeNamePair]]](5)
+    val instances = new java.util.HashMap[String, java.util.HashMap[String, java.util.ArrayList[CodeNamePair]]](5)
 
-    var randomRange = AppConfig.getRandomRange
-
-    var lowValue = low.intValue()
-    var highValue = high.intValue()
-    var range = highValue - lowValue
+    val lowValue = low.intValue()
+    val highValue = high.intValue()
+    val range = highValue - lowValue
     for (sig <- sigs) {
       for (i <- lowValue to highValue) {
-        var sigName = sig.getSigName()
-        var instanceName = sigName + i;
+        val sigName = sig.getSigName
+        val instanceName = sigName + i
         if (!instances.containsKey(sigName)) {
-          instances.put(sigName, new HashMap[String, ArrayList[CodeNamePair]](3))
+          instances.put(sigName, new java.util.HashMap[String, java.util.ArrayList[CodeNamePair]](3))
         }
         if (!instances.get(sigName).containsKey(instanceName)) {
-          instances.get(sigName).put(instanceName, new ArrayList[CodeNamePair](3))
+          instances.get(sigName).put(instanceName, new java.util.ArrayList[CodeNamePair](3))
         }
 
-        if (sig.getCategory() == 0) { // 0 is class
-          var id: String = sig.getId()
+        if (sig.getCategory == 0) { // 0 is class
+          val id: String = sig.getId
           var fieldValue: String = String.valueOf(i)
           instances.get(sigName).get(instanceName).add(new CodeNamePair(sigName + "_" + id, fieldValue))
-          for (fieldName <- sig.getAttrSet()) {
+          for (fieldName <- sig.getAttrSet) {
             if (!fieldName.equalsIgnoreCase(id)) {
-              var fieldType: String = types.get(fieldName)
+              val fieldType: String = types.get(fieldName)
               if (fieldType.contains("Int")) {
-                var rand: Random = new Random(System.currentTimeMillis())
-                fieldValue = String.valueOf(lowValue + rand.nextInt(range));
+                val rand: Random = new Random(System.currentTimeMillis())
+                fieldValue = String.valueOf(lowValue + rand.nextInt(range))
               } else if (fieldType.equalsIgnoreCase("string")) {
-                fieldValue = fieldName + UUID.randomUUID().toString().substring(0, 6)
+                fieldValue = fieldName + UUID.randomUUID().toString.substring(0, 6)
               } else if (fieldType.equalsIgnoreCase("Bool")) {
                 // assign it as true
-                fieldValue = "true";
+                fieldValue = "true"
               }
-              instances.get(sigName).get(instanceName).add(new CodeNamePair(sigName + "_" + fieldName, fieldValue));
+              instances.get(sigName).get(instanceName).add(new CodeNamePair(sigName + "_" + fieldName, fieldValue))
             }
           }
-        } else if (sig.getCategory() == 1) { // 1 is association
-          var rand: Random = new Random(System.currentTimeMillis());
-          var srcIDName: String = getIDBySigName(sigs, sig.getSrc());
+        } else if (sig.getCategory == 1) { // 1 is association
+          val srcIDName: String = getIDBySigName(sigs, sig.getSrc)
 
-          var srcIDValue = i;
-          var dstIDName = getIDBySigName(sigs, sig.getDst());
+          val srcIDValue = i
+          val dstIDName = getIDBySigName(sigs, sig.getDst)
 
-          var dstIDValue = i;
-          instances.get(sigName).get(instanceName).add(new CodeNamePair(sigName + "_" + srcIDName, String.valueOf(srcIDValue)));
-          instances.get(sigName).get(instanceName).add(new CodeNamePair(sigName + "_" + dstIDName, String.valueOf(dstIDValue)));
+          val dstIDValue = i
+          instances.get(sigName).get(instanceName).add(new CodeNamePair(sigName + "_" + srcIDName, String.valueOf(srcIDValue)))
+          instances.get(sigName).get(instanceName).add(new CodeNamePair(sigName + "_" + dstIDName, String.valueOf(dstIDValue)))
         }
       }
     }
     if (isDebugOn) {
       println("Random Instance generator ends....")
     }
-    return instances
+    instances
   }
 
   def myRunBenchmark(prod: Prod[ImplementationType, MeasurementFunctionSetType]): Prod[ImplementationType, MeasurementResultSetType] = {
@@ -441,23 +439,23 @@ class DBTrademaker extends AstronautFramework {
     //      Pair[ImplementationType, MeasurementResultSetType](new DBImplementation(""),
     //        new DBConcreteMeasurementFunctionSet(new DBConcreteTimeMeasurementFunction(), new DBConcreteSpaceMeasurementFunction()))
 
-    var impl = fst(prod).asInstanceOf[DBImplementation]
-    var mfs = snd(prod).asInstanceOf[DBConcreteMeasurementFunctionSet]
+    val impl = fst(prod).asInstanceOf[DBImplementation]
+    val mfs = snd(prod).asInstanceOf[DBConcreteMeasurementFunctionSet]
     mfs.setImpl(impl)
 
     // If benchmark is random test loads, need to create concrete load first and then run them
     if (AppConfig.getIsRandom == 1) {
       // call concrete loads creator here
-      var timeLoads: ArrayList[ConcreteLoad] = new ArrayList[ConcreteLoad](2)
-      var spaceLoads: ArrayList[ConcreteLoad] = new ArrayList[ConcreteLoad](1)
-      var insertLoad: ConcreteLoad = generateRandomInsertStatements(impl, mfs.getCtmf().getInstances())
-      var selectLoad: ConcreteLoad = generateRandomSelectStatements(impl, mfs.getCtmf().getInstances())
+      val timeLoads: java.util.ArrayList[ConcreteLoad] = new java.util.ArrayList[ConcreteLoad](2)
+      val spaceLoads: java.util.ArrayList[ConcreteLoad] = new java.util.ArrayList[ConcreteLoad](1)
+      val insertLoad: ConcreteLoad = generateRandomInsertStatements(impl, mfs.getCtmf.getInstances)
+      val selectLoad: ConcreteLoad = generateRandomSelectStatements(impl, mfs.getCtmf.getInstances)
       timeLoads.add(insertLoad)
       timeLoads.add(selectLoad)
 
       spaceLoads.add(insertLoad)
-      mfs.getCtmf().setLoads(timeLoads)
-      mfs.getCsmf().setLoads(spaceLoads)
+      mfs.getCtmf.setLoads(timeLoads)
+      mfs.getCsmf.setLoads(spaceLoads)
     }
 
     // wait for a while to collect since test suite transfer might require sometime
@@ -474,44 +472,42 @@ class DBTrademaker extends AstronautFramework {
     //      mr.setImpl(impl)
     //      myPair = Pair[ImplementationType, MeasurementResultSetType](impl, mr)
     //    } else {
-    var tmf = mfs.getCtmf()
+    val tmf = mfs.getCtmf
     tmf.setImpl(impl)
-    var smf = mfs.getCsmf()
+    val smf = mfs.getCsmf
     smf.setImpl(impl)
     if (isDebugOn) {
       println("=======================")
       println("TimeMeasurementFunction")
       println("=======================")
     }
-    var tmr = tmf.run()
+    val tmr = tmf.run()
     println("Insert time: " + tmr.getInsertTime + "s. Select time: " + tmr.getSelectTime + "s.")
     if (isDebugOn) {
       println("=======================")
       println("SpaceMeasurementFunction")
       println("=======================")
     }
-    var smr = smf.run()
+    val smr = smf.run()
     if (isDebugOn) {
       println("DB space: " + smr.getDbSpace + "kb")
     }
 
-    var dbmr = new DBMeasurementResult(tmr, smr)
+    val dbmr = new DBMeasurementResult(tmr, smr)
     dbmr.setImpl(impl)
-    val myPair = Pair[ImplementationType, MeasurementResultSetType](impl, dbmr)
-    //    }
 
     // delete insert and select files
-    var loads: ArrayList[ConcreteLoad] = mfs.getCtmf.getLoads
+    val loads: java.util.ArrayList[ConcreteLoad] = mfs.getCtmf.getLoads
     for (load <- loads) {
-      var inPath = load.getInsertPath
-      var slPath = load.getSelectPath
+      val inPath = load.getInsertPath
+      val slPath = load.getSelectPath
 
-      var inFile = new File(inPath)
+      val inFile = new File(inPath)
       if (inFile.exists()) {
         //        Chong:
         inFile.delete()
       }
-      var slFile = new File(slPath)
+      val slFile = new File(slPath)
       if (slFile.exists()) {
         //        Chong:
         slFile.delete()
@@ -524,23 +520,20 @@ class DBTrademaker extends AstronautFramework {
 
     // we can write the results into hadoop file system
     // /trademaker/modelName/solutionName
-
     Pair[ImplementationType, MeasurementResultSetType](new DBImplementation(impl.getImPath()), dbmr)
-
-    //    return myPair
   }
 
   // analyze and tradespace are already defined in Tradespace specification
   // we can call "tradespace" function to synthesize implementation and benchmark
-  var myTradespace: Tradespace = new Build_Tradespace(mySynthesizer _, myRunBenchmark _, myMapReduce _)
+  val myTradespace: Tradespace = Build_Tradespace(mySynthesizer, myRunBenchmark, myMapReduce)
 
   // here we get the tradespace function and analyze function
-  def tradespaceFunction = tradespace(myTradespace) // fun: (SpecificationType => List[Prod[ImplementationType, BenchmarkResultType]])
+  def tradespaceFunction: SpecificationType => List[Prod[ImplementationType, MeasurementResultSetType]] = tradespace(myTradespace) // fun: (SpecificationType => List[Prod[ImplementationType, BenchmarkResultType]])
 
   /**
    * Use Spark to evaluate solutions
    *
-   * @param list
+   * @param list List to map reduce
    * @return list of implementation and measurement result
    */
   def myMapReduce(list: List[Prod[ImplementationType, MeasurementFunctionSetType]]): List[Prod[ImplementationType, MeasurementResultSetType]] = {
@@ -563,7 +556,7 @@ class DBTrademaker extends AstronautFramework {
       .set("spark.rpc.askTimeout", "600000")
       .set("spark.rpc.retry.wait", "600000")
       .set("spark.rpc.message.maxSize", "300")
-      .set("spark.storage.memoryFraction", "0.9");
+      .set("spark.storage.memoryFraction", "0.9")
 
     //      .setMaster("spark://centurion002.cs.virginia.edu:7077")
     //      .set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
@@ -616,7 +609,7 @@ class DBTrademaker extends AstronautFramework {
     }
 
     var resultList: List[Prod[ImplementationType, MeasurementResultSetType]] = Nil[Prod[ImplementationType, MeasurementResultSetType]]()
-    collectedResult.map(e => {
+    collectedResult.foreach(e => {
       resultList = Cons[Prod[ImplementationType, MeasurementResultSetType]](e, resultList)
     })
 
@@ -652,7 +645,7 @@ class DBTrademaker extends AstronautFramework {
     list
   }
 
-  var myParetoFront: ParetoFront = new Build_ParetoFront(myTradespace, myParetoFilter)
+  val myParetoFront: ParetoFront = Build_ParetoFront(myTradespace, myParetoFilter)
 
   // returns the pareto function we defined in the specification
   //  def myParetoFrontFunction = paretoFront(myParetoFront)
@@ -675,7 +668,7 @@ class DBTrademaker extends AstronautFramework {
        * call smartbridge() function to synthesize formal implementations
        * scan solution folder to get implementations
        */
-      val specPath: String = fSpec.asInstanceOf[DBFormalSpecification].getSpec
+      val specPath: String = fSpec.asInstanceOf[DBFormalSpecification].getSpec()
       solFolder = specPath.substring(0, specPath.lastIndexOf(File.separator))
       val alloyOMName = specPath.substring(specPath.lastIndexOf(File.separator) + 1, specPath.lastIndexOf("."))
       solFolder = solFolder + File.separator + alloyOMName + File.separator + "ImplSolution"
@@ -684,10 +677,10 @@ class DBTrademaker extends AstronautFramework {
         val fileFP = new File(solFolder)
         val rtn = fileFP.mkdirs()
         if (rtn) {
-          println("Solution folder created!:::" + solFolder);
+          println("Solution folder created!:::" + solFolder)
         } else {
           if (isDebugOn) {
-            println("Create solution folder failed!");
+            println("Create solution folder failed!")
           }
         }
       }
@@ -695,13 +688,13 @@ class DBTrademaker extends AstronautFramework {
       // get mapping run file
       val mappingRun: String = FileOperation.getMappingRun(specPath)
       // call smartBridge
-      new SmartBridge(solFolder, mappingRun, AppConfig.getMaxSolForImpl.intValue());
+      new SmartBridge(solFolder, mappingRun, AppConfig.getMaxSolForImpl.intValue())
 
       // delete duplicate solutions
       DeleteUniq.del(solFolder)
 
       // log the time taken to synthesize all the results
-      var synthTime = System.currentTimeMillis() - startTime;
+      val synthTime = System.currentTimeMillis() - startTime
       println(s"[ICSE2022] synthesis complete: time=$synthTime, spec=$specPath")
     } else {
       println(s"[ICSE2020] reading results from folder: $solFolder")
@@ -712,23 +705,22 @@ class DBTrademaker extends AstronautFramework {
 
   def getDatabaseImplsForFolder(fSpec: FormalSpecificationType, solFolder: String): List[FormalImplementationType] = {
     // scan solution folder, and get all the solutions
-    var solFiles: Array[File] = new java.io.File(solFolder).listFiles.filter(_.getName.endsWith(".xml"))
-    var imFile: File = null
+    val solFiles: Array[File] = new java.io.File(solFolder).listFiles.filter(_.getName.endsWith(".xml"))
     var implList: List[FormalImplementationType] = Nil[FormalImplementationType]()
 
     for (file <- solFiles) {
-      var imFileName = file.getName()
-      var dbImpl: DBFormalImplementation = new DBFormalImplementation()
+      val dbImpl: DBFormalImplementation = new DBFormalImplementation()
       dbImpl.setImp(file.getAbsolutePath)
-      dbImpl.setSigs(fSpec.asInstanceOf[DBFormalSpecification].getSigs)
-      dbImpl.setAssociationsForCreateSchemas(fSpec.asInstanceOf[DBFormalSpecification].getAssociations)
-      dbImpl.setTypeMap(fSpec.asInstanceOf[DBFormalSpecification].getTypeMap)
-      dbImpl.setIds(fSpec.asInstanceOf[DBFormalSpecification].getIds)
+      dbImpl.setSigs(fSpec.asInstanceOf[DBFormalSpecification].getSigs())
+      dbImpl.setAssociationsForCreateSchemas(fSpec.asInstanceOf[DBFormalSpecification].getAssociations())
+      dbImpl.setTypeMap(fSpec.asInstanceOf[DBFormalSpecification].getTypeMap())
+      dbImpl.setIds(fSpec.asInstanceOf[DBFormalSpecification].getIds())
       implList = new Cons[FormalImplementationType](dbImpl, implList)
     }
     implList
   }
 
+  //noinspection ScalaUnusedSymbol
   def myAFunction(fImp: FormalImplementationType): FormalSpecificationType = {
     if (isDebugOn) {
       println("This is myAFunction function")
@@ -745,25 +737,25 @@ class DBTrademaker extends AstronautFramework {
 
     absLoads = generateFormalAbstractLoadSet(fSpec)
 
-    var absTimeMeasurementFunction = new DBFormalAbstractTimeMeasurementFunction(absLoads.getInsLoad(), absLoads.getSelLoad())
-    var absSpaceMeasurementFunction = new DBFormalAbstractSpaceMeasurementFunction(absLoads.getInsLoad())
+    val absTimeMeasurementFunction = new DBFormalAbstractTimeMeasurementFunction(absLoads.getInsLoad, absLoads.getSelLoad)
+    val absSpaceMeasurementFunction = new DBFormalAbstractSpaceMeasurementFunction(absLoads.getInsLoad)
     new DBFormalAbstractMeasurementFunctionSet(absTimeMeasurementFunction, absSpaceMeasurementFunction)
   }
 
-  def getIDBySigName(sigs: ArrayList[Sig], sigName: String): String = {
-    var pk: String = "";
+  def getIDBySigName(sigs: java.util.ArrayList[Sig], sigName: String): String = {
+    val pk: String = ""
     for (s <- sigs) {
-      if (s.getSigName().equalsIgnoreCase(sigName)) {
-        return s.getId();
+      if (s.getSigName.equalsIgnoreCase(sigName)) {
+        return s.getId
       }
     }
-    return pk;
+    pk
   }
 
   def recursiveDelete(f: File): Boolean = {
-    if (f.isDirectory()) {
+    if (f.isDirectory) {
       for (c <- f.listFiles())
-        recursiveDelete(c);
+        recursiveDelete(c)
     }
     if (!f.delete()) {
       //      throw new FileNotFoundException("Failed to delete file: " + f)
@@ -780,16 +772,16 @@ class DBTrademaker extends AstronautFramework {
     // package up the two abstract load objects in a FormalAbstractLoadSet object and return the result
 
     // initialize two empty abstract loads objects, to contain insert and select queries
-    var insAbsLoad = new AbstractLoad()
-    var selAbsLoad = new AbstractLoad()
+    val insAbsLoad = new AbstractLoad()
+    val selAbsLoad = new AbstractLoad()
 
     // use Alloy analyzer
     // for each object solution to fSpec
-    var objSpec = genObjSpec(fSpec)
+    val objSpec = genObjSpec(fSpec)
 
     // construct path to solution folder
-    var specPath = objSpec.getSpecPath()
-    var lenOfExtension = "_dm.als".length()
+    val specPath = objSpec.getSpecPath
+    val lenOfExtension = "_dm.als".length()
     var objectSolFolder = specPath.substring(0, specPath.length() - lenOfExtension)
 
     objectSolFolder = objectSolFolder + File.separator + "TestSolutions"
@@ -797,9 +789,8 @@ class DBTrademaker extends AstronautFramework {
     new File(objectSolFolder).mkdirs()
 
     // call objects generator
-    var loadSynthesizer = new LoadSynthesizer()
-    var startTime = System.currentTimeMillis()
-    loadSynthesizer.genObjsHelper(specPath, objectSolFolder, fSpec.asInstanceOf[DBFormalSpecification].getIds) // parse ID for negation
+    val loadSynthesizer = new LoadSynthesizer()
+    loadSynthesizer.genObjsHelper(specPath, objectSolFolder, fSpec.asInstanceOf[DBFormalSpecification].getIds()) // parse ID for negation
 
     /*
      * get solutions to alloy spec (stored as XML files)
@@ -810,19 +801,16 @@ class DBTrademaker extends AstronautFramework {
      */
 
     // iterate all objects
-    var objectFiles: Array[File] = new java.io.File(objectSolFolder).listFiles.filter(_.getName.endsWith(".xml"))
-    var file: File = null
-    var objects: ObjectSet = new ObjectSet()
+    val objectFiles: Array[File] = new java.io.File(objectSolFolder).listFiles.filter(_.getName.endsWith(".xml"))
 
-    var insQuerySet: ArrayList[AbstractQuery] = new ArrayList()
-    var selQuerySet: ArrayList[AbstractQuery] = new ArrayList()
+    val insQuerySet: java.util.ArrayList[AbstractQuery] = new java.util.ArrayList()
+    val selQuerySet: java.util.ArrayList[AbstractQuery] = new java.util.ArrayList()
 
     for (file <- objectFiles) {
-      var objectFileName = file.getName()
-      var singleObject = new ObjectOfDM(file.getAbsolutePath())
+      val singleObject = new ObjectOfDM(file.getAbsolutePath)
 
-      var insQuery: AbstractQuery = new AbstractQuery(AbstractQuery.Action.INSERT, singleObject)
-      var selQuery: AbstractQuery = new AbstractQuery(AbstractQuery.Action.SELECT, singleObject)
+      val insQuery: AbstractQuery = new AbstractQuery(AbstractQuery.Action.INSERT, singleObject)
+      val selQuery: AbstractQuery = new AbstractQuery(AbstractQuery.Action.SELECT, singleObject)
 
       insQuerySet.add(insQuery)
       selQuerySet.add(selQuery)
@@ -830,16 +818,14 @@ class DBTrademaker extends AstronautFramework {
     insAbsLoad.setQuerySet(insQuerySet)
     selAbsLoad.setQuerySet(selQuerySet)
 
-    var endTime = System.currentTimeMillis()
-    var interval = endTime - startTime
     if (isDebugOn) {
-      var spec = objSpec.getSpecPath()
+      var spec = objSpec.getSpecPath
       spec = spec.substring(spec.lastIndexOf(File.separator), spec.indexOf("."))
       println("generate objects for: " + spec)
     }
 
-    var fAbsLoadSet: FormalAbstractLoadSet = new FormalAbstractLoadSet(insAbsLoad, selAbsLoad)
-    return fAbsLoadSet
+    val fAbsLoadSet: FormalAbstractLoadSet = new FormalAbstractLoadSet(insAbsLoad, selAbsLoad)
+    fAbsLoadSet
   }
 
   /*
@@ -847,77 +833,72 @@ class DBTrademaker extends AstronautFramework {
    *  function, specialized to a particular implementation.
   */
 
-  def getConcreteMeasurementFunctionSets(absMF: DBFormalAbstractMeasurementFunctionSet, impls: ArrayList[DBImplementation]): ArrayList[DBFormalConcreteMeasurementFunctionSet] = {
+  def getConcreteMeasurementFunctionSets(absMF: DBFormalAbstractMeasurementFunctionSet, impls: java.util.ArrayList[DBImplementation]): java.util.ArrayList[DBFormalConcreteMeasurementFunctionSet] = {
     // iterate over all abstract measurement functions and convert them all to concrete measurement functions
-    var returnValue: ArrayList[DBFormalConcreteMeasurementFunctionSet] = new ArrayList()
-    var i: DBFormalImplementation = null
-    var it = impls.iterator()
-    while (it.hasNext()) {
-      var nextImpl = it.next()
-      var startTime = System.currentTimeMillis()
+    val returnValue: java.util.ArrayList[DBFormalConcreteMeasurementFunctionSet] = new java.util.ArrayList()
+    val it = impls.iterator()
+    while (it.hasNext) {
+      val nextImpl = it.next()
 
       returnValue.add(getConcreteMeasurementFunctionSet(absMF, nextImpl))
-      var endTime = System.currentTimeMillis()
       if (isDebugOn) {
-        var solName = nextImpl.asInstanceOf[DBImplementation].getImPath
+        var solName = nextImpl.getImPath()
         solName = solName.substring(solName.lastIndexOf(File.separator) + 1, solName.indexOf("."))
-        val df = new java.text.SimpleDateFormat("HH:mm:ss")
         println("generate concrete MF for solution: " + solName)
-        //        println("took time: " + df.format(endTime - startTime) + "s")
       }
     }
     returnValue
   }
 
   def getConcreteMeasurementFunctionSet(absMF: DBFormalAbstractMeasurementFunctionSet, impl: DBImplementation): DBFormalConcreteMeasurementFunctionSet = {
-    var concMFSet: DBFormalConcreteMeasurementFunctionSet = new DBFormalConcreteMeasurementFunctionSet()
+    val concMFSet: DBFormalConcreteMeasurementFunctionSet = new DBFormalConcreteMeasurementFunctionSet()
 
     // for time
-    var tmf: DBFormalAbstractMeasurementFunction = absMF.getTmf()
-    var tmfALoads: ArrayList[AbstractLoad] = tmf.getLoads()
-    var insAL: AbstractLoad = tmfALoads.get(0)
-    var selAL: AbstractLoad = tmfALoads.get(1)
-    var insCL = convert(insAL, impl)
+    val tmf: DBFormalAbstractMeasurementFunction = absMF.getTmf
+    val tmfALoads: java.util.ArrayList[AbstractLoad] = tmf.getLoads
+    val insAL: AbstractLoad = tmfALoads.get(0)
+    val selAL: AbstractLoad = tmfALoads.get(1)
+    val insCL = convert(insAL, impl)
     /**
      * print out insert scripts
      */
-    var implPath = impl.getImPath
+    val implPath = impl.getImPath()
     var pathBase = implPath.substring(0, implPath.lastIndexOf(File.separator))
-    var implFileName = implPath.substring(implPath.lastIndexOf(File.separator) + 1, implPath.lastIndexOf("."))
+    val implFileName = implPath.substring(implPath.lastIndexOf(File.separator) + 1, implPath.lastIndexOf("."))
     pathBase += File.separator + "TestCases"
     if (!new File(pathBase).exists()) {
-      new File(pathBase).mkdirs();
+      new File(pathBase).mkdirs()
     }
-    var insertPath = pathBase + File.separator + implFileName + "_insert.sql"
+    val insertPath = pathBase + File.separator + implFileName + "_insert.sql"
     insCL.setInsertPath(insertPath)
-    var insertFile: File = new File(insertPath)
+    val insertFile: File = new File(insertPath)
     if (insertFile.exists()) {
       insertFile.delete()
       insertFile.createNewFile()
     } else {
       insertFile.createNewFile()
     }
-    var insertPw: PrintWriter = new PrintWriter(insertFile)
+    val insertPw: PrintWriter = new PrintWriter(insertFile)
     if (AppConfig.getTestDB.equalsIgnoreCase("mysql")) {
       insertPw.println("USE " + implFileName + ";")
     }
-    var allInsertStmts = new ArrayList[HashMap[String, HashMap[Integer, String]]]();
+    val allInsertStmts = new java.util.ArrayList[java.util.HashMap[String, java.util.HashMap[Integer, String]]]()
     val printOrder = PrintOrder.getOutPutOrders(pathBase)
-    for (elem <- insCL.getQuerySet()) {
-      var sq = elem.getSq()
-      var sqInOneObject = sq.getInsertStmtsInOneObject()
+    for (elem <- insCL.getQuerySet) {
+      val sq = elem.getSq
+      val sqInOneObject = sq.getInsertStmtsInOneObject
       allInsertStmts.add(sqInOneObject)
     }
     for (s <- printOrder) {
       for (insertS <- allInsertStmts) {
-        var mapIt = insertS.iterator
+        val mapIt = insertS.iterator
         while (mapIt.hasNext) {
-          var elem = mapIt.next // (String, HashMap[Integer, String]) = (tableName, HashMap[ID, Statements])
+          val elem = mapIt.next // (String, HashMap[Integer, String]) = (tableName, HashMap[ID, Statements])
           if (elem._1.equalsIgnoreCase(s)) {
-            var tmp = elem._2
-            var tmpIt = tmp.iterator
+            val tmp = elem._2
+            val tmpIt = tmp.iterator
             while (tmpIt.hasNext) {
-              var stmt = tmpIt.next
+              val stmt = tmpIt.next
               insertPw.println(stmt._2)
             }
           }
@@ -944,32 +925,33 @@ class DBTrademaker extends AstronautFramework {
     allInsertStmts.clear()
 
     // convert select statements
-    var selCL = convert(selAL, impl)
-    var selectPath = pathBase + File.separator + implFileName + "_select.sql"
+    val selCL = convert(selAL, impl)
+    val selectPath = pathBase + File.separator + implFileName + "_select.sql"
     selCL.setSelectPath(selectPath)
-    var selectFile: File = new File(selectPath)
+    val selectFile: File = new File(selectPath)
     if (selectFile.exists()) {
       selectFile.delete()
       selectFile.createNewFile()
     } else {
       selectFile.createNewFile()
     }
-    var selectPw: PrintWriter = new PrintWriter(selectFile)
+    val selectPw: PrintWriter = new PrintWriter(selectFile)
     if (AppConfig.getTestDB.equalsIgnoreCase("mysql")) {
       selectPw.println("USE " + implFileName + ";")
     }
-    var allSelectStmts = new ArrayList[HashMap[String, HashMap[Integer, String]]]();
-    for (elem <- selCL.getQuerySet()) {
-      var sq = elem.getSq()
-      var sqInOneObject = sq.getSelectStmtsInOneObject()
+    val allSelectStmts = new java.util.ArrayList[java.util.HashMap[String, java.util.HashMap[Integer, String]]]()
+    for (elem <- selCL.getQuerySet) {
+      val sq = elem.getSq
+      val sqInOneObject = sq.getSelectStmtsInOneObject
       allSelectStmts.add(sqInOneObject)
     }
+    //noinspection ScalaUnusedSymbol
     for (s <- printOrder) {
       for (selectS <- allSelectStmts) {
-        var mapIt = selectS.iterator
+        val mapIt = selectS.iterator
         while (mapIt.hasNext) {
-          var elem = mapIt.next
-          var stmts = elem._2.values()
+          val elem = mapIt.next
+          val stmts = elem._2.values()
           for (e <- stmts) {
             selectPw.println(e)
           }
@@ -996,7 +978,7 @@ class DBTrademaker extends AstronautFramework {
     //    Process(Seq("rm", tmpFiles)).!
     allSelectStmts.clear()
 
-    var ctmf: DBFormalConcreteTimeMeasurementFunction = new DBFormalConcreteTimeMeasurementFunction(insCL, selCL)
+    val ctmf: DBFormalConcreteTimeMeasurementFunction = new DBFormalConcreteTimeMeasurementFunction(insCL, selCL)
     concMFSet.setCtmf(ctmf)
 
     // chong: duplicated code here
@@ -1005,7 +987,7 @@ class DBTrademaker extends AstronautFramework {
     //    var smfALoads: ArrayList[AbstractLoad] = smf.getLoads()
     //    insAL = smfALoads.get(0)
     //    insCL = convert(insAL, impl)
-    var csmf: DBFormalConcreteSpaceMeasurementFunction = new DBFormalConcreteSpaceMeasurementFunction(insCL)
+    val csmf: DBFormalConcreteSpaceMeasurementFunction = new DBFormalConcreteSpaceMeasurementFunction(insCL)
     concMFSet.setCsmf(csmf)
     concMFSet.setImpl(impl)
 
@@ -1020,14 +1002,14 @@ class DBTrademaker extends AstronautFramework {
     // add concrete queries to concrete loads
     // return it
 
-    var cl: ConcreteLoad = new ConcreteLoad()
+    val cl: ConcreteLoad = new ConcreteLoad()
 
-    var absqs = absl.getQuerySet()
-    var it = absqs.iterator()
-    while (it.hasNext()) {
-      var absq = it.next()
-      var cq = convertQuery(absq, impl)
-      cl.getQuerySet().add(cq)
+    val absqs = absl.getQuerySet
+    val it = absqs.iterator()
+    while (it.hasNext) {
+      val absq = it.next()
+      val cq = convertQuery(absq, impl)
+      cl.getQuerySet.add(cq)
     }
     cl
   }
@@ -1039,8 +1021,8 @@ class DBTrademaker extends AstronautFramework {
      *  	* generateInsert()
      *   else generateSelect()
      */
-    var cq = new ConcreteQuery()
-    var a = absq.getAction()
+    val cq = new ConcreteQuery()
+    val a = absq.getAction
     if (a == Action.INSERT) {
       cq.setAction(Action.INSERT)
       cq.setSq(specializeInsertQuery(absq, impl, null))
@@ -1051,68 +1033,64 @@ class DBTrademaker extends AstronautFramework {
     cq
   }
 
-  def specializeInsertQuery(absq: AbstractQuery, impl: DBImplementation, ins: HashMap[String, HashMap[String, ArrayList[CodeNamePair]]]): SpecializedQuery = {
+  def specializeInsertQuery(absq: AbstractQuery, impl: DBImplementation, ins: java.util.HashMap[String, java.util.HashMap[String, java.util.ArrayList[CodeNamePair]]]): SpecializedQuery = {
     // allInstances here contains all instances in a single object file, which is got by parse the object file
     // some fields may have more than one instance
     // allInstances is a hashmap: HashMap[String, HashMap[String, ArrayList[CodeNamePair[String>>>>
     // HashMap[tableName, HashMap[instanceName, fields_value_pairs]]
-    var allInstances = new HashMap[String, HashMap[String, ArrayList[CodeNamePair]]](1)
+    var allInstances = new java.util.HashMap[String, java.util.HashMap[String, java.util.ArrayList[CodeNamePair]]](1)
 
     if (absq != null) {
-      allInstances = absq.getOodm().parseDocument()
+      allInstances = absq.getOodm.parseDocument()
     } else {
       allInstances = ins
     }
 
-    var allInstancesIt = allInstances.entrySet().iterator()
+    val allInstancesIt = allInstances.entrySet().iterator()
 
     var field_part: String = ""
     var value_part: String = ""
-    var fTables: ArrayList[String] = new ArrayList()
-    var asss: ArrayList[HashMap[String, CodeNamePair]] = new ArrayList[HashMap[String, CodeNamePair]]()
-    var ass: HashMap[String, CodeNamePair] = null
 
-    var allInsertStmts: HashMap[String, HashMap[Integer, String]] = new HashMap[String, HashMap[Integer, String]]()
+    val allInsertStmts: java.util.HashMap[String, java.util.HashMap[Integer, String]] = new java.util.HashMap[String, java.util.HashMap[Integer, String]]()
     /**
      * Prepare output file by implPath
      */
-    var implPath = impl.getImPath
+    val implPath = impl.getImPath()
     var insertPath = implPath.substring(0, implPath.lastIndexOf(File.separator))
-    var implFileName = implPath.substring(implPath.lastIndexOf(File.separator) + 1, implPath.lastIndexOf("."))
+    val implFileName = implPath.substring(implPath.lastIndexOf(File.separator) + 1, implPath.lastIndexOf("."))
     insertPath += File.separator + "TestCases"
     if (!new File(insertPath).exists()) {
-      new File(insertPath).mkdirs();
+      new File(insertPath).mkdirs()
     }
     insertPath += File.separator + implFileName + "_insert.sql"
 
     while (allInstancesIt.hasNext) { // iterate all instances in an object
-      var instances = allInstancesIt.next
-      var className: String = instances.getKey // get key. tableName
-      var instancesIt = instances.getValue.iterator
+      val instances = allInstancesIt.next
+      val className: String = instances.getKey // get key. tableName
+      val instancesIt = instances.getValue.iterator
       while (instancesIt.hasNext) { // iterate all instances for one class
-        var singleInstance = instancesIt.next
-        var instanceName: String = singleInstance._1
-        var fieldValuePairs = singleInstance._2
+        val singleInstance = instancesIt.next
+        val fieldValuePairs = singleInstance._2
         // key is tableName, and value is fields in the table
-        var dbScheme = impl.getDataSchemas
+        val dbScheme = impl.getDataSchemas()
         // which table the element class will be
-        var reverseTAss = impl.getReverseTAssociate
-        var goToTable = getTableNameByClassName(reverseTAss, className) // null if not found
+        val reverseTAss = impl.getReverseTAssociate()
+        val goToTable = getTableNameByClassName(reverseTAss, className) // null if not found
         if (goToTable != null) {
           /* there is no t_association information for this element
            * which indicates it's an one-to-many association,
            * and the information is in dst table,
            * we don't need to consider since it will be taken in find foreign key value
            */
-          var id: String = getPrimaryKeyByTableName(dbScheme, goToTable)
-          var id_value: String = getFieldValue(fieldValuePairs, id, impl.getTypeMap())
+          val id: String = getPrimaryKeyByTableName(dbScheme, goToTable)
+          val id_value: String = getFieldValue(fieldValuePairs, id, impl.getTypeMap())
 
-          field_part = "";
-          value_part = "";
+          field_part = ""
+          value_part = ""
 
-          var allAboutSchema: ArrayList[CodeNamePair] = dbScheme.get(goToTable)
+          val allAboutSchema: java.util.ArrayList[CodeNamePair] = dbScheme.get(goToTable)
           if (!isClassAssociate(impl, className)) {
-            for (pair <- allAboutSchema if pair.getFirst().equalsIgnoreCase("fields")) {
+            for (pair <- allAboutSchema if pair.getFirst.equalsIgnoreCase("fields")) {
               /**
                * check pair.getSecond() (fieldName) is in "attr"
                * if fieldName is in attr, call getFieldValue()
@@ -1120,10 +1098,10 @@ class DBTrademaker extends AstronautFramework {
                * to get the primary class (eg, DecisionSpace)
                * if fieldName is DType, set fieldValue as tableName
                */
-              var fieldName: String = pair.getSecond()
-              var fieldInAttr = isFieldInAttr(impl, goToTable, fieldName)
-              var fieldIsID = fieldName.equalsIgnoreCase(id)
-              var isFKey = isForeignKey(dbScheme, goToTable, fieldName)
+              val fieldName: String = pair.getSecond
+              val fieldInAttr = isFieldInAttr(impl, goToTable, fieldName)
+              val fieldIsID = fieldName.equalsIgnoreCase(id)
+              val isFKey = isForeignKey(dbScheme, goToTable, fieldName)
               //              if (!fieldInAttr && fieldIsID) { // like: customerID is primary key of PreferredCustomer, but not in attr
               //                // need to find the value of cutsomerID from Cutsomer Table
               //              }
@@ -1140,8 +1118,8 @@ class DBTrademaker extends AstronautFramework {
               if (!fieldInAttr && !isFKey && !fieldIsID) {
                 if (!fieldName.equalsIgnoreCase("DType")) {
                   // find out where this field come from, by iterating all signatures in OM
-                  var foreignClass: String = getClassByAttr(impl, fieldName)
-                  var fieldValue: String = getForeignValue(allInstances, foreignClass, fieldName, impl.getTypeMap())
+                  val foreignClass: String = getClassByAttr(impl, fieldName)
+                  val fieldValue: String = getForeignValue(allInstances, foreignClass, fieldName, impl.getTypeMap())
                   //                  field_part += "`" + fieldName + "`,"
                   field_part += fieldName + ","
                   value_part += fieldValue + ","
@@ -1149,12 +1127,12 @@ class DBTrademaker extends AstronautFramework {
               }
 
               if (fieldInAttr || fieldIsID) {
-                var fieldValue = getFieldValue(fieldValuePairs, fieldName, impl.getTypeMap())
+                val fieldValue = getFieldValue(fieldValuePairs, fieldName, impl.getTypeMap())
                 //                field_part += "`" + fieldName + "`,"
                 field_part += fieldName + ","
                 value_part += fieldValue + ","
               } else if (fieldName.equalsIgnoreCase("DType")) {
-                var fieldValue = "'" + className + "'"
+                val fieldValue = "'" + className + "'"
                 //                field_part += "`" + fieldName + "`,"
                 //                var fieldValue = className
                 field_part += fieldName + ","
@@ -1164,9 +1142,9 @@ class DBTrademaker extends AstronautFramework {
                 // find the primary class of this foreign key name
                 // it is an object signature, not an association
                 // NOTICE: there is no need to consider association, since association has its own instances
-                var primaryClass = getPrimaryClassById(impl, fieldName)
+                val primaryClass = getPrimaryClassById(impl, fieldName)
                 // the next step is to get the primary key value of primaryClass
-                var pKeyValue = getForeignKeyValue(allInstances, primaryClass, fieldName)
+                val pKeyValue = getForeignKeyValue(allInstances, primaryClass, fieldName)
                 //                field_part += "`" + fieldName + "`,"
                 field_part += fieldName + ","
                 value_part += pKeyValue + ","
@@ -1175,9 +1153,9 @@ class DBTrademaker extends AstronautFramework {
           } else { // the class is an association
             // find two primary classes by foreign keys
             // find value of the primary key of two primary classes
-            for (pair <- allAboutSchema if pair.getFirst().equalsIgnoreCase("fields")) {
-              var keyName = pair.getSecond
-              var keyValue = getFieldValue(fieldValuePairs, keyName, impl.getTypeMap())
+            for (pair <- allAboutSchema if pair.getFirst.equalsIgnoreCase("fields")) {
+              val keyName = pair.getSecond
+              val keyValue = getFieldValue(fieldValuePairs, keyName, impl.getTypeMap())
               //              field_part += "`" + keyName + "`,"
               field_part += keyName + ","
               value_part += keyValue + ","
@@ -1187,44 +1165,44 @@ class DBTrademaker extends AstronautFramework {
           field_part = field_part.substring(0, field_part.length() - 1)
           value_part = value_part.substring(0, value_part.length() - 1)
           //          var stmt: String = "INSERT INTO `" + goToTable + "` (" + field_part + ") VALUES (" + value_part + ");"
-          var stmt: String = "INSERT INTO " + goToTable + " (" + field_part + ") VALUES (" + value_part + ");"
+          val stmt: String = "INSERT INTO " + goToTable + " (" + field_part + ") VALUES (" + value_part + ");"
           //          stmt += "FLUSH TABLES;";
           // add statments
           if (!dataSchemaHasInsertStatement(allInsertStmts, goToTable, Integer.valueOf(id_value))) {
-            addInsertStmtIntoDataSchema(allInsertStmts, goToTable, stmt, Integer.valueOf(id_value));
+            addInsertStmtIntoDataSchema(allInsertStmts, goToTable, stmt, Integer.valueOf(id_value))
           }
         }
       }
     }
-    var sQueries: SpecializedQuery = new SpecializedQuery()
+    val sQueries: SpecializedQuery = new SpecializedQuery()
     sQueries.setInsertStmtsInOneObject(allInsertStmts)
-    return sQueries
+    sQueries
   }
 
-  def getForeignValue(instances: HashMap[String, HashMap[String, ArrayList[CodeNamePair]]], fClass: String, attr: String, types: HashMap[String, String]): String = {
+  def getForeignValue(instances: java.util.HashMap[String, java.util.HashMap[String, java.util.ArrayList[CodeNamePair]]], fClass: String, attr: String, types: java.util.HashMap[String, String]): String = {
     var value: String = ""
-    var instancesIt = instances.entrySet().iterator()
-    while (instancesIt.hasNext()) {
-      var entry = instancesIt.next()
-      var keyName = entry.getKey()
+    val instancesIt = instances.entrySet().iterator()
+    while (instancesIt.hasNext) {
+      val entry = instancesIt.next()
+      val keyName = entry.getKey
       if (keyName.equalsIgnoreCase(fClass)) {
-        var singleInstanceIt = entry.getValue().entrySet().iterator()
-        while (singleInstanceIt.hasNext()) {
-          for (pair <- singleInstanceIt.next().getValue()) {
-            var field = pair.getFirst().split("_")(1)
+        val singleInstanceIt = entry.getValue.entrySet().iterator()
+        while (singleInstanceIt.hasNext) {
+          for (pair <- singleInstanceIt.next().getValue) {
+            val field = pair.getFirst.split("_")(1)
             if (field.equalsIgnoreCase(attr)) {
-              var tmp: String = pair.getSecond();
+              val tmp: String = pair.getSecond
               // get the type of field, then handle the value of it
-              var fieldType = types.get(field)
+              val fieldType = types.get(field)
               value = fieldType match {
                 case "Int" =>
                   var intValue = Integer.valueOf(tmp).intValue()
-                  var power = scala.math.pow(2, (AppConfig.getIntScopeForTestCases - 1))
+                  val power = scala.math.pow(2, AppConfig.getIntScopeForTestCases - 1)
                   intValue = intValue + power.intValue() + 1
                   String.valueOf(intValue)
                 case "Real" =>
                   var intValue = Integer.valueOf(tmp).intValue()
-                  var power = scala.math.pow(2, (AppConfig.getIntScopeForTestCases - 1))
+                  val power = scala.math.pow(2, AppConfig.getIntScopeForTestCases - 1)
                   intValue = intValue + power.intValue() + 1
                   String.valueOf(intValue)
                 //case "Real" =>
@@ -1238,7 +1216,7 @@ class DBTrademaker extends AstronautFramework {
         }
       }
     }
-    return value
+    value
   }
 
   def getClassByAttr(impl: DBImplementation, attr: String): String = {
@@ -1249,32 +1227,32 @@ class DBTrademaker extends AstronautFramework {
         }
       }
     }
-    return null
+    null
   }
 
-  def getPTablesByAssociate(impl: DBImplementation, primaryClass: String): ArrayList[String] = {
-    var tables: ArrayList[String] = new ArrayList[String]
+  def getPTablesByAssociate(impl: DBImplementation, primaryClass: String): java.util.ArrayList[String] = {
+    val tables: java.util.ArrayList[String] = new java.util.ArrayList[String]
     for (sig <- impl.getSigs()) {
-      if (sig.getSigName().equalsIgnoreCase(primaryClass) && sig.getCategory() == 1) { // check if sig is an associate
-        tables.add(sig.getSrc())
-        tables.add(sig.getDst())
+      if (sig.getSigName.equalsIgnoreCase(primaryClass) && sig.getCategory == 1) { // check if sig is an associate
+        tables.add(sig.getSrc)
+        tables.add(sig.getDst)
       }
     }
-    return tables
+    tables
   }
 
-  def getPKeysOfAssociate(allAboutClass: ArrayList[CodeNamePair]): ArrayList[String] = {
-    var keys: ArrayList[String] = new ArrayList[String]
+  def getPKeysOfAssociate(allAboutClass: java.util.ArrayList[CodeNamePair]): java.util.ArrayList[String] = {
+    val keys: java.util.ArrayList[String] = new java.util.ArrayList[String]
     for (pair <- allAboutClass) {
-      if (pair.getFirst().equalsIgnoreCase("primarykey")) {
-        keys.add(pair.getSecond())
+      if (pair.getFirst.equalsIgnoreCase("primarykey")) {
+        keys.add(pair.getSecond)
       }
     }
-    return keys;
+    keys
   }
 
   def isClassAssociate(impl: DBImplementation, primaryClass: String): Boolean = {
-    return impl.getDataProvider().isClassAssociate(primaryClass);
+    impl.getDataProvider().isClassAssociate(primaryClass)
   }
 
   def getPrimaryClassById(impl: DBImplementation, field: String): String = {
@@ -1289,22 +1267,22 @@ class DBTrademaker extends AstronautFramework {
         }
       }
     }
-    return null
+    null
   }
 
   def isFieldInAttr(impl: DBImplementation, mClass: String, attr: String): Boolean = {
-    var sigs = impl.getSigs()
+    val sigs = impl.getSigs()
     for (sig <- sigs) {
-      for (sAttr <- sig.getAttrSet if (sig.getCategory == 0 && sig.getSigName.equalsIgnoreCase(mClass)))
+      for (sAttr <- sig.getAttrSet if sig.getCategory == 0 && sig.getSigName.equalsIgnoreCase(mClass))
         if (sAttr.equalsIgnoreCase(attr)) {
           return true
         }
     }
-    return false
+    false
   }
 
   // return null if not found
-  def getTablesByPrimaryKey1(pairs: ArrayList[CodeNamePair], id: String): String = {
+  def getTablesByPrimaryKey1(pairs: java.util.ArrayList[CodeNamePair], id: String): String = {
     for (p: CodeNamePair <- pairs) {
       if (p.getSecond.equalsIgnoreCase(id)) {
         return p.getFirst
@@ -1314,16 +1292,16 @@ class DBTrademaker extends AstronautFramework {
     null
   }
 
-  def addInsertStmtIntoDataSchema(allInserts: HashMap[String, HashMap[Integer, String]],
-                                  goToTable: String, stmt: String, idValue: Integer) = {
-    var contains: Boolean = allInserts.containsKey(goToTable)
+  def addInsertStmtIntoDataSchema(allInserts: java.util.HashMap[String, java.util.HashMap[Integer, String]],
+                                  goToTable: String, stmt: String, idValue: Integer): String = {
+    val contains: Boolean = allInserts.containsKey(goToTable)
     if (!contains) {
-      allInserts.put(goToTable, new HashMap[Integer, String])
+      allInserts.put(goToTable, new java.util.HashMap[Integer, String])
     }
     allInserts.get(goToTable).put(idValue, stmt)
   }
 
-  def dataSchemaHasInsertStatement(allInserts: HashMap[String, HashMap[Integer, String]],
+  def dataSchemaHasInsertStatement(allInserts: java.util.HashMap[String, java.util.HashMap[Integer, String]],
                                    goToTable: String, idValue: Integer): Boolean = {
     if (allInserts.containsKey(goToTable)) {
       if (allInserts.get(goToTable).containsKey(idValue)) {
@@ -1333,39 +1311,39 @@ class DBTrademaker extends AstronautFramework {
     false
   }
 
-  def getAssByKey(scheme: HashMap[String, ArrayList[CodeNamePair]],
-                  pTable: String, fTable: String): HashMap[String, CodeNamePair] = {
-    var ass_map: HashMap[String, CodeNamePair] = new HashMap[String, CodeNamePair]()
-    var src: String = "";
-    var dst: String = "";
-    var ass: String = "";
+  def getAssByKey(scheme: java.util.HashMap[String, java.util.ArrayList[CodeNamePair]],
+                  pTable: String, fTable: String): java.util.HashMap[String, CodeNamePair] = {
+    val ass_map: java.util.HashMap[String, CodeNamePair] = new java.util.HashMap[String, CodeNamePair]()
+    var src: String = ""
+    var dst: String = ""
+    var ass: String = ""
 
-    var schemeIt = scheme.iterator
+    val schemeIt = scheme.iterator
     while (schemeIt.hasNext) {
-      var table = schemeIt.next
-      var fields = table._2
+      val table = schemeIt.next
+      val fields = table._2
       for (pair <- fields) {
-        if (pair.getFirst().equalsIgnoreCase("src")) {
-          if (pair.getSecond().equalsIgnoreCase(pTable)) {
-            src = pTable;
+        if (pair.getFirst.equalsIgnoreCase("src")) {
+          if (pair.getSecond.equalsIgnoreCase(pTable)) {
+            src = pTable
           }
-          if (pair.getSecond().equalsIgnoreCase(fTable)) {
-            src = fTable;
+          if (pair.getSecond.equalsIgnoreCase(fTable)) {
+            src = fTable
           }
         }
-        if (pair.getFirst().equalsIgnoreCase("dst")) {
-          if (pair.getSecond().equalsIgnoreCase(pTable)) {
-            dst = pTable;
+        if (pair.getFirst.equalsIgnoreCase("dst")) {
+          if (pair.getSecond.equalsIgnoreCase(pTable)) {
+            dst = pTable
           }
-          if (pair.getSecond().equalsIgnoreCase(fTable)) {
-            dst = fTable;
+          if (pair.getSecond.equalsIgnoreCase(fTable)) {
+            dst = fTable
           }
         }
       }
-      if (src.length() > 0 && dst.length() > 0) {
-        ass = table._1;
-        var pair: CodeNamePair = new CodeNamePair(src, dst)
-        ass_map.put(ass, pair);
+      if (src.nonEmpty && dst.nonEmpty) {
+        ass = table._1
+        val pair: CodeNamePair = new CodeNamePair(src, dst)
+        ass_map.put(ass, pair)
         return ass_map
       }
     }
@@ -1374,84 +1352,85 @@ class DBTrademaker extends AstronautFramework {
 
   // get table name by the primary key
   // we need to filter out the association table by check if the primary key is foreign key at the same time
-  def getTablesByPrimaryKey(pKeys: ArrayList[CodeNamePair], primaryKey: String): ArrayList[String] = {
-    var tables: ArrayList[String] = new ArrayList[String]();
+  def getTablesByPrimaryKey(pKeys: java.util.ArrayList[CodeNamePair], primaryKey: String): java.util.ArrayList[String] = {
+    val tables: java.util.ArrayList[String] = new java.util.ArrayList[String]()
     for (pair <- pKeys) {
-      if (pair.getSecond().equalsIgnoreCase(primaryKey)) {
-        tables.add(pair.getFirst());
+      if (pair.getSecond.equalsIgnoreCase(primaryKey)) {
+        tables.add(pair.getFirst)
       }
     }
-    return tables
+    tables
   }
 
-  def getForeignKeyValue(instances: HashMap[String, HashMap[String, ArrayList[CodeNamePair]]], primaryClass: String, pKey: String): String = {
-    var instancesIt = instances.entrySet().iterator()
-    while (instancesIt.hasNext()) {
-      var entry = instancesIt.next()
-      var keyName = entry.getKey()
+  def getForeignKeyValue(instances: java.util.HashMap[String, java.util.HashMap[String, java.util.ArrayList[CodeNamePair]]], primaryClass: String, pKey: String): String = {
+    val instancesIt = instances.entrySet().iterator()
+    while (instancesIt.hasNext) {
+      val entry = instancesIt.next()
+      val keyName = entry.getKey
       if (keyName.equalsIgnoreCase(primaryClass)) {
-        var singleInstanceIt = entry.getValue().entrySet().iterator()
-        while (singleInstanceIt.hasNext()) {
-          for (pair <- singleInstanceIt.next().getValue()) {
-            if (pair.getFirst().split("_")(1).equalsIgnoreCase(pKey)) {
-              var intValue: Integer = Integer.valueOf(pair.getSecond()).intValue();
-              var power = scala.math.pow(2, (AppConfig.getIntScopeForTestCases - 1))
-              intValue = intValue + power.intValue() + 1;
+        val singleInstanceIt = entry.getValue.entrySet().iterator()
+        while (singleInstanceIt.hasNext) {
+          for (pair <- singleInstanceIt.next().getValue) {
+            if (pair.getFirst.split("_")(1).equalsIgnoreCase(pKey)) {
+              var intValue: Integer = Integer.valueOf(pair.getSecond).intValue()
+              val power = scala.math.pow(2, AppConfig.getIntScopeForTestCases - 1)
+              intValue = intValue + power.intValue() + 1
               return String.valueOf(intValue)
             }
           }
         }
       }
     }
-    return null
+    null
   }
 
-  def getForeignKeyValue1(instance: HashMap[String, ArrayList[CodeNamePair]],
+  //noinspection ScalaUnusedSymbol
+  def getForeignKeyValue1(instance: java.util.HashMap[String, java.util.ArrayList[CodeNamePair]],
                           keyValue: String, srcDst: String, srcDst1: String): String = {
-    var value: String = null
-    var instanceIt = instance.iterator
+    val value: String = null
+    val instanceIt = instance.iterator
     while (instanceIt.hasNext) {
-      var entryValue = instanceIt.next._2
+      val entryValue = instanceIt.next._2
       for (pair <- entryValue) {
-        if (pair.getFirst().split("_")(1).equalsIgnoreCase(srcDst1)) {
-          var intValue: Integer = Integer.valueOf(pair.getSecond()).intValue();
-          var power = scala.math.pow(2, (AppConfig.getIntScopeForTestCases - 1))
-          intValue = intValue + power.intValue() + 1;
+        if (pair.getFirst.split("_")(1).equalsIgnoreCase(srcDst1)) {
+          var intValue: Integer = Integer.valueOf(pair.getSecond).intValue()
+          val power = scala.math.pow(2, AppConfig.getIntScopeForTestCases - 1)
+          intValue = intValue + power.intValue() + 1
           return String.valueOf(intValue)
         }
       }
     }
-    return value
+    value
   }
 
-  def isForeignKey(scheme: HashMap[String, ArrayList[CodeNamePair]], table: String, field: String): Boolean = {
+  def isForeignKey(scheme: java.util.HashMap[String, java.util.ArrayList[CodeNamePair]], table: String, field: String): Boolean = {
     for (pair <- scheme.get(table)) {
-      if (pair.getFirst().equalsIgnoreCase("foreignKey")) {
-        if (pair.getSecond().equalsIgnoreCase(field)) {
+      if (pair.getFirst.equalsIgnoreCase("foreignKey")) {
+        if (pair.getSecond.equalsIgnoreCase(field)) {
           return true
         }
       }
     }
-    return false
+    false
   }
 
-  def getFieldValue(fieldValues: ArrayList[CodeNamePair], field: String, types: HashMap[String, String]): String = {
+  def getFieldValue(fieldValues: java.util.ArrayList[CodeNamePair], field: String, types: java.util.HashMap[String, String]): String = {
     var value: String = null
     for (pair <- fieldValues) {
-      if (pair.getFirst().split("_")(1).equalsIgnoreCase(field)) {
-        var tmp: String = pair.getSecond();
+      if (pair.getFirst.split("_")(1).equalsIgnoreCase(field)) {
+        val tmp: String = pair.getSecond
         // get the type of field, then handle the value of it
-        var fieldType = types.get(field)
+        val fieldType = types.get(field)
 
         value = fieldType match {
           case "Int" =>
             var intValue = Integer.valueOf(tmp).intValue()
-            var power = scala.math.pow(2, (AppConfig.getIntScopeForTestCases - 1))
+            val power = scala.math.pow(2, AppConfig.getIntScopeForTestCases - 1)
             intValue = intValue + power.intValue() + 1
             String.valueOf(intValue)
           case "Real" =>
             var intValue = Integer.valueOf(tmp).intValue()
-            var power = scala.math.pow(2, (AppConfig.getIntScopeForTestCases - 1))
+            val power = scala.math.pow(2, AppConfig.getIntScopeForTestCases - 1)
             intValue = intValue + power.intValue() + 1
             String.valueOf(intValue)
           //case "Real" =>
@@ -1477,114 +1456,113 @@ class DBTrademaker extends AstronautFramework {
         //        }
       }
     }
-    return value
+    value
   }
 
   def isNumeric(str: String): Boolean = {
-    var formatter: NumberFormat = NumberFormat.getInstance()
-    var pos: ParsePosition = new ParsePosition(0)
-    formatter.parse(str, pos);
-    return str.length() == pos.getIndex()
+    val formatter: NumberFormat = NumberFormat.getInstance()
+    val pos: ParsePosition = new ParsePosition(0)
+    formatter.parse(str, pos)
+    str.length() == pos.getIndex
   }
 
-  def getPrimaryKeyByTableName(dbScheme: HashMap[String, ArrayList[CodeNamePair]], tableName: String): String = {
-    var table: ArrayList[CodeNamePair] = dbScheme.get(tableName);
+  def getPrimaryKeyByTableName(dbScheme: java.util.HashMap[String, java.util.ArrayList[CodeNamePair]], tableName: String): String = {
+    val table: java.util.ArrayList[CodeNamePair] = dbScheme.get(tableName)
     //    var pair: CodeNamePair = null
     for (pair <- table) {
-      if (pair.getFirst().equalsIgnoreCase("primaryKey")) {
-        return pair.getSecond()
+      if (pair.getFirst.equalsIgnoreCase("primaryKey")) {
+        return pair.getSecond
       }
     }
-    return null
+    null
   }
 
   // looks up reverse t_associate data structure to find a target table for each object element, e.g. a class instance or an association
-  def getTableNameByClassName(reverseTAss: ArrayList[CodeNamePair], className: String): String = {
-    var elem: CodeNamePair = null
+  def getTableNameByClassName(reverseTAss: java.util.ArrayList[CodeNamePair], className: String): String = {
     for (elem <- reverseTAss) {
-      if (elem.getFirst().equalsIgnoreCase(className)) {
-        return elem.getSecond()
+      if (elem.getFirst.equalsIgnoreCase(className)) {
+        return elem.getSecond
       }
     }
-    return null
+    null
   }
 
-  def isAssociation(sigs: ArrayList[Sig], element: String): Boolean = {
+  def isAssociation(sigs: java.util.ArrayList[Sig], element: String): Boolean = {
     for (sig <- sigs) {
-      if (sig.getCategory() == 1 && sig.getSigName().equalsIgnoreCase(element)) {
-        return true;
+      if (sig.getCategory == 1 && sig.getSigName.equalsIgnoreCase(element)) {
+        return true
       }
     }
     false
   }
 
-  def getParent(sigs: ArrayList[Sig], element: String): String = {
+  //noinspection ScalaUnusedSymbol
+  def getParent(sigs: java.util.ArrayList[Sig], element: String): String = {
     for (sig <- sigs) {
-      if (sig.getCategory() == 0) {
-        if (sig.isHasParent()) {
-          return sig.getParent()
+      if (sig.getCategory == 0) {
+        if (sig.isHasParent) {
+          return sig.getParent
         }
       }
     }
     null
   }
 
-  def isPrimaryKeys(pKeys: ArrayList[CodeNamePair], table: String, field: String): Boolean = {
+  def isPrimaryKeys(pKeys: java.util.ArrayList[CodeNamePair], table: String, field: String): Boolean = {
     for (s <- pKeys) {
-      if (s.getFirst().equalsIgnoreCase(table) && s.getSecond().equalsIgnoreCase(field)) {
-        return true;
+      if (s.getFirst.equalsIgnoreCase(table) && s.getSecond.equalsIgnoreCase(field)) {
+        return true
       }
     }
-    return false;
+    false
   }
 
-  def specializeSelectQuery(absq: AbstractQuery, impl: DBImplementation, ins: HashMap[String, HashMap[String, ArrayList[CodeNamePair]]]): SpecializedQuery = {
+  def specializeSelectQuery(absq: AbstractQuery, impl: DBImplementation, ins: java.util.HashMap[String, java.util.HashMap[String, java.util.ArrayList[CodeNamePair]]]): SpecializedQuery = {
     var selectPart = ""
     var fromPart = ""
     var wherePart = ""
-    var allAboutOMClass: ArrayList[CodeNamePair] = new ArrayList[CodeNamePair](1)
-    var allSelectStmts: HashMap[String, HashMap[Integer, String]] = new HashMap[String, HashMap[Integer, String]](1)
+    val allSelectStmts: java.util.HashMap[String, java.util.HashMap[Integer, String]] = new java.util.HashMap[String, java.util.HashMap[Integer, String]](1)
 
-    var instance = new HashMap[String, HashMap[String, ArrayList[CodeNamePair]]](1)
+    var instance = new java.util.HashMap[String, java.util.HashMap[String, java.util.ArrayList[CodeNamePair]]](1)
 
     if (absq != null) {
-      instance = absq.getOodm().parseDocument()
+      instance = absq.getOodm.parseDocument()
     } else {
       instance = ins
     }
 
-    var instanceIt = instance.iterator
+    val instanceIt = instance.iterator
     while (instanceIt.hasNext) {
-      var instanceEntry = instanceIt.next
+      val instanceEntry = instanceIt.next
       var element = instanceEntry._1
-      var instance = instanceEntry._2
-      var isAss = isAssociation(impl.getSigs, element)
+      val instance = instanceEntry._2
+      val isAss = isAssociation(impl.getSigs(), element)
       if (!isAss) {
-        var instanceIt = instance.iterator
+        val instanceIt = instance.iterator
         while (instanceIt.hasNext) {
-          var singleInstance = instanceIt.next
-          var fieldValuePairs = singleInstance._2
+          val singleInstance = instanceIt.next
+          val fieldValuePairs = singleInstance._2
 
-          selectPart = "SELECT ";
-          fromPart = " FROM ";
-          wherePart = " WHERE ";
+          selectPart = "SELECT "
+          fromPart = " FROM "
+          wherePart = " WHERE "
 
-          var dbScheme = impl.getDataSchemas
-          var goToTable = getTableNameByClassName(impl.getReverseTAssociate, element)
+          val dbScheme = impl.getDataSchemas()
+          var goToTable = getTableNameByClassName(impl.getReverseTAssociate(), element)
 
-          var id: String = getPrimaryKeyByTableName(dbScheme, goToTable)
-          var id_value: Integer = getFieldValue(fieldValuePairs, id, impl.getTypeMap()).toInt
+          val id: String = getPrimaryKeyByTableName(dbScheme, goToTable)
+          val id_value: Integer = getFieldValue(fieldValuePairs, id, impl.getTypeMap()).toInt
 
-          var parent = getParent(impl.getSigs, element)
+          val parent = getParent(impl.getSigs(), element)
           if (parent == null) { // element is a root class
-            var allAboutOMClass: ArrayList[CodeNamePair] = dbScheme.get(goToTable)
+            val allAboutOMClass: java.util.ArrayList[CodeNamePair] = dbScheme.get(goToTable)
             //            fromPart += "`" + element + "`"
             fromPart += element
             for (pair <- allAboutOMClass if pair.getFirst.equalsIgnoreCase("fields")) {
-              var fieldName = pair.getSecond()
+              val fieldName = pair.getSecond
               //              selectPart += "`" + element + "`.`" + fieldName + "`,"
               selectPart += element + "." + fieldName + ","
-              if (isPrimaryKeys(impl.getPrimaryKeys, element, fieldName)) {
+              if (isPrimaryKeys(impl.getPrimaryKeys(), element, fieldName)) {
                 val value = getFieldValue(fieldValuePairs, fieldName, impl.getTypeMap())
                 //                wherePart += "`" + element + "`.`" + fieldName + "`=" + value + " AND "
                 wherePart += element + "." + fieldName + "=" + value + " AND "
@@ -1594,22 +1572,22 @@ class DBTrademaker extends AstronautFramework {
 
           } else if (goToTable.equalsIgnoreCase(element)) { // class C is mapped to its own table
             //            fromPart += "`" + goToTable + "`";
-            fromPart += goToTable;
-            var allAboutOMClass: ArrayList[CodeNamePair] = dbScheme.get(goToTable)
-            for (pair <- allAboutOMClass if pair.getFirst().equalsIgnoreCase("fields")) {
-              var fieldName = pair.getSecond()
+            fromPart += goToTable
+            val allAboutOMClass: java.util.ArrayList[CodeNamePair] = dbScheme.get(goToTable)
+            for (pair <- allAboutOMClass if pair.getFirst.equalsIgnoreCase("fields")) {
+              val fieldName = pair.getSecond
               //              selectPart += "`" + element + "`.`" + fieldName + "`,";
-              selectPart += element + "." + fieldName + ",";
-              if (isPrimaryKeys(impl.getPrimaryKeys, element, fieldName)) {
+              selectPart += element + "." + fieldName + ","
+              if (isPrimaryKeys(impl.getPrimaryKeys(), element, fieldName)) {
                 val value = getFieldValue(fieldValuePairs, fieldName, impl.getTypeMap())
                 //                wherePart += "`" + element + "`.`" + fieldName + "`=" + value + " AND ";
-                wherePart += element + "." + fieldName + "=" + value + " AND ";
+                wherePart += element + "." + fieldName + "=" + value + " AND "
               }
             }
           }
-          selectPart = selectPart.substring(0, selectPart.length() - 1);
-          wherePart = wherePart.substring(0, wherePart.length() - 5);
-          var stmt = selectPart + fromPart + wherePart + ";";
+          selectPart = selectPart.substring(0, selectPart.length() - 1)
+          wherePart = wherePart.substring(0, wherePart.length() - 5)
+          val stmt = selectPart + fromPart + wherePart + ";"
           if (!stmt.substring(0, 11).equalsIgnoreCase("select from")) {
             //            stmt += "RESET QUERY CACHE;";
             if (!dataSchemaHasSelectStatement(allSelectStmts, goToTable, id_value, stmt)) {
@@ -1619,24 +1597,25 @@ class DBTrademaker extends AstronautFramework {
         }
       }
     }
-    var sq = new SpecializedQuery()
+    val sq = new SpecializedQuery()
     sq.setSelectStmtsInOneObject(allSelectStmts)
-    return sq
+    sq
   }
 
-  def dataSchemaHasSelectStatement(stmts: HashMap[String, HashMap[Integer, String]], tableName: String, idValue: Integer, stmt: String): Boolean = {
+  //noinspection ScalaUnusedSymbol
+  def dataSchemaHasSelectStatement(stmts: java.util.HashMap[String, java.util.HashMap[Integer, String]], tableName: String, idValue: Integer, stmt: String): Boolean = {
     if (stmts.containsKey(tableName)) {
       if (stmts.get(tableName).containsKey(idValue)) {
         return true
       }
     }
-    return false
+    false
   }
 
-  def addSelectStmtIntoDataSchema(allStmts: HashMap[String, HashMap[Integer, String]],
-                                  tableName: String, idValue: Integer, stmt: String) = {
+  def addSelectStmtIntoDataSchema(allStmts: java.util.HashMap[String, java.util.HashMap[Integer, String]],
+                                  tableName: String, idValue: Integer, stmt: String): String = {
     if (!allStmts.containsKey(tableName)) {
-      allStmts.put(tableName, new HashMap[Integer, String]())
+      allStmts.put(tableName, new java.util.HashMap[Integer, String]())
     }
     allStmts.get(tableName).put(idValue, stmt)
   }
@@ -1651,18 +1630,18 @@ class DBTrademaker extends AstronautFramework {
      * new AlloyOMToAllotDM to get sigs
      * new ORMParser to get
      */
-    var fSpecPath = fSpec.asInstanceOf[DBFormalSpecification].getSpec
-    var objSpecPath = fSpecPath.substring(0, fSpecPath.length() - 4) + "_dm.als"
+    val fSpecPath = fSpec.asInstanceOf[DBFormalSpecification].getSpec()
+    val objSpecPath = fSpecPath.substring(0, fSpecPath.length() - 4) + "_dm.als"
 
-    var aotad: AlloyOMToAlloyDM = new AlloyOMToAlloyDM()
+    val aotad: AlloyOMToAlloyDM = new AlloyOMToAlloyDM()
     // by calling run, (legacy) Object Specification will be created
     aotad.run(fSpecPath, objSpecPath, AppConfig.getIntScopeForTestCases)
 
-    var objSpec = new ObjectSpec()
+    val objSpec = new ObjectSpec()
 
-    var dbDSpec = fSpec.asInstanceOf[DBFormalSpecification]
-    objSpec.setIds(dbDSpec.getIds)
-    objSpec.setAssociations(dbDSpec.getAssociations)
+    val dbDSpec = fSpec.asInstanceOf[DBFormalSpecification]
+    objSpec.setIds(dbDSpec.getIds())
+    objSpec.setAssociations(dbDSpec.getAssociations())
     objSpec.setTypeList(dbDSpec.getTypeMap())
     objSpec.setSigs(dbDSpec.getSigs())
 
@@ -1670,52 +1649,53 @@ class DBTrademaker extends AstronautFramework {
     objSpec
   }
 
-  def myTFunction(fAB: FormalAbstractMeasurementFunctionSet): (List[ImplementationType] => List[FormalConcreteMeasurementFunctionSet]) = {
+  def myTFunction(fAB: FormalAbstractMeasurementFunctionSet): List[ImplementationType] => List[FormalConcreteMeasurementFunctionSet] = {
     if (isDebugOn) {
       println("This is myTFunction function")
     }
 
     def returnFunction(implList: List[ImplementationType]): List[FormalConcreteMeasurementFunctionSet] = {
       // convert between List in extracted code and ArrayList in Java
-      var impls: ArrayList[DBImplementation] = new ArrayList[DBImplementation]()
+      val impls: java.util.ArrayList[DBImplementation] = new java.util.ArrayList[DBImplementation]()
 
-      var defaultValue: ImplementationType = Option.empty[ImplementationType].orNull //= new ImplementationType
+      val defaultValue: ImplementationType = Option.empty[ImplementationType].orNull //= new ImplementationType
       var implHd: ImplementationType = hd[ImplementationType](defaultValue)(implList)
       var implTl = tl[ImplementationType](implList)
 
       while (implHd != defaultValue) {
         impls.add(implHd.asInstanceOf[DBImplementation])
-        var tmp = hd[ImplementationType](defaultValue)(implTl)
+        val tmp = hd[ImplementationType](defaultValue)(implTl)
+        //noinspection ComparingUnrelatedTypes
         if (tmp != Nil[ImplementationType]()) {
           implHd = tmp.asInstanceOf[DBImplementation]
           implTl = tl[ImplementationType](implTl)
         }
-        implHd = tmp;
+        implHd = tmp
       }
 
       // for each implementation, get concrete MF from abstract MD
       // return ArrayList
-      var concreteMFSet = getConcreteMeasurementFunctionSets(fAB.asInstanceOf[DBFormalAbstractMeasurementFunctionSet], impls)
+      val concreteMFSet = getConcreteMeasurementFunctionSets(fAB.asInstanceOf[DBFormalAbstractMeasurementFunctionSet], impls)
 
       // new empty list
       var returnValue: List[FormalConcreteMeasurementFunctionSet] = Nil[FormalConcreteMeasurementFunctionSet]()
-      var cMFSIt = concreteMFSet.iterator()
-      while (cMFSIt.hasNext()) {
-        var tmp = cMFSIt.next()
+      val cMFSIt = concreteMFSet.iterator()
+      while (cMFSIt.hasNext) {
+        val tmp = cMFSIt.next()
         returnValue = Cons[FormalConcreteMeasurementFunctionSet](tmp.asInstanceOf[FormalConcreteMeasurementFunctionSet], returnValue)
       }
       // return from inner function
-      return returnValue
+      returnValue
     }
     // return outter function
-    return returnFunction
+    returnFunction
   }
 
   def mySFunction(spec: SpecificationType): FormalSpecificationType = {
     if (isDebugOn) {
       println("This is mySFunction function")
     }
-    var dbfs = new DBFormalSpecification(spec.asInstanceOf[DBSpecification].getSpecFile)
+    val dbfs = new DBFormalSpecification(spec.asInstanceOf[DBSpecification].getSpecFile)
     // parse spec file and fill in all members
     // Chong: check how to define constructor in Scala, and call parseSepc() in consctructor
     dbfs.parseSpec()
@@ -1725,12 +1705,13 @@ class DBTrademaker extends AstronautFramework {
   def myIFunctionHelper(fciList: List[FormalImplementationType]): List[ImplementationType] = {
     var implList: List[ImplementationType] = Nil[ImplementationType]()
 
-    var defaultValue = new DBFormalImplementation()
+    val defaultValue = new DBFormalImplementation()
 
     var tmp = hd[FormalImplementationType](defaultValue)(fciList)
     var tail = tl[FormalImplementationType](fciList)
+    //noinspection ComparingUnrelatedTypes
     while (tmp != defaultValue) {
-      var dbi: ImplementationType = myIFunction(tmp)
+      val dbi: ImplementationType = myIFunction(tmp)
       implList = Cons[ImplementationType](dbi.asInstanceOf[DBImplementation], implList)
       tmp = hd[FormalImplementationType](defaultValue)(tail)
       tail = tl[FormalImplementationType](tail)
@@ -1747,32 +1728,32 @@ class DBTrademaker extends AstronautFramework {
      * sigs here is all signatures in FormalSpecification (alloyOM), which already be set by lFunction
      * set all needed information for test cases generation here, initialize the global variable SolveAlloyDM
      */
-    var fImpFileName = fImp.asInstanceOf[DBFormalImplementation].getImplementation
-    var impFileName = fImpFileName.substring(0, fImpFileName.length() - 4) + ".sql"
+    val fImpFileName = fImp.asInstanceOf[DBFormalImplementation].getImplementation()
+    val impFileName = fImpFileName.substring(0, fImpFileName.length() - 4) + ".sql"
 
-    var parser = new ORMParser(fImpFileName, impFileName, fImp.asInstanceOf[DBFormalImplementation].getSigs)
-    parser.createSchemas();
+    val parser = new ORMParser(fImpFileName, impFileName, fImp.asInstanceOf[DBFormalImplementation].getSigs())
+    parser.createSchemas()
     /**
      * Need to set all needed information for test cases generation here
      */
 
-    var dbFImpl: DBFormalImplementation = fImp.asInstanceOf[DBFormalImplementation]
+    val dbFImpl: DBFormalImplementation = fImp.asInstanceOf[DBFormalImplementation]
 
-    var impl = new DBImplementation(impFileName)
+    val impl = new DBImplementation(impFileName)
     impl.setAllFields(parser.getallFields())
-    impl.setPrimaryKeys(parser.getPrimaryKeys())
-    impl.setReverseTAssociate(parser.getReverseTAssociate())
-    impl.setFields(parser.getFields())
-    impl.setFieldsTable(parser.getFieldsTable())
-    impl.setForeignKeys(parser.getForeignKey())
-    impl.setDataProvider(parser.getDataProvider())
-    impl.setAssociations(parser.getAssociations())
-    impl.setReverseIDs(parser.getReverseIds())
+    impl.setPrimaryKeys(parser.getPrimaryKeys)
+    impl.setReverseTAssociate(parser.getReverseTAssociate)
+    impl.setFields(parser.getFields)
+    impl.setFieldsTable(parser.getFieldsTable)
+    impl.setForeignKeys(parser.getForeignKey)
+    impl.setDataProvider(parser.getDataProvider)
+    impl.setAssociations(parser.getAssociations)
+    impl.setReverseIDs(parser.getReverseIds)
 
-    impl.setSigs(dbFImpl.getSigs)
-    impl.setIds(dbFImpl.getIds)
-    impl.setAssociationsForCreateSchemas(dbFImpl.getAssociationsForCreateSchemas)
-    impl.setTypeMap(dbFImpl.getTypeMap)
+    impl.setSigs(dbFImpl.getSigs())
+    impl.setIds(dbFImpl.getIds())
+    impl.setAssociationsForCreateSchemas(dbFImpl.getAssociationsForCreateSchemas())
+    impl.setTypeMap(dbFImpl.getTypeMap())
 
     impl
   }
@@ -1781,12 +1762,13 @@ class DBTrademaker extends AstronautFramework {
     // iterate whole list Concrete Measurement Function
     // define a default value to call hd()
     var mfSetList: List[MeasurementFunctionSetType] = Nil[MeasurementFunctionSetType]()
-    var defaultValue = Nil[FormalConcreteMeasurementFunctionSet]()
+    val defaultValue = Nil[FormalConcreteMeasurementFunctionSet]()
     var fcfHead = hd[FormalConcreteMeasurementFunctionSet](defaultValue)(fcbList)
     var fcfTail = tl[FormalConcreteMeasurementFunctionSet](fcbList)
 
+    //noinspection ComparingUnrelatedTypes
     while (fcfHead != defaultValue) {
-      var result = myBFunction(fcfHead)
+      val result = myBFunction(fcfHead)
       mfSetList = Cons[MeasurementFunctionSetType](result, mfSetList)
       fcfHead = hd[FormalConcreteMeasurementFunctionSet](defaultValue)(fcfTail)
       fcfTail = tl[FormalConcreteMeasurementFunctionSet](fcfTail)
@@ -1796,20 +1778,20 @@ class DBTrademaker extends AstronautFramework {
 
   // BFunction here is an identity function
   def myBFunction(fCB: FormalConcreteMeasurementFunctionSet): MeasurementFunctionSetType = {
-    var castedfCB = fCB.asInstanceOf[DBFormalConcreteMeasurementFunctionSet]
-    var tLoads = castedfCB.getCtmf().getLoads()
-    var sLoads = castedfCB.getCsmf().getLoads()
+    val castedfCB = fCB.asInstanceOf[DBFormalConcreteMeasurementFunctionSet]
+    val tLoads = castedfCB.getCtmf.getLoads
+    val sLoads = castedfCB.getCsmf.getLoads
 
-    var dbConTMF = new DBConcreteTimeMeasurementFunction(tLoads)
-    var dbConSMF = new DBConcreteSpaceMeasurementFunction(sLoads)
+    val dbConTMF = new DBConcreteTimeMeasurementFunction(tLoads)
+    val dbConSMF = new DBConcreteSpaceMeasurementFunction(sLoads)
 
-    var dbConMF = new DBConcreteMeasurementFunctionSet(dbConTMF, dbConSMF)
-    dbConMF.setImpl(castedfCB.getImpl())
+    val dbConMF = new DBConcreteMeasurementFunctionSet(dbConTMF, dbConSMF)
+    dbConMF.setImpl(castedfCB.getImpl)
 
     dbConMF
   }
 
-  var myTrademaker: Trademaker = new Build_Trademaker(
+  var myTrademaker: Trademaker = Build_Trademaker(
     myTradespace,
     myParetoFront,
     myCFunction,
