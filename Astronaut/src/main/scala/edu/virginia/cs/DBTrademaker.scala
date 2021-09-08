@@ -52,7 +52,7 @@ class DBTrademaker extends AstronautFramework {
       var resultTail = tl[Pair[ImplementationType, MeasurementResultSetType]](castedResults)
 
       if (resultHead != defaultValue) {
-        var implPath: String = fst(resultHead).asInstanceOf[DBImplementation].getImPath()
+        var implPath: String = fst(resultHead).asInstanceOf[DBImplementation].getImPath
         val startIdx = implPath.lastIndexOf(File.separator) + 1
         // get solution file name, which is like: customerOrderObjectModel_Sol_2.sql
         val tmpPath = implPath.substring(startIdx)
@@ -69,7 +69,7 @@ class DBTrademaker extends AstronautFramework {
           val impl = fst(resultHead)
           val mr = snd(resultHead)
 
-          val sol = impl.asInstanceOf[DBImplementation].getImPath()
+          val sol = impl.asInstanceOf[DBImplementation].getImPath
           val solName = sol.substring(sol.lastIndexOf(File.separator) + 1, sol.lastIndexOf("."))
           pw.println(solName + ":" + mr.asInstanceOf[DBMeasurementResult].getTmr.getInsertTime + ":" +
             mr.asInstanceOf[DBMeasurementResult].getTmr.getSelectTime + ":" +
@@ -164,7 +164,7 @@ class DBTrademaker extends AstronautFramework {
     //        highRange = i + subRange
     //      }
 
-    val allInstances = generateRandomInstances(dbImpls.get(0).getSigs(), dbImpls.get(0).getTypeMap(), 1, range)
+    val allInstances = generateRandomInstances(dbImpls.get(0).getSigs, dbImpls.get(0).getTypeMap, 1, range)
     val implIt = dbImpls.iterator()
     var i = 0
     while (implIt.hasNext) {
@@ -224,7 +224,7 @@ class DBTrademaker extends AstronautFramework {
     val insCL = new ConcreteLoad()
     insCL.setQuerySet(cqs)
 
-    val implPath = impl.getImPath()
+    val implPath = impl.getImPath
     var pathBase = implPath.substring(0, implPath.lastIndexOf(File.separator))
     val implFileName = implPath.substring(implPath.lastIndexOf(File.separator) + 1, implPath.lastIndexOf("."))
     pathBase += File.separator + "TestCases"
@@ -302,7 +302,7 @@ class DBTrademaker extends AstronautFramework {
 
     // convert select statements
 
-    val implPath = impl.getImPath()
+    val implPath = impl.getImPath
     var pathBase = implPath.substring(0, implPath.lastIndexOf(File.separator))
     val implFileName = implPath.substring(implPath.lastIndexOf(File.separator) + 1, implPath.lastIndexOf("."))
     pathBase += File.separator + "TestCases"
@@ -515,12 +515,12 @@ class DBTrademaker extends AstronautFramework {
     }
 
     if (isDebugOn) {
-      println("finish implementation: " + impl.getImPath() + ":" + dbmr.getTmr.getInsertTime + "," + dbmr.getTmr.getSelectTime + "," + dbmr.getSmr.getDbSpace)
+      println("finish implementation: " + impl.getImPath + ":" + dbmr.getTmr.getInsertTime + "," + dbmr.getTmr.getSelectTime + "," + dbmr.getSmr.getDbSpace)
     }
 
     // we can write the results into hadoop file system
     // /trademaker/modelName/solutionName
-    Pair[ImplementationType, MeasurementResultSetType](new DBImplementation(impl.getImPath()), dbmr)
+    Pair[ImplementationType, MeasurementResultSetType](new DBImplementation(impl.getImPath), dbmr)
   }
 
   // analyze and tradespace are already defined in Tradespace specification
@@ -668,7 +668,7 @@ class DBTrademaker extends AstronautFramework {
        * call smartbridge() function to synthesize formal implementations
        * scan solution folder to get implementations
        */
-      val specPath: String = fSpec.asInstanceOf[DBFormalSpecification].getSpec()
+      val specPath: String = fSpec.asInstanceOf[DBFormalSpecification].getSpec
       solFolder = specPath.substring(0, specPath.lastIndexOf(File.separator))
       val alloyOMName = specPath.substring(specPath.lastIndexOf(File.separator) + 1, specPath.lastIndexOf("."))
       solFolder = solFolder + File.separator + alloyOMName + File.separator + "ImplSolution"
@@ -711,10 +711,10 @@ class DBTrademaker extends AstronautFramework {
     for (file <- solFiles) {
       val dbImpl: DBFormalImplementation = new DBFormalImplementation()
       dbImpl.setImp(file.getAbsolutePath)
-      dbImpl.setSigs(fSpec.asInstanceOf[DBFormalSpecification].getSigs())
-      dbImpl.setAssociationsForCreateSchemas(fSpec.asInstanceOf[DBFormalSpecification].getAssociations())
-      dbImpl.setTypeMap(fSpec.asInstanceOf[DBFormalSpecification].getTypeMap())
-      dbImpl.setIds(fSpec.asInstanceOf[DBFormalSpecification].getIds())
+      dbImpl.setSigs(fSpec.asInstanceOf[DBFormalSpecification].getSigs)
+      dbImpl.setAssociationsForCreateSchemas(fSpec.asInstanceOf[DBFormalSpecification].getAssociations)
+      dbImpl.setTypeMap(fSpec.asInstanceOf[DBFormalSpecification].getTypeMap)
+      dbImpl.setIds(fSpec.asInstanceOf[DBFormalSpecification].getIds)
       implList = new Cons[FormalImplementationType](dbImpl, implList)
     }
     implList
@@ -790,7 +790,7 @@ class DBTrademaker extends AstronautFramework {
 
     // call objects generator
     val loadSynthesizer = new LoadSynthesizer()
-    loadSynthesizer.genObjsHelper(specPath, objectSolFolder, fSpec.asInstanceOf[DBFormalSpecification].getIds()) // parse ID for negation
+    loadSynthesizer.genObjsHelper(specPath, objectSolFolder, fSpec.asInstanceOf[DBFormalSpecification].getIds) // parse ID for negation
 
     /*
      * get solutions to alloy spec (stored as XML files)
@@ -842,7 +842,7 @@ class DBTrademaker extends AstronautFramework {
 
       returnValue.add(getConcreteMeasurementFunctionSet(absMF, nextImpl))
       if (isDebugOn) {
-        var solName = nextImpl.getImPath()
+        var solName = nextImpl.getImPath
         solName = solName.substring(solName.lastIndexOf(File.separator) + 1, solName.indexOf("."))
         println("generate concrete MF for solution: " + solName)
       }
@@ -862,7 +862,7 @@ class DBTrademaker extends AstronautFramework {
     /**
      * print out insert scripts
      */
-    val implPath = impl.getImPath()
+    val implPath = impl.getImPath
     var pathBase = implPath.substring(0, implPath.lastIndexOf(File.separator))
     val implFileName = implPath.substring(implPath.lastIndexOf(File.separator) + 1, implPath.lastIndexOf("."))
     pathBase += File.separator + "TestCases"
@@ -1055,7 +1055,7 @@ class DBTrademaker extends AstronautFramework {
     /**
      * Prepare output file by implPath
      */
-    val implPath = impl.getImPath()
+    val implPath = impl.getImPath
     var insertPath = implPath.substring(0, implPath.lastIndexOf(File.separator))
     val implFileName = implPath.substring(implPath.lastIndexOf(File.separator) + 1, implPath.lastIndexOf("."))
     insertPath += File.separator + "TestCases"
@@ -1072,9 +1072,9 @@ class DBTrademaker extends AstronautFramework {
         val singleInstance = instancesIt.next
         val fieldValuePairs = singleInstance._2
         // key is tableName, and value is fields in the table
-        val dbScheme = impl.getDataSchemas()
+        val dbScheme = impl.getDataSchemas
         // which table the element class will be
-        val reverseTAss = impl.getReverseTAssociate()
+        val reverseTAss = impl.getReverseTAssociate
         val goToTable = getTableNameByClassName(reverseTAss, className) // null if not found
         if (goToTable != null) {
           /* there is no t_association information for this element
@@ -1083,7 +1083,7 @@ class DBTrademaker extends AstronautFramework {
            * we don't need to consider since it will be taken in find foreign key value
            */
           val id: String = getPrimaryKeyByTableName(dbScheme, goToTable)
-          val id_value: String = getFieldValue(fieldValuePairs, id, impl.getTypeMap())
+          val id_value: String = getFieldValue(fieldValuePairs, id, impl.getTypeMap)
 
           field_part = ""
           value_part = ""
@@ -1119,7 +1119,7 @@ class DBTrademaker extends AstronautFramework {
                 if (!fieldName.equalsIgnoreCase("DType")) {
                   // find out where this field come from, by iterating all signatures in OM
                   val foreignClass: String = getClassByAttr(impl, fieldName)
-                  val fieldValue: String = getForeignValue(allInstances, foreignClass, fieldName, impl.getTypeMap())
+                  val fieldValue: String = getForeignValue(allInstances, foreignClass, fieldName, impl.getTypeMap)
                   //                  field_part += "`" + fieldName + "`,"
                   field_part += fieldName + ","
                   value_part += fieldValue + ","
@@ -1127,7 +1127,7 @@ class DBTrademaker extends AstronautFramework {
               }
 
               if (fieldInAttr || fieldIsID) {
-                val fieldValue = getFieldValue(fieldValuePairs, fieldName, impl.getTypeMap())
+                val fieldValue = getFieldValue(fieldValuePairs, fieldName, impl.getTypeMap)
                 //                field_part += "`" + fieldName + "`,"
                 field_part += fieldName + ","
                 value_part += fieldValue + ","
@@ -1155,7 +1155,7 @@ class DBTrademaker extends AstronautFramework {
             // find value of the primary key of two primary classes
             for (pair <- allAboutSchema if pair.getFirst.equalsIgnoreCase("fields")) {
               val keyName = pair.getSecond
-              val keyValue = getFieldValue(fieldValuePairs, keyName, impl.getTypeMap())
+              val keyValue = getFieldValue(fieldValuePairs, keyName, impl.getTypeMap)
               //              field_part += "`" + keyName + "`,"
               field_part += keyName + ","
               value_part += keyValue + ","
@@ -1220,7 +1220,7 @@ class DBTrademaker extends AstronautFramework {
   }
 
   def getClassByAttr(impl: DBImplementation, attr: String): String = {
-    for (sig <- impl.getSigs()) {
+    for (sig <- impl.getSigs) {
       for (sAttr <- sig.getAttrSet if sig.getCategory == 0) {
         if (sAttr.equalsIgnoreCase(attr)) {
           return sig.getSigName
@@ -1232,7 +1232,7 @@ class DBTrademaker extends AstronautFramework {
 
   def getPTablesByAssociate(impl: DBImplementation, primaryClass: String): java.util.ArrayList[String] = {
     val tables: java.util.ArrayList[String] = new java.util.ArrayList[String]
-    for (sig <- impl.getSigs()) {
+    for (sig <- impl.getSigs) {
       if (sig.getSigName.equalsIgnoreCase(primaryClass) && sig.getCategory == 1) { // check if sig is an associate
         tables.add(sig.getSrc)
         tables.add(sig.getDst)
@@ -1252,7 +1252,7 @@ class DBTrademaker extends AstronautFramework {
   }
 
   def isClassAssociate(impl: DBImplementation, primaryClass: String): Boolean = {
-    impl.getDataProvider().isClassAssociate(primaryClass)
+    impl.getDataProvider.isClassAssociate(primaryClass)
   }
 
   def getPrimaryClassById(impl: DBImplementation, field: String): String = {
@@ -1260,7 +1260,7 @@ class DBTrademaker extends AstronautFramework {
       if (pair.getFirst.equalsIgnoreCase(field)) {
         // iterate attrSet
         // check ID is in attr
-        for (attr <- impl.getDataProvider().getAttrByTableName(pair.getSecond)) {
+        for (attr <- impl.getDataProvider.getAttrByTableName(pair.getSecond)) {
           if (attr.equalsIgnoreCase(field)) {
             return pair.getSecond
           }
@@ -1271,7 +1271,7 @@ class DBTrademaker extends AstronautFramework {
   }
 
   def isFieldInAttr(impl: DBImplementation, mClass: String, attr: String): Boolean = {
-    val sigs = impl.getSigs()
+    val sigs = impl.getSigs
     for (sig <- sigs) {
       for (sAttr <- sig.getAttrSet if sig.getCategory == 0 && sig.getSigName.equalsIgnoreCase(mClass))
         if (sAttr.equalsIgnoreCase(attr)) {
@@ -1536,7 +1536,7 @@ class DBTrademaker extends AstronautFramework {
       val instanceEntry = instanceIt.next
       var element = instanceEntry._1
       val instance = instanceEntry._2
-      val isAss = isAssociation(impl.getSigs(), element)
+      val isAss = isAssociation(impl.getSigs, element)
       if (!isAss) {
         val instanceIt = instance.iterator
         while (instanceIt.hasNext) {
@@ -1547,13 +1547,13 @@ class DBTrademaker extends AstronautFramework {
           fromPart = " FROM "
           wherePart = " WHERE "
 
-          val dbScheme = impl.getDataSchemas()
-          var goToTable = getTableNameByClassName(impl.getReverseTAssociate(), element)
+          val dbScheme = impl.getDataSchemas
+          var goToTable = getTableNameByClassName(impl.getReverseTAssociate, element)
 
           val id: String = getPrimaryKeyByTableName(dbScheme, goToTable)
-          val id_value: Integer = getFieldValue(fieldValuePairs, id, impl.getTypeMap()).toInt
+          val id_value: Integer = getFieldValue(fieldValuePairs, id, impl.getTypeMap).toInt
 
-          val parent = getParent(impl.getSigs(), element)
+          val parent = getParent(impl.getSigs, element)
           if (parent == null) { // element is a root class
             val allAboutOMClass: java.util.ArrayList[CodeNamePair] = dbScheme.get(goToTable)
             //            fromPart += "`" + element + "`"
@@ -1562,8 +1562,8 @@ class DBTrademaker extends AstronautFramework {
               val fieldName = pair.getSecond
               //              selectPart += "`" + element + "`.`" + fieldName + "`,"
               selectPart += element + "." + fieldName + ","
-              if (isPrimaryKeys(impl.getPrimaryKeys(), element, fieldName)) {
-                val value = getFieldValue(fieldValuePairs, fieldName, impl.getTypeMap())
+              if (isPrimaryKeys(impl.getPrimaryKeys, element, fieldName)) {
+                val value = getFieldValue(fieldValuePairs, fieldName, impl.getTypeMap)
                 //                wherePart += "`" + element + "`.`" + fieldName + "`=" + value + " AND "
                 wherePart += element + "." + fieldName + "=" + value + " AND "
               }
@@ -1578,8 +1578,8 @@ class DBTrademaker extends AstronautFramework {
               val fieldName = pair.getSecond
               //              selectPart += "`" + element + "`.`" + fieldName + "`,";
               selectPart += element + "." + fieldName + ","
-              if (isPrimaryKeys(impl.getPrimaryKeys(), element, fieldName)) {
-                val value = getFieldValue(fieldValuePairs, fieldName, impl.getTypeMap())
+              if (isPrimaryKeys(impl.getPrimaryKeys, element, fieldName)) {
+                val value = getFieldValue(fieldValuePairs, fieldName, impl.getTypeMap)
                 //                wherePart += "`" + element + "`.`" + fieldName + "`=" + value + " AND ";
                 wherePart += element + "." + fieldName + "=" + value + " AND "
               }
@@ -1630,7 +1630,7 @@ class DBTrademaker extends AstronautFramework {
      * new AlloyOMToAllotDM to get sigs
      * new ORMParser to get
      */
-    val fSpecPath = fSpec.asInstanceOf[DBFormalSpecification].getSpec()
+    val fSpecPath = fSpec.asInstanceOf[DBFormalSpecification].getSpec
     val objSpecPath = fSpecPath.substring(0, fSpecPath.length() - 4) + "_dm.als"
 
     val aotad: AlloyOMToAlloyDM = new AlloyOMToAlloyDM()
@@ -1640,10 +1640,10 @@ class DBTrademaker extends AstronautFramework {
     val objSpec = new ObjectSpec()
 
     val dbDSpec = fSpec.asInstanceOf[DBFormalSpecification]
-    objSpec.setIds(dbDSpec.getIds())
-    objSpec.setAssociations(dbDSpec.getAssociations())
-    objSpec.setTypeList(dbDSpec.getTypeMap())
-    objSpec.setSigs(dbDSpec.getSigs())
+    objSpec.setIds(dbDSpec.getIds)
+    objSpec.setAssociations(dbDSpec.getAssociations)
+    objSpec.setTypeList(dbDSpec.getTypeMap)
+    objSpec.setSigs(dbDSpec.getSigs)
 
     objSpec.setSpecPath(objSpecPath)
     objSpec
@@ -1728,10 +1728,10 @@ class DBTrademaker extends AstronautFramework {
      * sigs here is all signatures in FormalSpecification (alloyOM), which already be set by lFunction
      * set all needed information for test cases generation here, initialize the global variable SolveAlloyDM
      */
-    val fImpFileName = fImp.asInstanceOf[DBFormalImplementation].getImplementation()
+    val fImpFileName = fImp.asInstanceOf[DBFormalImplementation].getImplementation
     val impFileName = fImpFileName.substring(0, fImpFileName.length() - 4) + ".sql"
 
-    val parser = new ORMParser(fImpFileName, impFileName, fImp.asInstanceOf[DBFormalImplementation].getSigs())
+    val parser = new ORMParser(fImpFileName, impFileName, fImp.asInstanceOf[DBFormalImplementation].getSigs)
     parser.createSchemas()
     /**
      * Need to set all needed information for test cases generation here
@@ -1750,10 +1750,10 @@ class DBTrademaker extends AstronautFramework {
     impl.setAssociations(parser.getAssociations)
     impl.setReverseIDs(parser.getReverseIds)
 
-    impl.setSigs(dbFImpl.getSigs())
-    impl.setIds(dbFImpl.getIds())
-    impl.setAssociationsForCreateSchemas(dbFImpl.getAssociationsForCreateSchemas())
-    impl.setTypeMap(dbFImpl.getTypeMap())
+    impl.setSigs(dbFImpl.getSigs)
+    impl.setIds(dbFImpl.getIds)
+    impl.setAssociationsForCreateSchemas(dbFImpl.getAssociationsForCreateSchemas)
+    impl.setTypeMap(dbFImpl.getTypeMap)
 
     impl
   }
