@@ -1,17 +1,14 @@
-name := "Astronaut"
+import Dependencies._
 
-version := "1.0"
+ThisBuild / scalaVersion     := "2.11.7"
+ThisBuild / version          := "0.1.0-SNAPSHOT"
+ThisBuild / organization     := "com.example"
+ThisBuild / organizationName := "example"
 
-scalaVersion := "2.11.7"
-
-libraryDependencies += "org.jdom" % "jdom" % "2.0.2"
-
-libraryDependencies += "mysql" % "mysql-connector-java" % "5.1.38"
-
-libraryDependencies += "com.typesafe" % "config" % "1.3.0"
-
-libraryDependencies += "org.apache.spark" % "spark-core_2.10" % "1.6.1" % "provided"
-
-assemblyJarName in assembly := "astronaut.jar"
-
-mainClass in assembly := Some("edu.virginia.cs.Main")
+lazy val root = (project in file("."))
+  .settings(
+    name := "Astronaut",
+    assembly / mainClass := Some("edu.virginia.cs.Main"),
+    assembly / assemblyJarName := "astronaut.jar",
+    libraryDependencies ++= Seq(jdom, mysql, typesafe, spark)
+  )

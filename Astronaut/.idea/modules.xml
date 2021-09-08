@@ -2,8 +2,8 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/astronaut.iml" filepath="$PROJECT_DIR$/.idea/modules/astronaut.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/astronaut-build.iml" filepath="$PROJECT_DIR$/.idea/modules/astronaut-build.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Astronaut.iml" filepath="$PROJECT_DIR$/.idea/modules/Astronaut.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Astronaut-build.iml" filepath="$PROJECT_DIR$/.idea/modules/Astronaut-build.iml" />
     </modules>
   </component>
 </project>
