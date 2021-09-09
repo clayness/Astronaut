@@ -178,5 +178,6 @@
       </library>
     </orderEntry>
     <orderEntry type="library" scope="PROVIDED" name="sbt: xmlenc:xmlenc:0.52:jar" level="project" />
+    <orderEntry type="library" name="org.alloytools.alloy.dist" level="project" />
   </component>
 </module>

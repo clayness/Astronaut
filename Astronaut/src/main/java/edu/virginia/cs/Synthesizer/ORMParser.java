@@ -12,63 +12,46 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Created by IntelliJ IDEA.
- * User: ct4ew
- * Date: 7/23/13
- * Time: 3:35 PM
- * To change this template use File | Settings | File Templates.
- */
 public class ORMParser {
-    private Document dom;
-    private String input;
-    private String output;
-    private DataProvider dataProvider;
-	private ArrayList<CodeNamePair> reverseTAssociate;
-    private ArrayList<CodeNamePair> foreignKeys;
+    private final String input;
+    private final String output;
+    private final DataProvider dataProvider;
+    private final ArrayList<CodeNamePair> reverseTAssociate;
+    private final ArrayList<CodeNamePair> foreignKeys;
     // HashMap<Association Name, pair<src, dst>, src and dst are class name
-    private HashMap<String, CodeNamePair> associations;
-    private ArrayList<CodeNamePair> primaryKeys;
-    private ArrayList<CodeNamePair> fields;
-    private ArrayList<String> allFields;
-    private ArrayList<CodeNamePair> fieldsTable;
-    private ArrayList<CodeNamePair> reverseIds;
-    private ArrayList<Sig> sigs;
-    
-    
+    private final HashMap<String, CodeNamePair> associations;
+    private final ArrayList<CodeNamePair> primaryKeys;
+    private final ArrayList<CodeNamePair> fields;
+    private final ArrayList<String> allFields;
+    private final ArrayList<CodeNamePair> fieldsTable;
+    private final ArrayList<Sig> sigs;
+
+
+    public ORMParser(String input, String output, ArrayList<Sig> sigs) {
+        this.input = input;
+        this.output = output;
+        this.reverseTAssociate = new ArrayList<>();
+        this.foreignKeys = new ArrayList<>();
+        this.associations = new HashMap<>();
+        this.primaryKeys = new ArrayList<>();
+        this.fields = new ArrayList<>();
+        this.allFields = new ArrayList<>();
+        this.fieldsTable = new ArrayList<>();
+        this.sigs = sigs;
+        this.dataProvider = new DataProvider();
+
+    }
+
     public ArrayList<CodeNamePair> getReverseIds() {
-    	return this.dataProvider.getReverseIds();
+        return this.dataProvider.getReverseIds();
     }
-    
-    public void setReverseIds(ArrayList<CodeNamePair> ids) {
-    	this.reverseIds = ids;
-    }
-    
+
     public DataProvider getDataProvider() {
-		return dataProvider;
-	}
+        return dataProvider;
+    }
 
-	public void setDataProvider(DataProvider dataProvider) {
-		this.dataProvider = dataProvider;
-	}
-
-	public HashMap<String, CodeNamePair> getAssociations() {
-		return associations;
-	}
-
-	public void setAssociations(HashMap<String, CodeNamePair> associations) {
-		this.associations = associations;
-	}
-
-	public ArrayList<String> getAllFields() {
-		return allFields;
-	}
-
-	public void setAllFields(ArrayList<String> allFields) {
-		this.allFields = allFields;
-	}
-
-    public ORMParser() {
+    public HashMap<String, CodeNamePair> getAssociations() {
+        return associations;
     }
 
     public ArrayList<CodeNamePair> getReverseTAssociate() {
@@ -77,22 +60,6 @@ public class ORMParser {
 
     public HashMap<String, CodeNamePair> getAssociation() {
         return this.associations;
-    }
-
-    public ORMParser(String input, String output, ArrayList<Sig> sigs) {
-        this.input = input;
-        this.output = output;
-        this.reverseTAssociate = new ArrayList<CodeNamePair>();
-        this.foreignKeys = new ArrayList<CodeNamePair>();
-        this.associations = new HashMap<String, CodeNamePair>();
-        this.primaryKeys = new ArrayList<CodeNamePair>();
-        this.fields = new ArrayList<CodeNamePair>();
-        this.allFields = new ArrayList<String>();
-        this.fieldsTable = new ArrayList<CodeNamePair>();
-        this.reverseIds = new ArrayList<CodeNamePair>();
-        this.sigs = sigs;
-        this.dataProvider = new DataProvider(this.sigs);
-        
     }
 
     public ArrayList<CodeNamePair> getFields() {
@@ -136,7 +103,7 @@ public class ORMParser {
 
     public ArrayList<String> getallFields() {
         // refine the the foreign key list first
-        ArrayList<String> result = new ArrayList<String>();
+        ArrayList<String> result = new ArrayList<>();
         for (String fKey : this.allFields) {
             //to not add DType$0
             String fieldName = this.dataProvider.getSecondByFirst(fKey);
@@ -163,20 +130,11 @@ public class ORMParser {
         return this.primaryKeys;
     }
 
-    public boolean isTableAAssociation(String tableName) {
-        for (Map.Entry<String, CodeNamePair> entry : this.associations.entrySet()) {
-            if (entry.getKey().equalsIgnoreCase(tableName)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     public void createSchemas() {
         // the input file will be a XML solution file
         parseXML();
         try {
-            this.dataProvider.refineTable(this.sigs);
+            this.dataProvider.refineTable();
             //this.dataProvider.outputData(this.output); //For debug
             this.dataProvider.writeIntoFile(this.output);
         } catch (IOException e) {
@@ -191,7 +149,7 @@ public class ORMParser {
             //Using factory get an instance of document builder
             DocumentBuilder db = dbf.newDocumentBuilder();
             //parse using builder to get DOM representation of the XML file
-            dom = db.parse(this.input);
+            Document dom = db.parse(this.input);
 
             //get the root element
             Element docEle = dom.getDocumentElement();
@@ -279,7 +237,6 @@ public class ORMParser {
     /**
      * Return the root table among a set of tables
      *
-     * @param tableName
      * @return root table or null if any error happened
      */
     public String getRootTable(String tableName) {
@@ -303,7 +260,6 @@ public class ORMParser {
      * variable "TableName"
      *
      * @param element: the input "tAssociate" tag
-     * @return true if parse success
      */
     public void parse_tAssociate(Element element) {
         NodeList children = element.getElementsByTagName("tuple");
@@ -323,8 +279,7 @@ public class ORMParser {
                 // there is one table code existed, means some table share a table code
                 // need to find the root among these table
                 if (hasCode) {
-                    String root = getRootTable(name);
-                    name = root;
+                    name = getRootTable(name);
                     this.dataProvider.removePairByCode(code);
                 }
                 this.dataProvider.addPair(code, name);
@@ -366,7 +321,6 @@ public class ORMParser {
      * handle primary key
      *
      * @param element: the primary key tag
-     * @return true: if parse successfully false: if parsing has failure
      */
     public void parsePK(Element element) {
         NodeList children = element.getElementsByTagName("tuple");

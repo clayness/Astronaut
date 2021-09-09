@@ -1,5 +1,9 @@
 package edu.virginia.cs.Framework.Types;
 
+import edu.virginia.cs.AppConfig;
+import edu.virginia.cs.Evaluator.ScriptRunner;
+import edu.virginia.cs.Synthesizer.CodeNamePair;
+
 import java.io.*;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -8,22 +12,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
 
-import edu.virginia.cs.AppConfig;
-import edu.virginia.cs.Evaluator.ScriptRunner;
-import edu.virginia.cs.Framework.Types.DBFormalAbstractMeasurementFunction.MeasurementType;
-import edu.virginia.cs.Synthesizer.CodeNamePair;
-
 public class DBConcreteMeasurementFunction implements Serializable {
-    private MeasurementType mType = null;
     //	private ArrayList<ConcreteLoad> loads;
-//	private DBImplementation impl;
-    private Boolean isDebugOn = AppConfig.getDebug();
+    //	private DBImplementation impl;
+    public MeasurementFunctionByDB mfByDB = null;
     private HashMap<String, HashMap<String, ArrayList<CodeNamePair>>> instances;
 
-    public MeasurementFunctionByDB mfByDB = null;
-
-    public DBConcreteMeasurementFunction(MeasurementType m) {
-        this.setmType(m);
+    public DBConcreteMeasurementFunction() {
         if (AppConfig.getTestDB().equalsIgnoreCase("mysql")) {
             this.mfByDB = new MySQLMeasurementFunction();
         } else if (AppConfig.getTestDB().equalsIgnoreCase("postgres")) {
@@ -43,20 +38,8 @@ public class DBConcreteMeasurementFunction implements Serializable {
         this.instances = ins;
     }
 
-    public DBImplementation getImpl() {
-        return this.mfByDB.getImpl();
-    }
-
     public void setImpl(DBImplementation impl) {
         this.mfByDB.setImpl(impl);
-    }
-
-    public MeasurementType getmType() {
-        return mType;
-    }
-
-    public void setmType(MeasurementType mType) {
-        this.mType = mType;
     }
 
     public ArrayList<ConcreteLoad> getLoads() {
@@ -82,10 +65,6 @@ abstract class MeasurementFunctionByDB implements Serializable {
         this.loads = loads;
     }
 
-    public DBImplementation getImpl() {
-        return impl;
-    }
-
     public void setImpl(DBImplementation impl) {
         this.impl = impl;
     }
@@ -106,13 +85,13 @@ abstract class MeasurementFunctionByDB implements Serializable {
 
 class MySQLMeasurementFunction extends MeasurementFunctionByDB implements Serializable {
     //	private MeasurementType mType = null;
-    private Boolean isDebugOn = AppConfig.getDebug();
+    private final Boolean isDebugOn = AppConfig.getDebug();
 //	private HashMap<String, HashMap<String, ArrayList<CodeNamePair>>> instances;
 
 
-    String mysqlUser = AppConfig.getMySQLUser();
-    String mysqlPassword = AppConfig.getMysqlPassword();
-    private String mysqlCMD = "mysql --user='" + mysqlUser + "' --password='" + mysqlPassword + "'";
+    final String mysqlUser = AppConfig.getMySQLUser();
+    final String mysqlPassword = AppConfig.getMysqlPassword();
+    private final String mysqlCMD = "mysql --user='" + mysqlUser + "' --password='" + mysqlPassword + "'";
 
     public double checkSpace() {
         String implPath = this.impl.getImPath();
@@ -132,13 +111,13 @@ class MySQLMeasurementFunction extends MeasurementFunctionByDB implements Serial
             BufferedReader reader = new BufferedReader(new InputStreamReader(
                     p.getInputStream()));
 
-            String line = "";
+            String line;
             while ((line = reader.readLine()) != null) {
                 String[] splited = line.split("\\s+");
                 if (splited.length == 2) {
                     if (splited[0].equalsIgnoreCase(dbName)) { // find right
                         // data base
-                        return Double.valueOf(splited[1]);
+                        return Double.parseDouble(splited[1]);
                     }
                 }
             }
@@ -150,10 +129,10 @@ class MySQLMeasurementFunction extends MeasurementFunctionByDB implements Serial
     }
 
     public void dropDB() {
-        /**
-         * get the name from implPath create drop database script :
-         * "drop database implName;" create cmd to drop the database execute the
-         * cmd
+        /*
+          get the name from implPath create drop database script :
+          "drop database implName;" create cmd to drop the database execute the
+          cmd
          */
         System.out.println("dropDB function in DBConcreteTimeMeasurementFunction");
         String implPath = this.impl.getImPath();
@@ -176,19 +155,17 @@ class MySQLMeasurementFunction extends MeasurementFunctionByDB implements Serial
                 }
             }
 
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (InterruptedException e) {
+        } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }
     }
 
     public void createDB() {
         System.out.println("createDB function in DBConcreteTimeMeasurementFunction");
-        /**
-         * get the name from implPath create create database script :
-         * "create database implName;" create cmd to create the database execute
-         * the cmd
+        /*
+          get the name from implPath create create database script :
+          "create database implName;" create cmd to create the database execute
+          the cmd
          */
 
         String implPath = this.impl.getImPath();
@@ -200,7 +177,7 @@ class MySQLMeasurementFunction extends MeasurementFunctionByDB implements Serial
                 implPath.lastIndexOf(File.separator))
                 + "createDatabase.sql";
         try {
-            PrintWriter pw = new PrintWriter(new File(scriptFileName));
+            PrintWriter pw = new PrintWriter(scriptFileName);
             String outToFile = this.mysqlCMD + " -Bse " + "\"" + createDatabase
                     + "\"";
             pw.println(outToFile);
@@ -209,11 +186,6 @@ class MySQLMeasurementFunction extends MeasurementFunctionByDB implements Serial
             e.printStackTrace();
         }
 
-        String[] command = new String[]{
-                "bash",
-                "-c",
-                this.mysqlCMD
-                        + " -Bse\"create database " + dbName + ";\""};
         try {
             Process p = Runtime.getRuntime().exec("bash " + scriptFileName);
             p.waitFor();
@@ -226,18 +198,16 @@ class MySQLMeasurementFunction extends MeasurementFunctionByDB implements Serial
             }
             // delete the script
             new File(scriptFileName).delete();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (InterruptedException e) {
+        } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }
     }
 
     public void createTables() {
         System.out.println("createTables function in DBConcreteTimeMeasurementFunction");
-        /**
-         * get the name from implPath create create tables script call bash to
-         * execute that script
+        /*
+          get the name from implPath create create tables script call bash to
+          execute that script
          */
         String implPath = this.impl.getImPath();
         // String dbName =
@@ -248,7 +218,7 @@ class MySQLMeasurementFunction extends MeasurementFunctionByDB implements Serial
                 + "createTables.sql";
 
         try {
-            PrintWriter pw = new PrintWriter(new File(scriptFileName));
+            PrintWriter pw = new PrintWriter(scriptFileName);
             String outToFile = this.mysqlCMD + " < " + implPath;
             pw.println(outToFile);
             pw.close();
@@ -268,9 +238,7 @@ class MySQLMeasurementFunction extends MeasurementFunctionByDB implements Serial
             }
             // delete the script
             new File(scriptFileName).delete();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (InterruptedException e) {
+        } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }
     }
@@ -312,13 +280,7 @@ class MySQLMeasurementFunction extends MeasurementFunctionByDB implements Serial
                 runner.runScript(reader);
                 reader.close();
                 conn.close();
-            } catch (SQLException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            } catch (FileNotFoundException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            } catch (IOException e) {
+            } catch (SQLException | IOException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
             }
@@ -361,13 +323,7 @@ class MySQLMeasurementFunction extends MeasurementFunctionByDB implements Serial
                 runner.runScript(reader);
                 reader.close();
                 conn.close();
-            } catch (SQLException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            } catch (FileNotFoundException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            } catch (IOException e) {
+            } catch (SQLException | IOException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
             }
@@ -420,14 +376,9 @@ class MySQLMeasurementFunction extends MeasurementFunctionByDB implements Serial
 }
 
 class PostgresMeasurementFunction extends MeasurementFunctionByDB implements Serializable {
-    private Boolean isDebugOn = AppConfig.getDebug();
+    private final Boolean isDebugOn = AppConfig.getDebug();
 //    private HashMap<String, HashMap<String, ArrayList<CodeNamePair>>> instances;
 
-
-    String username = AppConfig.getPostgresUser();
-    String password = AppConfig.getPostgresPassword();
-
-    private String postgresCMD = "psql -U " + username;
 
     public double checkSpace() {
         System.out.println("checkSpace function in DBConcreteTimeMeasurementFunction");
@@ -441,7 +392,7 @@ class PostgresMeasurementFunction extends MeasurementFunctionByDB implements Ser
 //                "-c",
 //                this.postgresCMD + " " + dbName, "-c", "\"SELECT pg_database_size('"+ dbName +"');\""};
         String[] command = new String[]{"bash", "-c",
-                "psql -c \"SELECT pg_database_size('"+dbName.toLowerCase()+"');\" " + dbName.toLowerCase()};
+                "psql -c \"SELECT pg_database_size('" + dbName.toLowerCase() + "');\" " + dbName.toLowerCase()};
         Process p;
         try {
             System.out.println("Prepare to execute command: Check Space");
@@ -458,16 +409,16 @@ class PostgresMeasurementFunction extends MeasurementFunctionByDB implements Ser
             BufferedReader reader = new BufferedReader(new InputStreamReader(
                     p.getInputStream()));
 
-            String line = "";
-            ArrayList<String> lines = new ArrayList<String>();
+            String line;
+            ArrayList<String> lines = new ArrayList<>();
             while ((line = reader.readLine()) != null) {
                 lines.add(line);
             }
 
-            for(String s : lines){
-                if(s.startsWith("    ")) {
-                    System.out.println("Database: "+dbName+" ; Size: "+s);
-                    return Double.parseDouble(s.trim())/1024;   // in KB
+            for (String s : lines) {
+                if (s.startsWith("    ")) {
+                    System.out.println("Database: " + dbName + " ; Size: " + s);
+                    return Double.parseDouble(s.trim()) / 1024;   // in KB
                 }
             }
         } catch (Exception e) {
@@ -477,10 +428,10 @@ class PostgresMeasurementFunction extends MeasurementFunctionByDB implements Ser
     }
 
     public void dropDB() {
-        /**
-         * get the name from implPath create drop database script :
-         * "drop database implName;" create cmd to drop the database execute the
-         * cmd
+        /*
+          get the name from implPath create drop database script :
+          "drop database implName;" create cmd to drop the database execute the
+          cmd
          */
         System.out.println("dropDB function in DBConcreteTimeMeasurementFunction");
         String implPath = this.impl.getImPath();
@@ -489,20 +440,15 @@ class PostgresMeasurementFunction extends MeasurementFunctionByDB implements Ser
                 implPath.lastIndexOf("."));
 
         String[] command = new String[]{"bash", "-c",
-                "psql -c \"drop database "+dbName.toLowerCase()+";\" postgres &> /dev/null"};
+                "psql -c \"drop database " + dbName.toLowerCase() + ";\" postgres &> /dev/null"};
 //        System.out.println(String.join(" ", command));
         try {
             System.out.println("Prepare to execute command: DROP DB");
             Process p = Runtime.getRuntime().exec(command);
-            BufferedReader stdInput = new BufferedReader(new
-                    InputStreamReader(p.getInputStream()));
 
-            BufferedReader stdError = new BufferedReader(new
-                    InputStreamReader(p.getErrorStream()));
             System.out.println("Wait for command to finish: DROP DB");
             p.waitFor();
             System.out.println("Command finished");
-            String s = null;
             if (p.exitValue() != 0) {
                 if (isDebugOn) {
                     System.out.println("Drop DB Failure...");
@@ -522,19 +468,17 @@ class PostgresMeasurementFunction extends MeasurementFunctionByDB implements Ser
 //            }
 //            System.out.println("=========================================");
 //            System.out.println("=========================================");
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (InterruptedException e) {
+        } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }
     }
 
     public void createDB() {
         System.out.println("createDB function in DBConcreteTimeMeasurementFunction");
-        /**
-         * get the name from implPath create create database script :
-         * "create database implName;" create cmd to create the database execute
-         * the cmd
+        /*
+          get the name from implPath create create database script :
+          "create database implName;" create cmd to create the database execute
+          the cmd
          */
 
         String implPath = this.impl.getImPath();
@@ -543,7 +487,7 @@ class PostgresMeasurementFunction extends MeasurementFunctionByDB implements Ser
                 implPath.lastIndexOf("."));
 
         String[] command = new String[]{"bash", "-c",
-                "psql -c \"create database "+dbName.toLowerCase()+";\" postgres  &> /dev/null"};
+                "psql -c \"create database " + dbName.toLowerCase() + ";\" postgres  &> /dev/null"};
         System.out.println(String.join(" ", command));
         try {
             System.out.println("Prepare to execute command: CREATE DB");
@@ -561,7 +505,7 @@ class PostgresMeasurementFunction extends MeasurementFunctionByDB implements Ser
                     System.out.println("CREATE DB Failure...");
                     System.out.println("CREATEDB: exit value = " + p.exitValue());
 
-                    String s = null;
+                    String s;
                     System.out.println("=========================================");
                     System.out.println("=========================================");
                     System.out.println("===============CREATEDB standard output=============");
@@ -579,25 +523,23 @@ class PostgresMeasurementFunction extends MeasurementFunctionByDB implements Ser
             }
 //            // delete the script
 //            new File(scriptFileName).delete();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (InterruptedException e) {
+        } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }
     }
 
     public void createTables() {
         System.out.println("createTables function in PostgresMeasurementFunction");
-        /**
-         * get the name from implPath create tables script call bash to
-         * execute that script
+        /*
+          get the name from implPath create tables script call bash to
+          execute that script
          */
         String implPath = this.impl.getImPath();
         String dbName = implPath.substring(
                 implPath.lastIndexOf(File.separator) + 1,
                 implPath.lastIndexOf("."));
         String[] command = new String[]{"bash", "-c",
-                "psql -f "+implPath+" " + dbName.toLowerCase() + " &> /dev/null"};
+                "psql -f " + implPath + " " + dbName.toLowerCase() + " &> /dev/null"};
 
         try {
             Process p = Runtime.getRuntime().exec(command);
@@ -612,9 +554,7 @@ class PostgresMeasurementFunction extends MeasurementFunctionByDB implements Ser
             }
             // delete the script
 //            new File(scriptFileName).delete();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (InterruptedException e) {
+        } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }
     }
@@ -635,7 +575,7 @@ class PostgresMeasurementFunction extends MeasurementFunctionByDB implements Ser
 
             long startTime = System.currentTimeMillis();
             String[] command = new String[]{"bash", "-c",
-                    "psql -f "+insertPath+" " + dbName.toLowerCase() + " &> /dev/null"};
+                    "psql -f " + insertPath + " " + dbName.toLowerCase() + " &> /dev/null"};
 
             try {
                 System.out.println("Prepare to execute command: Run Insert");
@@ -652,9 +592,7 @@ class PostgresMeasurementFunction extends MeasurementFunctionByDB implements Ser
                 }
                 // delete the script
 //            new File(scriptFileName).delete();
-            } catch (IOException e) {
-                e.printStackTrace();
-            } catch (InterruptedException e) {
+            } catch (IOException | InterruptedException e) {
                 e.printStackTrace();
             }
 
@@ -686,7 +624,7 @@ class PostgresMeasurementFunction extends MeasurementFunctionByDB implements Ser
 //            String[] cmd = new String[]{"bash", "-c", "\"" + this.postgresCMD + " " + dbName + " -f ", selectPath+"\""};
 //            String cmd = this.postgresCMD + " " + dbName + " -f " + selectPath;
             String[] command = new String[]{"bash", "-c",
-                    "psql -f "+selectPath+" " + dbName.toLowerCase()+ " &> /dev/null"};
+                    "psql -f " + selectPath + " " + dbName.toLowerCase() + " &> /dev/null"};
 
             try {
                 System.out.println("Prepare to execute command: Run Select");
@@ -700,9 +638,7 @@ class PostgresMeasurementFunction extends MeasurementFunctionByDB implements Ser
                                 + p.exitValue());
                     }
                 }
-            } catch (IOException e) {
-                e.printStackTrace();
-            } catch (InterruptedException e) {
+            } catch (IOException | InterruptedException e) {
                 e.printStackTrace();
             }
 

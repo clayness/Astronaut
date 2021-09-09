@@ -1,28 +1,28 @@
 package edu.virginia.cs.Framework.Types;
 
 public class FormalAbstractLoadSet {
-	private AbstractLoad insLoad;
-	private AbstractLoad selLoad;
-	
-	public FormalAbstractLoadSet(AbstractLoad insLoad, AbstractLoad selLoad){
-		this.setInsLoad(insLoad);
-		this.setSelLoad(selLoad);
-	}
+    private AbstractLoad insLoad;
+    private AbstractLoad selLoad;
 
-	public AbstractLoad getInsLoad() {
-		return insLoad;
-	}
+    public FormalAbstractLoadSet(AbstractLoad insLoad, AbstractLoad selLoad) {
+        this.setInsLoad(insLoad);
+        this.setSelLoad(selLoad);
+    }
 
-	public void setInsLoad(AbstractLoad insLoad) {
-		this.insLoad = insLoad;
-	}
+    public AbstractLoad getInsLoad() {
+        return insLoad;
+    }
 
-	public AbstractLoad getSelLoad() {
-		return selLoad;
-	}
+    public void setInsLoad(AbstractLoad insLoad) {
+        this.insLoad = insLoad;
+    }
 
-	public void setSelLoad(AbstractLoad selLoad) {
-		this.selLoad = selLoad;
-	}
-	
+    public AbstractLoad getSelLoad() {
+        return selLoad;
+    }
+
+    public void setSelLoad(AbstractLoad selLoad) {
+        this.selLoad = selLoad;
+    }
+
 }

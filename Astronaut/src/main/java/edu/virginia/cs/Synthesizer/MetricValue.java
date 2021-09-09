@@ -1,7 +1,6 @@
 package edu.virginia.cs.Synthesizer;
 
 public class MetricValue {
-    private Integer solutionNo = 0;
     private Integer TATI = 0;
     private Integer NCT = 0;
     private Integer NCRF = 0;
@@ -16,13 +15,6 @@ public class MetricValue {
 //    private String NIC_detail = "";
 
 //    ArrayList<Integer> similarSolutions = new ArrayList<Integer>();
-
-    public MetricValue(){
-    }
-
-    public MetricValue(int solutionNo){
-        this.solutionNo = solutionNo;
-    }
 
     public Integer getTATI() {
         return TATI;
@@ -56,19 +48,9 @@ public class MetricValue {
         this.ANV = ANV;
     }
 
-    public boolean shallowEquals(MetricValue m) {
-        if (TATI.equals(m.getTATI()) &&
-                NCT.equals(m.getNCT()) &&
-                NCRF.equals(m.getNCRF()) &&
-                ANV.equals(m.getANV()) &&
-//                NIC.equals(m.getNIC()) &&
-                NFK.equals(m.getNFK()) )
-            return true;
-        return false;
-    }
-
     public boolean equals(MetricValue m) {
-        if (TATI.equals(m.getTATI()) &&
+        //                NIC_detail.equals(m.NIC_detail) )
+        return TATI.equals(m.getTATI()) &&
                 NCT.equals(m.getNCT()) &&
                 NCRF.equals(m.getNCRF()) &&
                 ANV.equals(m.getANV()) &&
@@ -77,18 +59,7 @@ public class MetricValue {
                 TATI_detail.equals(m.TATI_detail) &&
                 NCT_detail.equals(m.NCT_detail) &&
                 NCRF_detail.equals(m.NCRF_detail) &&
-                ANV_detail.equals(m.ANV_detail))
-//                NIC_detail.equals(m.NIC_detail) )
-            return true;
-        return false;
-    }
-
-    public Integer getSolutionNo() {
-        return solutionNo;
-    }
-
-    public void setSolutionNo(Integer solutionNo) {
-        this.solutionNo = solutionNo;
+                ANV_detail.equals(m.ANV_detail);
     }
 
     public String getTATI_detail() {

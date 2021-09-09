@@ -214,7 +214,7 @@ class DBTrademaker extends AstronautFramework {
   def generateRandomInsertStatements(impl: DBImplementation, instances: java.util.HashMap[String, java.util.HashMap[String, java.util.ArrayList[CodeNamePair]]]): ConcreteLoad = {
     val insertSpecializedQuery: SpecializedQuery = specializeInsertQuery(null, impl, instances)
     val cq = new ConcreteQuery()
-    cq.setAction(Action.INSERT)
+    //cq.setAction(Action.INSERT)
     cq.setSq(insertSpecializedQuery)
     val cqs = new java.util.ArrayList[ConcreteQuery](1)
     cqs.add(cq)
@@ -293,7 +293,7 @@ class DBTrademaker extends AstronautFramework {
     val selectSpecializedQuery: SpecializedQuery = specializeSelectQuery(null, impl, instances)
 
     val cq = new ConcreteQuery()
-    cq.setAction(Action.SELECT)
+    //cq.setAction(Action.SELECT)
     cq.setSq(selectSpecializedQuery)
     val cqs = new java.util.ArrayList[ConcreteQuery]()
     cqs.add(cq)
@@ -441,7 +441,6 @@ class DBTrademaker extends AstronautFramework {
 
     val impl = fst(prod).asInstanceOf[DBImplementation]
     val mfs = snd(prod).asInstanceOf[DBConcreteMeasurementFunctionSet]
-    mfs.setImpl(impl)
 
     // If benchmark is random test loads, need to create concrete load first and then run them
     if (AppConfig.getIsRandom == 1) {
@@ -738,8 +737,7 @@ class DBTrademaker extends AstronautFramework {
     absLoads = generateFormalAbstractLoadSet(fSpec)
 
     val absTimeMeasurementFunction = new DBFormalAbstractTimeMeasurementFunction(absLoads.getInsLoad, absLoads.getSelLoad)
-    val absSpaceMeasurementFunction = new DBFormalAbstractSpaceMeasurementFunction(absLoads.getInsLoad)
-    new DBFormalAbstractMeasurementFunctionSet(absTimeMeasurementFunction, absSpaceMeasurementFunction)
+    new DBFormalAbstractMeasurementFunctionSet(absTimeMeasurementFunction)
   }
 
   def getIDBySigName(sigs: java.util.ArrayList[Sig], sigName: String): String = {
@@ -989,7 +987,6 @@ class DBTrademaker extends AstronautFramework {
     //    insCL = convert(insAL, impl)
     val csmf: DBFormalConcreteSpaceMeasurementFunction = new DBFormalConcreteSpaceMeasurementFunction(insCL)
     concMFSet.setCsmf(csmf)
-    concMFSet.setImpl(impl)
 
     // return concMFSet
     concMFSet
@@ -1024,10 +1021,10 @@ class DBTrademaker extends AstronautFramework {
     val cq = new ConcreteQuery()
     val a = absq.getAction
     if (a == Action.INSERT) {
-      cq.setAction(Action.INSERT)
+      //cq.setAction(Action.INSERT)
       cq.setSq(specializeInsertQuery(absq, impl, null))
     } else {
-      cq.setAction(Action.SELECT)
+      //cq.setAction(Action.SELECT)
       cq.setSq(specializeSelectQuery(absq, impl, null))
     }
     cq
@@ -1641,10 +1638,6 @@ class DBTrademaker extends AstronautFramework {
 
     val dbDSpec = fSpec.asInstanceOf[DBFormalSpecification]
     objSpec.setIds(dbDSpec.getIds)
-    objSpec.setAssociations(dbDSpec.getAssociations)
-    objSpec.setTypeList(dbDSpec.getTypeMap)
-    objSpec.setSigs(dbDSpec.getSigs)
-
     objSpec.setSpecPath(objSpecPath)
     objSpec
   }
@@ -1786,8 +1779,6 @@ class DBTrademaker extends AstronautFramework {
     val dbConSMF = new DBConcreteSpaceMeasurementFunction(sLoads)
 
     val dbConMF = new DBConcreteMeasurementFunctionSet(dbConTMF, dbConSMF)
-    dbConMF.setImpl(castedfCB.getImpl)
-
     dbConMF
   }
 
