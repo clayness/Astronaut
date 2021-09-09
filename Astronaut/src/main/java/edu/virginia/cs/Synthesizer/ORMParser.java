@@ -1,5 +1,6 @@
 package edu.virginia.cs.Synthesizer;
 
+import edu.virginia.cs.Uniq.Pair;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -16,14 +17,14 @@ public class ORMParser {
     private final String input;
     private final String output;
     private final DataProvider dataProvider;
-    private final ArrayList<CodeNamePair> reverseTAssociate;
-    private final ArrayList<CodeNamePair> foreignKeys;
+    private final ArrayList<Pair<String>> reverseTAssociate;
+    private final ArrayList<Pair<String>> foreignKeys;
     // HashMap<Association Name, pair<src, dst>, src and dst are class name
-    private final HashMap<String, CodeNamePair> associations;
-    private final ArrayList<CodeNamePair> primaryKeys;
-    private final ArrayList<CodeNamePair> fields;
+    private final HashMap<String, Pair<String>> associations;
+    private final ArrayList<Pair<String>> primaryKeys;
+    private final ArrayList<Pair<String>> fields;
     private final ArrayList<String> allFields;
-    private final ArrayList<CodeNamePair> fieldsTable;
+    private final ArrayList<Pair<String>> fieldsTable;
     private final ArrayList<Sig> sigs;
 
 
@@ -42,7 +43,7 @@ public class ORMParser {
 
     }
 
-    public ArrayList<CodeNamePair> getReverseIds() {
+    public ArrayList<Pair<String>> getReverseIds() {
         return this.dataProvider.getReverseIds();
     }
 
@@ -50,51 +51,51 @@ public class ORMParser {
         return dataProvider;
     }
 
-    public HashMap<String, CodeNamePair> getAssociations() {
+    public HashMap<String, Pair<String>> getAssociations() {
         return associations;
     }
 
-    public ArrayList<CodeNamePair> getReverseTAssociate() {
+    public ArrayList<Pair<String>> getReverseTAssociate() {
         return this.reverseTAssociate;
     }
 
-    public HashMap<String, CodeNamePair> getAssociation() {
+    public HashMap<String, Pair<String>> getAssociation() {
         return this.associations;
     }
 
-    public ArrayList<CodeNamePair> getFields() {
-        for (CodeNamePair field : this.fields) {
+    public ArrayList<Pair<String>> getFields() {
+        for (Pair<String> field : this.fields) {
             field.setFirst(this.dataProvider.getSecondByFirst(field.getFirst()));
             field.setSecond(this.dataProvider.getSecondByFirst(field.getSecond()));
         }
         return fields;
     }
 
-    public ArrayList<CodeNamePair> getFieldType() {
+    public ArrayList<Pair<String>> getFieldType() {
         return this.dataProvider.getTypes();
     }
 
     // this function will change the value of schemas and return it
-    public HashMap<String, ArrayList<CodeNamePair>> getDataSchemas() {
+    public HashMap<String, ArrayList<Pair<String>>> getDataSchemas() {
         return this.dataProvider.getTables();
     }
 
-    public ArrayList<CodeNamePair> getParents() {
+    public ArrayList<Pair<String>> getParents() {
         return this.dataProvider.getParents();
     }
 
-    public ArrayList<CodeNamePair> getForeignKey() {
+    public ArrayList<Pair<String>> getForeignKey() {
         // refine the the foreign key list first
-        for (CodeNamePair fKey : this.foreignKeys) {
+        for (Pair<String> fKey : this.foreignKeys) {
             fKey.setFirst(this.dataProvider.getSecondByFirst(fKey.getFirst()));
             fKey.setSecond(this.dataProvider.getSecondByFirst(fKey.getSecond()));
         }
         return this.foreignKeys;
     }
 
-    public ArrayList<CodeNamePair> getFieldsTable() {
+    public ArrayList<Pair<String>> getFieldsTable() {
         // refine the the foreign key list first
-        for (CodeNamePair fKey : this.fieldsTable) {
+        for (Pair<String> fKey : this.fieldsTable) {
             fKey.setFirst(this.dataProvider.getSecondByFirst(fKey.getFirst()));
             fKey.setSecond(this.dataProvider.getSecondByFirst(fKey.getSecond()));
         }
@@ -114,8 +115,8 @@ public class ORMParser {
 
     }
 
-    public ArrayList<CodeNamePair> getPrimaryKeys() {
-        for (CodeNamePair pair : this.primaryKeys) {
+    public ArrayList<Pair<String>> getPrimaryKeys() {
+        for (Pair<String> pair : this.primaryKeys) {
             pair.setFirst(this.dataProvider.getSecondByFirst(pair.getFirst()));
             pair.setSecond(this.dataProvider.getSecondByFirst(pair.getSecond()));
         }
@@ -272,7 +273,7 @@ public class ORMParser {
                 // the label attribute is what we need
                 String code = getSingleAtom(singleTuple, 0);    // Get the first part
                 String name = getSingleAtom(singleTuple, 1);    // Get the second part
-                //System.out.println(code + "+" + name + "+" + "Pair");
+                //System.out.println(code + "+" + name + "+" + "Pair<String>");
 
                 // if there existed code in table pair, return value will be the collision table name
                 boolean hasCode = this.dataProvider.hasPairCode(code);
@@ -312,7 +313,7 @@ public class ORMParser {
                 String name = getSingleAtom(singleTuple, 1);    // Get the second part
 
                 String tableName = this.dataProvider.getSecondByFirst(code);
-                this.reverseTAssociate.add(new CodeNamePair(name, tableName));
+                this.reverseTAssociate.add(new Pair<>(name, tableName));
             }
         }
     }
@@ -335,7 +336,7 @@ public class ORMParser {
                 String key = getSingleAtom(singleTuple, 1);
                 //System.out.println(table + "+" + "PrimaryKey" + "+" + key);
                 this.dataProvider.addItem(table, "primaryKey", key);
-                this.primaryKeys.add(new CodeNamePair(table, key));
+                this.primaryKeys.add(new Pair<>(table, key));
             }
         }
     }
@@ -353,7 +354,7 @@ public class ORMParser {
                 String key = getSingleAtom(singleTuple, 1);    // Get the second part
                 //System.out.println(table + "+" + "foreignKey" + "+" + key);
                 this.dataProvider.addItem(table, "foreignKey", key);
-                this.foreignKeys.add(new CodeNamePair(table, key));
+                this.foreignKeys.add(new Pair<>(table, key));
             }
         }
     }
@@ -371,9 +372,9 @@ public class ORMParser {
                 String field = getSingleAtom(singleTuple, 1);    // Get the second part
                 //System.out.println(table + "+" + "fields" + "+" + field);
                 this.dataProvider.addItem(table, "fields", field);
-                this.fields.add(new CodeNamePair(table, field));
+                this.fields.add(new Pair<>(table, field));
                 this.allFields.add(field);
-                this.fieldsTable.add(new CodeNamePair(field, table));
+                this.fieldsTable.add(new Pair<>(field, table));
             }
         }
     }
@@ -389,7 +390,7 @@ public class ORMParser {
                 // the label attribute is what we need
                 String code = getSingleAtom(singleTuple, 0);    // Get the first part
                 String name = getSingleAtom(singleTuple, 1);    // Get the second part
-                //System.out.println(code + "+" + name + "+" + "Pair");
+                //System.out.println(code + "+" + name + "+" + "Pair<String>");
                 this.dataProvider.addPair(code, name);
             }
         }
@@ -445,14 +446,14 @@ public class ORMParser {
                 if (this.associations.containsKey(table)) {
                     setAssociation(table, "src", srcTable);
                 } else {
-                    this.associations.put(table, new CodeNamePair(srcTable, ""));
+                    this.associations.put(table, new Pair<>(srcTable, ""));
                 }
             }
         }
     }
 
     public void setAssociation(String assName, String target, String value) {
-        for (Map.Entry<String, CodeNamePair> ass : this.associations.entrySet()) {
+        for (Map.Entry<String, Pair<String>> ass : this.associations.entrySet()) {
             if (ass.getKey().equalsIgnoreCase(assName)) {
                 if (target.equalsIgnoreCase("src")) {
                     ass.getValue().setFirst(value);
@@ -480,7 +481,7 @@ public class ORMParser {
                 if (this.associations.containsKey(table)) {
                     setAssociation(table, "dst", dstTable);
                 } else {
-                    this.associations.put(table, new CodeNamePair("", dstTable));
+                    this.associations.put(table, new Pair<>("", dstTable));
                 }
             }
         }

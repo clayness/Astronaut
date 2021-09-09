@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <module external.linked.project.id="root [file:/Users/cstevens/Research/astronaut/repo/Astronaut/]" external.linked.project.path="$MODULE_DIR$/../.." external.root.project.path="$MODULE_DIR$/../.." external.system.id="SBT" type="JAVA_MODULE" version="4">
-  <component name="NewModuleRootManager" LANGUAGE_LEVEL="JDK_1_8">
+  <component name="NewModuleRootManager" LANGUAGE_LEVEL="JDK_10">
     <output url="file://$MODULE_DIR$/../../target/scala-2.11/classes" />
     <output-test url="file://$MODULE_DIR$/../../target/scala-2.11/test-classes" />
     <exclude-output />
@@ -134,11 +134,11 @@
     <orderEntry type="library" scope="PROVIDED" name="sbt: org.objenesis:objenesis:1.2:jar" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="sbt: org.roaringbitmap:RoaringBitmap:0.5.11:jar" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="sbt: org.scala-lang.modules:scala-parser-combinators_2.11:1.0.4:jar" level="project" />
-    <orderEntry type="library" scope="PROVIDED" name="sbt: org.scala-lang.modules:scala-xml_2.11:1.0.4:jar" level="project" />
-    <orderEntry type="library" scope="PROVIDED" name="sbt: org.scala-lang:scala-compiler:2.11.7:jar" level="project" />
-    <orderEntry type="library" name="sbt: org.scala-lang:scala-library:2.11.7:jar" level="project" />
-    <orderEntry type="library" scope="PROVIDED" name="sbt: org.scala-lang:scala-reflect:2.11.7:jar" level="project" />
-    <orderEntry type="library" scope="PROVIDED" name="sbt: org.scala-lang:scalap:2.11.7:jar" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="sbt: org.scala-lang.modules:scala-xml_2.11:1.0.5:jar" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="sbt: org.scala-lang:scala-compiler:2.11.12:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.scala-lang:scala-library:2.11.12:jar" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="sbt: org.scala-lang:scala-reflect:2.11.12:jar" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="sbt: org.scala-lang:scalap:2.11.12:jar" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="sbt: org.slf4j:jcl-over-slf4j:1.7.10:jar" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="sbt: org.slf4j:jul-to-slf4j:1.7.10:jar" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="sbt: org.slf4j:slf4j-api:1.7.10:jar" level="project" />
@@ -156,7 +156,7 @@
     <orderEntry type="module-library">
       <library name="sbt: unmanaged-jars">
         <CLASSES>
-          <root url="jar://$MODULE_DIR$/../../lib/AlloyEngine.jar!/" />
+          <root url="jar://$MODULE_DIR$/../../lib/org.alloytools.alloy.dist.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -178,6 +178,5 @@
       </library>
     </orderEntry>
     <orderEntry type="library" scope="PROVIDED" name="sbt: xmlenc:xmlenc:0.52:jar" level="project" />
-    <orderEntry type="library" name="org.alloytools.alloy.dist" level="project" />
   </component>
 </module>

@@ -1,19 +1,16 @@
 package edu.virginia.cs.Framework.Types
 
 import scala.io.Source
-import edu.virginia.cs.Synthesizer.CodeNamePair
-
 import javax.xml.parsers.DocumentBuilderFactory
 import javax.xml.parsers.DocumentBuilder
 import org.w3c.dom.Document
 import org.w3c.dom.Element
 import org.w3c.dom.NodeList
 import org.w3c.dom.Node
-import edu.virginia.cs.Synthesizer.Sig
+import edu.virginia.cs.Synthesizer.{DataProvider, Sig}
+import edu.virginia.cs.Uniq.Pair
 
 import scala.collection.JavaConversions._
-import edu.virginia.cs.Synthesizer.DataProvider
-
 import java.io.Serializable
 
 // ImpelementationType here will be the file path of SQL schema script
@@ -22,17 +19,17 @@ class DBImplementation(path:String) extends Serializable { //extends FrameworkTy
   private val implPath: String = path
 
   private var dataProvider: DataProvider = _
-  private var reverseTAssociate: java.util.ArrayList[CodeNamePair] = _
-  private var foreignKeys: java.util.ArrayList[CodeNamePair] = _
+  private var reverseTAssociate: java.util.ArrayList[Pair[String]] = _
+  private var foreignKeys: java.util.ArrayList[Pair[String]] = _
   // HashMap[Association Name, pair[src, dst], src and dst are class name
-  private var associations: java.util.HashMap[String, CodeNamePair] = _
-  private var primaryKeys: java.util.ArrayList[CodeNamePair] = _
-  private var fields: java.util.ArrayList[CodeNamePair] = _
+  private var associations: java.util.HashMap[String, Pair[String]] = _
+  private var primaryKeys: java.util.ArrayList[Pair[String]] = _
+  private var fields: java.util.ArrayList[Pair[String]] = _
   private var allFields: java.util.ArrayList[String] = _
-  private var fieldsTable: java.util.ArrayList[CodeNamePair] = _
+  private var fieldsTable: java.util.ArrayList[Pair[String]] = _
 
   // this the reverse of "id" in implementation
-  private var reverseIDs: java.util.ArrayList[CodeNamePair] = _
+  private var reverseIDs: java.util.ArrayList[Pair[String]] = _
 
   private var sigs: java.util.ArrayList[Sig] = _
   private var ids: java.util.ArrayList[String] = _
@@ -87,43 +84,43 @@ class DBImplementation(path:String) extends Serializable { //extends FrameworkTy
     this.dataProvider = dp
   }
 
-  def getReverseTAssociate: java.util.ArrayList[CodeNamePair] = {
+  def getReverseTAssociate: java.util.ArrayList[Pair[String]] = {
     this.reverseTAssociate 
   }
 
-  def setReverseTAssociate(rTAss: java.util.ArrayList[CodeNamePair]): Unit = {
+  def setReverseTAssociate(rTAss: java.util.ArrayList[Pair[String]]): Unit = {
     this.reverseTAssociate = rTAss
   }
 
-  def getForeignKeys: java.util.ArrayList[CodeNamePair] = {
+  def getForeignKeys: java.util.ArrayList[Pair[String]] = {
     this.foreignKeys 
   }
 
-  def setForeignKeys(fKeys: java.util.ArrayList[CodeNamePair]): Unit = {
+  def setForeignKeys(fKeys: java.util.ArrayList[Pair[String]]): Unit = {
     this.foreignKeys = fKeys
   }
 
-  def getAssociations: java.util.HashMap[String, CodeNamePair] = {
+  def getAssociations: java.util.HashMap[String, Pair[String]] = {
     this.associations 
   }
 
-  def setAssociations(ass: java.util.HashMap[String, CodeNamePair]): Unit = {
+  def setAssociations(ass: java.util.HashMap[String, Pair[String]]): Unit = {
     this.associations = ass
   }
 
-  def getPrimaryKeys: java.util.ArrayList[CodeNamePair] = {
+  def getPrimaryKeys: java.util.ArrayList[Pair[String]] = {
     this.primaryKeys 
   }
 
-  def setPrimaryKeys(pKeys: java.util.ArrayList[CodeNamePair]): Unit = {
+  def setPrimaryKeys(pKeys: java.util.ArrayList[Pair[String]]): Unit = {
     this.primaryKeys = pKeys
   }
 
-  def getFields: java.util.ArrayList[CodeNamePair] = {
+  def getFields: java.util.ArrayList[Pair[String]] = {
     this.fields 
   }
 
-  def setFields(fields: java.util.ArrayList[CodeNamePair]): Unit = {
+  def setFields(fields: java.util.ArrayList[Pair[String]]): Unit = {
     this.fields = fields
   }
 
@@ -135,19 +132,19 @@ class DBImplementation(path:String) extends Serializable { //extends FrameworkTy
     this.allFields = af
   }
 
-  def getFieldsTable: java.util.ArrayList[CodeNamePair] = {
+  def getFieldsTable: java.util.ArrayList[Pair[String]] = {
     this.fieldsTable 
   }
 
-  def setFieldsTable(ft: java.util.ArrayList[CodeNamePair]): Unit = {
+  def setFieldsTable(ft: java.util.ArrayList[Pair[String]]): Unit = {
     this.fieldsTable = ft
   }
 
-  def getReverseIDs: java.util.ArrayList[CodeNamePair] = {
+  def getReverseIDs: java.util.ArrayList[Pair[String]] = {
     this.reverseIDs
   }
 
-  def setReverseIDs(ids:java.util.ArrayList[CodeNamePair]): Unit = {
+  def setReverseIDs(ids:java.util.ArrayList[Pair[String]]): Unit = {
     this.reverseIDs = ids
   }
 
@@ -274,7 +271,7 @@ class DBImplementation(path:String) extends Serializable { //extends FrameworkTy
         val code = getSingleAtom(singleTuple, 0)
         val name = getSingleAtom(singleTuple, 1)
         val tableName = this.dataProvider.getSecondByFirst(code)
-        this.reverseTAssociate.add(new CodeNamePair(name, tableName))
+        this.reverseTAssociate.add(new Pair[String](name, tableName))
       }
     }
   }
@@ -288,7 +285,7 @@ class DBImplementation(path:String) extends Serializable { //extends FrameworkTy
         val table = getSingleAtom(singleTuple, 0)
         val key = getSingleAtom(singleTuple, 1)
         this.dataProvider.addItem(table, "primaryKey", key)
-        this.primaryKeys.add(new CodeNamePair(table, key))
+        this.primaryKeys.add(new Pair(table, key))
       }
     }
   }
@@ -302,7 +299,7 @@ class DBImplementation(path:String) extends Serializable { //extends FrameworkTy
         val table = getSingleAtom(singleTuple, 0)
         val key = getSingleAtom(singleTuple, 1)
         this.dataProvider.addItem(table, "foreignKey", key)
-        this.foreignKeys.add(new CodeNamePair(table, key))
+        this.foreignKeys.add(new Pair(table, key))
       }
     }
   }
@@ -316,9 +313,9 @@ class DBImplementation(path:String) extends Serializable { //extends FrameworkTy
         val table = getSingleAtom(singleTuple, 0)
         val field = getSingleAtom(singleTuple, 1)
         this.dataProvider.addItem(table, "fields", field)
-        this.fields.add(new CodeNamePair(table, field))
+        this.fields.add(new Pair(table, field))
         this.allFields.add(field)
-        this.fieldsTable.add(new CodeNamePair(field, table))
+        this.fieldsTable.add(new Pair(field, table))
       }
     }
   }
@@ -374,7 +371,7 @@ class DBImplementation(path:String) extends Serializable { //extends FrameworkTy
         if (this.associations.containsKey(table)) {
           setAssociation(table, "src", srcTable)
         } else {
-          this.associations.put(table, new CodeNamePair(srcTable, ""))
+          this.associations.put(table, new Pair(srcTable, ""))
         }
       }
     }
@@ -392,7 +389,7 @@ class DBImplementation(path:String) extends Serializable { //extends FrameworkTy
         if (this.associations.containsKey(table)) {
           setAssociation(table, "dst", dstTable)
         } else {
-          this.associations.put(table, new CodeNamePair("", dstTable))
+          this.associations.put(table, new Pair("", dstTable))
         }
       }
     }
@@ -477,7 +474,7 @@ class DBImplementation(path:String) extends Serializable { //extends FrameworkTy
     null
   }
   
-  def getDataSchemas: java.util.HashMap[String, java.util.ArrayList[CodeNamePair]] = {
+  def getDataSchemas: java.util.HashMap[String, java.util.ArrayList[Pair[String]]] = {
     this.dataProvider.getTables
   }
 }

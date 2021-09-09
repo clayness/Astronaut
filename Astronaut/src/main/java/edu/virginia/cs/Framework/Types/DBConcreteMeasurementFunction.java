@@ -2,7 +2,7 @@ package edu.virginia.cs.Framework.Types;
 
 import edu.virginia.cs.AppConfig;
 import edu.virginia.cs.Evaluator.ScriptRunner;
-import edu.virginia.cs.Synthesizer.CodeNamePair;
+import edu.virginia.cs.Uniq.Pair;
 
 import java.io.*;
 import java.sql.Connection;
@@ -16,7 +16,7 @@ public class DBConcreteMeasurementFunction implements Serializable {
     //	private ArrayList<ConcreteLoad> loads;
     //	private DBImplementation impl;
     public MeasurementFunctionByDB mfByDB = null;
-    private HashMap<String, HashMap<String, ArrayList<CodeNamePair>>> instances;
+    private HashMap<String, HashMap<String, ArrayList<Pair<String>>>> instances;
 
     public DBConcreteMeasurementFunction() {
         if (AppConfig.getTestDB().equalsIgnoreCase("mysql")) {
@@ -30,11 +30,11 @@ public class DBConcreteMeasurementFunction implements Serializable {
         }
     }
 
-    public HashMap<String, HashMap<String, ArrayList<CodeNamePair>>> getInstances() {
+    public HashMap<String, HashMap<String, ArrayList<Pair<String>>>> getInstances() {
         return instances;
     }
 
-    public void setInstances(HashMap<String, HashMap<String, ArrayList<CodeNamePair>>> ins) {
+    public void setInstances(HashMap<String, HashMap<String, ArrayList<Pair<String>>>> ins) {
         this.instances = ins;
     }
 
@@ -84,13 +84,11 @@ abstract class MeasurementFunctionByDB implements Serializable {
 }
 
 class MySQLMeasurementFunction extends MeasurementFunctionByDB implements Serializable {
+    final String mysqlUser = AppConfig.getMySQLUser();
+//	private HashMap<String, HashMap<String, ArrayList<CodeNamePair>>> instances;
+    final String mysqlPassword = AppConfig.getMysqlPassword();
     //	private MeasurementType mType = null;
     private final Boolean isDebugOn = AppConfig.getDebug();
-//	private HashMap<String, HashMap<String, ArrayList<CodeNamePair>>> instances;
-
-
-    final String mysqlUser = AppConfig.getMySQLUser();
-    final String mysqlPassword = AppConfig.getMysqlPassword();
     private final String mysqlCMD = "mysql --user='" + mysqlUser + "' --password='" + mysqlPassword + "'";
 
     public double checkSpace() {

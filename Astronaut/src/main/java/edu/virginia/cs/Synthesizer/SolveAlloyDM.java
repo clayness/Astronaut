@@ -1,6 +1,7 @@
 package edu.virginia.cs.Synthesizer;
 
 import edu.virginia.cs.AppConfig;
+import edu.virginia.cs.Uniq.Pair;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -19,7 +20,7 @@ public class SolveAlloyDM {
     // HashMap<String, ArrayList<CodeNamePair>> fields = new
     // HashMap<String, ArrayList<CodeNamePair>>();
     private final int intScope;
-    public final HashMap<String, HashMap<String, ArrayList<CodeNamePair>>> allInstances = new HashMap<>();
+    public final HashMap<String, HashMap<String, ArrayList<Pair<String>>>> allInstances = new HashMap<>();
     // public HashMap<String, HashMap<String, HashMap<String, String>>>
     // allInsertStmts = new HashMap<String, HashMap<String, HashMap<String,
     // String>>>();
@@ -34,8 +35,8 @@ public class SolveAlloyDM {
     /**
      * Use this method to output the data in inner data structure into sql file
      */
-    final HashMap<String, HashMap<String, ArrayList<CodeNamePair>>> schemas;
-    final HashMap<String, ArrayList<CodeNamePair>> parents;
+    final HashMap<String, HashMap<String, ArrayList<Pair<String>>>> schemas;
+    final HashMap<String, ArrayList<Pair<String>>> parents;
     // store the FilePrinter of data schemas
     final HashMap<String, PrintWriter> insertPrintWriters = new HashMap<>();
     // HashMap<String, PrintWriter> insertInstantPrintWriters = new
@@ -44,26 +45,26 @@ public class SolveAlloyDM {
     // HashMap<String, PrintWriter> updateInstantPrintWriters = new
     // HashMap<String, PrintWriter>();
     final HashMap<String, PrintWriter> selectPrintWriters = new HashMap<>();
-    final HashMap<String, ArrayList<CodeNamePair>> reverseTAss;
-    final HashMap<String, ArrayList<CodeNamePair>> foreignKeys;
-    final HashMap<String, HashMap<String, CodeNamePair>> associations;
-    final HashMap<String, ArrayList<CodeNamePair>> primaryKeys;
+    final HashMap<String, ArrayList<Pair<String>>> reverseTAss;
+    final HashMap<String, ArrayList<Pair<String>>> foreignKeys;
+    final HashMap<String, HashMap<String, Pair<String>>> associations;
+    final HashMap<String, ArrayList<Pair<String>>> primaryKeys;
     final HashMap<String, ArrayList<String>> printOrder = new HashMap<>();
     // HashMap<String, HashMap<String, HashSet<String>>> existingID = new HashMap<>();
     final HashMap<String, ArrayList<String>> allFields;
-    final HashMap<String, ArrayList<CodeNamePair>> fieldsTable;
-    final HashMap<String, ArrayList<CodeNamePair>> tableFields;
-    final HashMap<String, ArrayList<CodeNamePair>> fieldType;
+    final HashMap<String, ArrayList<Pair<String>>> fieldsTable;
+    final HashMap<String, ArrayList<Pair<String>>> tableFields;
+    final HashMap<String, ArrayList<Pair<String>>> fieldType;
     final ArrayList<String> ids;
     final ArrayList<String> assList;
     final HashMap<String, String> typeList;
     final ArrayList<Sig> sigs;
     final HashSet<String> childrenInOM = new HashSet<>();
 
-    public SolveAlloyDM(HashMap<String, HashMap<String, ArrayList<CodeNamePair>>> schemas, HashMap<String, ArrayList<CodeNamePair>> parents, HashMap<String, ArrayList<CodeNamePair>> reverseTAss,
-                        HashMap<String, ArrayList<CodeNamePair>> foreignKeys, HashMap<String, HashMap<String, CodeNamePair>> associations, HashMap<String, ArrayList<CodeNamePair>> primaryKeys,
-                        HashMap<String, ArrayList<CodeNamePair>> tableFields, HashMap<String, ArrayList<String>> allFields, HashMap<String, ArrayList<CodeNamePair>> fieldsTable,
-                        HashMap<String, ArrayList<CodeNamePair>> fieldType, ArrayList<String> ids, ArrayList<String> assList, int intScope,
+    public SolveAlloyDM(HashMap<String, HashMap<String, ArrayList<Pair<String>>>> schemas, HashMap<String, ArrayList<Pair<String>>> parents, HashMap<String, ArrayList<Pair<String>>> reverseTAss,
+                        HashMap<String, ArrayList<Pair<String>>> foreignKeys, HashMap<String, HashMap<String, Pair<String>>> associations, HashMap<String, ArrayList<Pair<String>>> primaryKeys,
+                        HashMap<String, ArrayList<Pair<String>>> tableFields, HashMap<String, ArrayList<String>> allFields, HashMap<String, ArrayList<Pair<String>>> fieldsTable,
+                        HashMap<String, ArrayList<Pair<String>>> fieldType, ArrayList<String> ids, ArrayList<String> assList, int intScope,
                         HashMap<String, String> typeList, ArrayList<Sig> sigs) {
         this.schemas = schemas;
         this.parents = parents;
@@ -113,7 +114,7 @@ public class SolveAlloyDM {
             System.out.println("Enter printAllStatements()" + getCurrentTime());
         }
         // create insert printwriters for data schemas
-        for (Map.Entry<String, HashMap<String, ArrayList<CodeNamePair>>> entry : schemas
+        for (Map.Entry<String, HashMap<String, ArrayList<Pair<String>>>> entry : schemas
                 .entrySet()) {
             String dbSchemaFile = entry.getKey(); // this file include .sql
             // extension
@@ -171,7 +172,7 @@ public class SolveAlloyDM {
         // }
 
         // create select print writers for data schemas
-        for (Map.Entry<String, HashMap<String, ArrayList<CodeNamePair>>> entry : schemas
+        for (Map.Entry<String, HashMap<String, ArrayList<Pair<String>>>> entry : schemas
                 .entrySet()) {
             String dbSchemaFile = entry.getKey(); // this file include .sql
             // extension
@@ -341,8 +342,8 @@ public class SolveAlloyDM {
     }
 
     public boolean isPrimaryKeys(String dbScheme, String table, String field) {
-        ArrayList<CodeNamePair> keys = this.primaryKeys.get(dbScheme);
-        for (CodeNamePair s : keys) {
+        ArrayList<Pair<String>> keys = this.primaryKeys.get(dbScheme);
+        for (Pair<String> s : keys) {
             if (s.getFirst().equalsIgnoreCase(table)
                     && s.getSecond().equalsIgnoreCase(field)) {
                 return true;
@@ -369,8 +370,8 @@ public class SolveAlloyDM {
         StringBuilder selectPart;
         String fromPart;
         StringBuilder wherePart;
-        ArrayList<CodeNamePair> allAboutOMClass;
-        for (Map.Entry<String, HashMap<String, ArrayList<CodeNamePair>>> instances : this.allInstances
+        ArrayList<Pair<String>> allAboutOMClass;
+        for (Map.Entry<String, HashMap<String, ArrayList<Pair<String>>>> instances : this.allInstances
                 .entrySet()) {
             String element = instances.getKey();
             boolean isAss = isAssociation(element);
@@ -378,9 +379,9 @@ public class SolveAlloyDM {
             if (isAss) {
                 continue;
             }
-            for (Map.Entry<String, ArrayList<CodeNamePair>> instance : instances
+            for (Map.Entry<String, ArrayList<Pair<String>>> instance : instances
                     .getValue().entrySet()) {
-                for (Map.Entry<String, HashMap<String, ArrayList<CodeNamePair>>> omClass : this.schemas
+                for (Map.Entry<String, HashMap<String, ArrayList<Pair<String>>>> omClass : this.schemas
                         .entrySet()) {
                     selectPart = new StringBuilder("SELECT ");
                     fromPart = " FROM ";
@@ -393,7 +394,7 @@ public class SolveAlloyDM {
                     if (parent == null) { // element is a root class
                         allAboutOMClass = omClass.getValue().get(element);
                         fromPart += "`" + element + "`";
-                        for (CodeNamePair pair : allAboutOMClass) {
+                        for (Pair<String> pair : allAboutOMClass) {
                             if (pair.getFirst().equalsIgnoreCase("fields")) {
                                 String field = pair.getSecond();
                                 selectPart.append("`").append(element).append("`.`").append(field).append("`,");
@@ -439,7 +440,7 @@ public class SolveAlloyDM {
                         // table
                         fromPart += "`" + goToTable + "`";
                         allAboutOMClass = omClass.getValue().get(element);
-                        for (CodeNamePair pair : allAboutOMClass) {
+                        for (Pair<String> pair : allAboutOMClass) {
                             if (pair.getFirst().equalsIgnoreCase("fields")) {
                                 String field = pair.getSecond();
                                 selectPart.append("`").append(element).append("`.`").append(field).append("`,");
@@ -479,18 +480,18 @@ public class SolveAlloyDM {
         String element;
         String dbScheme;
         String goToTable;
-        ArrayList<CodeNamePair> allAboutOMClass;
+        ArrayList<Pair<String>> allAboutOMClass;
         ArrayList<String> fTables;
-        ArrayList<HashMap<String, CodeNamePair>> associations = new ArrayList<>();
-        HashMap<String, CodeNamePair> ass;
+        ArrayList<HashMap<String, Pair<String>>> associations = new ArrayList<>();
+        HashMap<String, Pair<String>> ass;
         // start with the instances
-        for (Map.Entry<String, HashMap<String, ArrayList<CodeNamePair>>> instances : this.allInstances
+        for (Map.Entry<String, HashMap<String, ArrayList<Pair<String>>>> instances : this.allInstances
                 .entrySet()) {
             element = instances.getKey();
             // iterate all the instances in instance for element
-            for (Map.Entry<String, ArrayList<CodeNamePair>> instance : instances
+            for (Map.Entry<String, ArrayList<Pair<String>>> instance : instances
                     .getValue().entrySet()) {
-                for (Map.Entry<String, HashMap<String, ArrayList<CodeNamePair>>> omClass : this.schemas
+                for (Map.Entry<String, HashMap<String, ArrayList<Pair<String>>>> omClass : this.schemas
                         .entrySet()) {
                     dbScheme = omClass.getKey();
                     // String insertFile = dbScheme.substring(0,
@@ -511,7 +512,7 @@ public class SolveAlloyDM {
                     String id_value = getFieldValue(instance.getValue(), id);
                     field_part = new StringBuilder();
                     value_part = new StringBuilder();
-                    for (CodeNamePair pair : allAboutOMClass) {
+                    for (Pair<String> pair : allAboutOMClass) {
                         if (pair.getFirst().equalsIgnoreCase("fields")) {
                             String field = pair.getSecond();
                             // then get value of this field from instance, which
@@ -563,8 +564,8 @@ public class SolveAlloyDM {
                                         // table
                                         // then get the
 
-                                        for (HashMap<String, CodeNamePair> tmp_ass : associations) {
-                                            for (Map.Entry<String, CodeNamePair> ass_entry : tmp_ass
+                                        for (HashMap<String, Pair<String>> tmp_ass : associations) {
+                                            for (Map.Entry<String, Pair<String>> ass_entry : tmp_ass
                                                     .entrySet()) {
                                                 // need the value of id, srcdst,
                                                 // srcdst1
@@ -703,7 +704,7 @@ public class SolveAlloyDM {
 
         if (fileName.contains("customer")) {
             // init print order
-            for (Map.Entry<String, HashMap<String, ArrayList<CodeNamePair>>> entry : schemas
+            for (Map.Entry<String, HashMap<String, ArrayList<Pair<String>>>> entry : schemas
                     .entrySet()) {
                 String dbSchemaFile = entry.getKey(); // this file include .sql
                 // extension
@@ -715,7 +716,7 @@ public class SolveAlloyDM {
                         "CustomerOrderAssociation");
             }
         } else if (fileName.contains("CSOS")) {
-            for (Map.Entry<String, HashMap<String, ArrayList<CodeNamePair>>> entry : schemas
+            for (Map.Entry<String, HashMap<String, ArrayList<Pair<String>>>> entry : schemas
                     .entrySet()) {
                 String dbSchemaFile = entry.getKey(); // this file include .sql
                 // extension
@@ -752,7 +753,7 @@ public class SolveAlloyDM {
                         .add("StateMachineTransitions");
             }
         } else if (fileName.contains("ecommerce")) {
-            for (Map.Entry<String, HashMap<String, ArrayList<CodeNamePair>>> entry : schemas
+            for (Map.Entry<String, HashMap<String, ArrayList<Pair<String>>>> entry : schemas
                     .entrySet()) {
                 String dbSchemaFile = entry.getKey(); // this file include .sql
                 // extension
@@ -790,7 +791,7 @@ public class SolveAlloyDM {
                         .add("ProductAssetAssociation");
             }
         } else if (fileName.contains("decider")) {
-            for (Map.Entry<String, HashMap<String, ArrayList<CodeNamePair>>> entry : schemas
+            for (Map.Entry<String, HashMap<String, ArrayList<Pair<String>>>> entry : schemas
                     .entrySet()) {
                 String dbSchemaFile = entry.getKey(); // this file include .sql
                 // extension
@@ -831,7 +832,7 @@ public class SolveAlloyDM {
                         "DSNDecisionSpaceAssociation");
             }
         } else if (fileName.contains("person")) {
-            for (Map.Entry<String, HashMap<String, ArrayList<CodeNamePair>>> entry : schemas
+            for (Map.Entry<String, HashMap<String, ArrayList<Pair<String>>>> entry : schemas
                     .entrySet()) {
                 String dbSchemaFile = entry.getKey(); // this file include .sql
                 // extension
@@ -845,7 +846,7 @@ public class SolveAlloyDM {
                 this.printOrder.get(dbSchemaFile).add("Manager");
             }
         } else if (fileName.contains("wordpress")) {
-            for (Map.Entry<String, HashMap<String, ArrayList<CodeNamePair>>> entry : schemas
+            for (Map.Entry<String, HashMap<String, ArrayList<Pair<String>>>> entry : schemas
                     .entrySet()) {
                 String dbSchemaFile = entry.getKey(); // this file include .sql
                 // extension
@@ -872,7 +873,7 @@ public class SolveAlloyDM {
                 this.printOrder.get(dbSchemaFile).add("TermLinksAssociation");
             }
         } else if (fileName.contains("moodle")) {
-            for (Map.Entry<String, HashMap<String, ArrayList<CodeNamePair>>> entry : schemas
+            for (Map.Entry<String, HashMap<String, ArrayList<Pair<String>>>> entry : schemas
                     .entrySet()) {
                 String dbSchemaFile = entry.getKey(); // this file include .sql
                 // extension
@@ -899,7 +900,7 @@ public class SolveAlloyDM {
                 // this.printOrder.get(dbSchemaFile).add("ImportNewitemImportValuesAssociation");
             }
         } else if (fileName.contains("ke")) {
-            for (Map.Entry<String, HashMap<String, ArrayList<CodeNamePair>>> entry : schemas
+            for (Map.Entry<String, HashMap<String, ArrayList<Pair<String>>>> entry : schemas
                     .entrySet()) {
                 String dbSchemaFile = entry.getKey(); // this file include .sql
                 // extension
@@ -908,7 +909,7 @@ public class SolveAlloyDM {
             }
         } else { // this is the default case, for any other object model, the
             // print order is empty string list
-            for (Map.Entry<String, HashMap<String, ArrayList<CodeNamePair>>> entry : schemas
+            for (Map.Entry<String, HashMap<String, ArrayList<Pair<String>>>> entry : schemas
                     .entrySet()) {
                 String dbSchemaFile = entry.getKey(); // this file include .sql
                 // extension
@@ -936,8 +937,8 @@ public class SolveAlloyDM {
     public ArrayList<String> getTablesByPrimaryKey(String scheme,
                                                    String primaryKey) {
         ArrayList<String> tables = new ArrayList<>();
-        ArrayList<CodeNamePair> pairs = this.primaryKeys.get(scheme);
-        for (CodeNamePair pair : pairs) {
+        ArrayList<Pair<String>> pairs = this.primaryKeys.get(scheme);
+        for (Pair<String> pair : pairs) {
             if (pair.getSecond().equalsIgnoreCase(primaryKey)) {
                 tables.add(pair.getFirst());
             }
@@ -946,9 +947,9 @@ public class SolveAlloyDM {
     }
 
     public boolean isForeignKey(
-            HashMap<String, ArrayList<CodeNamePair>> scheme,
+            HashMap<String, ArrayList<Pair<String>>> scheme,
             String table, String field) {
-        for (CodeNamePair pair : scheme.get(table)) {
+        for (Pair<String> pair : scheme.get(table)) {
             if (pair.getFirst().equalsIgnoreCase("foreignKey")) {
                 if (pair.getSecond().equalsIgnoreCase(field)) {
                     return true;
@@ -958,10 +959,10 @@ public class SolveAlloyDM {
         return false;
     }
 
-    public String getFieldValue(ArrayList<CodeNamePair> instance,
+    public String getFieldValue(ArrayList<Pair<String>> instance,
                                 String field) {
         String value;
-        for (CodeNamePair pair : instance) {
+        for (Pair<String> pair : instance) {
             if (pair.getFirst().split("_")[1].equalsIgnoreCase(field)) {
                 String tmp = pair.getSecond();
                 if (isNumeric(tmp)) {
@@ -977,11 +978,11 @@ public class SolveAlloyDM {
     }
 
     public String getForeignKeyValue(
-            HashMap<String, ArrayList<CodeNamePair>> in_instance,
+            HashMap<String, ArrayList<Pair<String>>> in_instance,
             String key_value, String srcDst, String srcDst1) {
-        for (Map.Entry<String, ArrayList<CodeNamePair>> instance : in_instance
+        for (Map.Entry<String, ArrayList<Pair<String>>> instance : in_instance
                 .entrySet()) {
-            for (CodeNamePair pair : instance.getValue()) {
+            for (Pair<String> pair : instance.getValue()) {
                 if (pair.getFirst().split("_")[1].equalsIgnoreCase(srcDst1)) {
                     int intValue = Integer.parseInt(pair.getSecond());
                     intValue = intValue + (int) (Math.pow(2, (intScope - 1)))
@@ -1001,10 +1002,10 @@ public class SolveAlloyDM {
     }
 
     public String getPrimaryKeyByTableName(
-            HashMap<String, ArrayList<CodeNamePair>> scheme,
+            HashMap<String, ArrayList<Pair<String>>> scheme,
             String tableName) {
-        ArrayList<CodeNamePair> table = scheme.get(tableName);
-        for (CodeNamePair pair : table) {
+        ArrayList<Pair<String>> table = scheme.get(tableName);
+        for (Pair<String> pair : table) {
             if (pair.getFirst().equalsIgnoreCase("primaryKey")) {
                 return pair.getSecond();
             }
@@ -1012,16 +1013,16 @@ public class SolveAlloyDM {
         return "";
     }
 
-    public HashMap<String, CodeNamePair> getAssByKey(String scheme, String pTable, String fTable) {
-        HashMap<String, CodeNamePair> ass_map = new HashMap<>();
+    public HashMap<String, Pair<String>> getAssByKey(String scheme, String pTable, String fTable) {
+        HashMap<String, Pair<String>> ass_map = new HashMap<>();
         String src = "";
         String dst = "";
         String ass;
-        HashMap<String, ArrayList<CodeNamePair>> single_scheme = this.schemas
+        HashMap<String, ArrayList<Pair<String>>> single_scheme = this.schemas
                 .get(scheme);
-        for (Map.Entry<String, ArrayList<CodeNamePair>> entry : single_scheme
+        for (Map.Entry<String, ArrayList<Pair<String>>> entry : single_scheme
                 .entrySet()) {
-            for (CodeNamePair pair : entry.getValue()) {
+            for (Pair<String> pair : entry.getValue()) {
                 if (pair.getFirst().equalsIgnoreCase("src")) {
                     if (pair.getSecond().equalsIgnoreCase(pTable)) {
                         src = pTable;
@@ -1041,7 +1042,7 @@ public class SolveAlloyDM {
             }
             if (src.length() > 0 && dst.length() > 0) {
                 ass = entry.getKey();
-                CodeNamePair pair = new CodeNamePair(src, dst);
+                Pair<String> pair = new Pair<>(src, dst);
                 ass_map.put(ass, pair);
                 return ass_map;
             }
@@ -1052,9 +1053,9 @@ public class SolveAlloyDM {
     // looks up reverse t_associate data structure to find a target table for
     // each object element, e.g. a class instance or an association
     public String getTableNameByElement(String schema, String element) {
-        ArrayList<CodeNamePair> entry = this.reverseTAss.get(schema);
+        ArrayList<Pair<String>> entry = this.reverseTAss.get(schema);
         if (entry != null) {
-            for (CodeNamePair pair : entry) {
+            for (Pair<String> pair : entry) {
                 if (pair.getFirst().equalsIgnoreCase(element)) {
                     return pair.getSecond();
                 }
@@ -1142,7 +1143,7 @@ public class SolveAlloyDM {
                     this.allInstances
                             .get(sigName)
                             .get(instanceName)
-                            .add(new CodeNamePair(sigName + "_" + id,
+                            .add(new Pair<>(sigName + "_" + id,
                                     fieldValue));
                     for (String fieldName : sig.attrSet) {
                         if (fieldName.equalsIgnoreCase(id)) {
@@ -1164,7 +1165,7 @@ public class SolveAlloyDM {
                         this.allInstances
                                 .get(sigName)
                                 .get(instanceName)
-                                .add(new CodeNamePair(sigName + "_"
+                                .add(new Pair<>(sigName + "_"
                                         + fieldName, fieldValue));
                     }
                 } else if (sig.category == 1) { // 0 is association
@@ -1179,12 +1180,12 @@ public class SolveAlloyDM {
                     this.allInstances
                             .get(sigName)
                             .get(instanceName)
-                            .add(new CodeNamePair(sigName + "_"
+                            .add(new Pair<>(sigName + "_"
                                     + srcIDName, String.valueOf(srcIDValue)));
                     this.allInstances
                             .get(sigName)
                             .get(instanceName)
-                            .add(new CodeNamePair(sigName + "_"
+                            .add(new Pair<>(sigName + "_"
                                     + dstIDName, String.valueOf(dstIDValue)));
                     // }
                 }

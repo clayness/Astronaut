@@ -4,89 +4,55 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Comparator;
 import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class DeleteUniq {
     public static void del(String path) {
-
-        HashSet<String> uniqFileList = uniqueFiles(cksums(getFileList(path)));
-
-        File folder = new File(path);
-
-        ArrayList<String> delFiles = new ArrayList<>();
-        for (final File fileEntry : Objects.requireNonNull(folder.listFiles())) {
-            String filePath = fileEntry.getAbsolutePath();
-            if (filePath.endsWith("xml") && !uniqFileList.contains(filePath)) {
-                delFiles.add(filePath);
-            }
+        try (var walk = Files.walk(Paths.get(path))) {
+            var uniqFileList = new HashSet<>(cksums(getFileList(path)).stream()
+                    .collect(Collectors.toMap(Pair::getSecond, Pair::getFirst, (x, y) -> x))
+                    .values());
+            //noinspection ResultOfMethodCallIgnored
+            walk.sorted(Comparator.reverseOrder())
+                    .filter(p -> p.endsWith("xml"))
+                    .map(Path::toFile)
+                    .filter(f -> !uniqFileList.contains(f.getAbsolutePath()))
+                    .forEach(File::delete);
+        } catch (IOException e) {
+            /* no-op */
         }
-
-        // delete xml files
-        for (String s : delFiles) {
-            new File(s).delete();
-        }
-
     }
 
     // get file list by path
-    public static ArrayList<String> getFileList(String dir) {
-        ArrayList<String> lists = new ArrayList<>();
-        File folder = new File(dir);
-
-        for (final File fileEntry : Objects.requireNonNull(folder.listFiles())) {
-            String filePath = fileEntry.getAbsolutePath();
-            if (filePath.endsWith("xml")) {
-                lists.add(filePath);
-            }
+    public static List<String> getFileList(String dir) throws IOException {
+        try (var list = Files.list(Paths.get(dir))) {
+            return list.filter(p -> p.endsWith("xml"))
+                    .map(p -> p.toAbsolutePath().toString())
+                    .collect(Collectors.toList());
         }
-        return lists;
     }
 
     // get checksum of all files
-    public static ArrayList<Pair<String>> cksums(ArrayList<String> files) {
-        ArrayList<Pair<String>> cksums = new ArrayList<>();
-        for (String s : files) {
+    public static List<Pair<String>> cksums(List<String> files) {
+        return files.stream().map(s -> {
             try {
                 Process p = Runtime.getRuntime().exec("cksum " + s);
                 p.waitFor();
 
-                BufferedReader reader = new BufferedReader(
-                        new InputStreamReader(p.getInputStream()));
-                String firstLine = reader.readLine();
-                String[] splited = firstLine.split(" ");
-                cksums.add(new Pair<>(splited[2], splited[0]));
-            } catch (IOException | InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-        return cksums;
-    }
-
-    public static HashSet<String> uniqueFiles(
-            ArrayList<Pair<String>> filesWithCksums) {
-        ArrayList<String> sums = new ArrayList<>();
-        for (Pair<String> p : filesWithCksums) {
-            sums.add(p.getSecond());
-            //System.out.println(p.getSecond());
-        }
-
-        Set<String> uniqueSums = new HashSet<>(sums);
-
-        // find out unique files with HashSet
-        HashSet<String> hashSet = new HashSet<>();
-
-        for (String u : uniqueSums) {
-            for (Pair<String> p : filesWithCksums) {
-                if (p.getSecond().equals(u)) {
-                    hashSet.add(p.getFirst());
-                    break;
+                try (var reader = new BufferedReader(new InputStreamReader(p.getInputStream()))) {
+                    String[] splited = reader.readLine().split(" ");
+                    return new Pair<>(splited[2], splited[0]);
                 }
+            } catch (IOException | InterruptedException e) {
+                throw new RuntimeException(e);
             }
-        }
-
-        return hashSet;
+        }).collect(Collectors.toList());
     }
+
 }

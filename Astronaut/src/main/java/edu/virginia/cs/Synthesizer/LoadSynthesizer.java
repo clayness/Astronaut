@@ -13,6 +13,7 @@ import edu.mit.csail.sdg.translator.A4Solution;
 import edu.mit.csail.sdg.translator.TranslateAlloyToKodkod;
 import edu.virginia.cs.AppConfig;
 import edu.virginia.cs.Framework.Types.ObjectOfDM;
+import edu.virginia.cs.Uniq.Pair;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -21,11 +22,10 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 public class LoadSynthesizer {
-    private final Boolean isDebugOn = AppConfig.getDebug();
-
     public final HashMap<String, String> globalNegation = new HashMap<>();
+    private final Boolean isDebugOn = AppConfig.getDebug();
     public ArrayList<String> ids = new ArrayList<>();
-    public HashMap<String, HashMap<String, ArrayList<CodeNamePair>>> allInstances = new HashMap<>();
+    public HashMap<String, HashMap<String, ArrayList<Pair<String>>>> allInstances = new HashMap<>();
     public int solutionNo = 1;
     boolean isFinished = false;
 
@@ -155,15 +155,15 @@ public class LoadSynthesizer {
     public void getNegation() {
         StringBuilder negation = new StringBuilder();
         StringBuilder forGlobalNegation;
-        for (Map.Entry<String, HashMap<String, ArrayList<CodeNamePair>>> entry : this.allInstances
+        for (Map.Entry<String, HashMap<String, ArrayList<Pair<String>>>> entry : this.allInstances
                 .entrySet()) {
             String element = entry.getKey();
-            for (Map.Entry<String, ArrayList<CodeNamePair>> instance : entry
+            for (Map.Entry<String, ArrayList<Pair<String>>> instance : entry
                     .getValue().entrySet()) {
                 forGlobalNegation = new StringBuilder("no o:" + element + " | ");
                 negation.append("no o:").append(element).append(" | ");
-                ArrayList<CodeNamePair> allFields = instance.getValue();
-                for (CodeNamePair fields : allFields) {
+                ArrayList<Pair<String>> allFields = instance.getValue();
+                for (Pair<String> fields : allFields) {
                     String field = fields.getFirst();
                     // check if field is ID or not
                     if (isID(field.split("_")[1])) {

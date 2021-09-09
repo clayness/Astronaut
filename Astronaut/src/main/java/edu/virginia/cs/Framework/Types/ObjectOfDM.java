@@ -1,6 +1,6 @@
 package edu.virginia.cs.Framework.Types;
 
-import edu.virginia.cs.Synthesizer.CodeNamePair;
+import edu.virginia.cs.Uniq.Pair;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -28,9 +28,9 @@ public class ObjectOfDM {
     // HashMap<String, HashMap<String, ArrayList<CodeNamePair>>>
     // HashMap<tableName, HashMap<instanceName,
     // ArrayList<CodeNamePair>>>
-    public HashMap<String, HashMap<String, ArrayList<CodeNamePair>>> parseDocument() {
+    public HashMap<String, HashMap<String, ArrayList<Pair<String>>>> parseDocument() {
 
-        HashMap<String, HashMap<String, ArrayList<CodeNamePair>>> allInstances = new HashMap<>();
+        HashMap<String, HashMap<String, ArrayList<Pair<String>>>> allInstances = new HashMap<>();
 
         // if (AppConfig.getIsRandom() == 0) {
         try {
@@ -56,14 +56,14 @@ public class ObjectOfDM {
                             && !table_name.equalsIgnoreCase("int")
                             && !table_name.equalsIgnoreCase("string")
                             && !table_name.contains("/")) {
-                        HashMap<String, ArrayList<CodeNamePair>> instances = new HashMap<>();
+                        HashMap<String, ArrayList<Pair<String>>> instances = new HashMap<>();
                         NodeList multiple_instances = tmpElement
                                 .getElementsByTagName("atom");
                         int instances_num = multiple_instances.getLength();
                         for (int j = 0; j < instances_num; j++) {
                             Element single_instance = (Element) multiple_instances.item(j);
                             String s_instance_name = single_instance.getAttribute("label");
-                            ArrayList<CodeNamePair> single_table = new ArrayList<>();
+                            ArrayList<Pair<String>> single_table = new ArrayList<>();
                             instances.put(s_instance_name, single_table);
                         }
                         allInstances.put(table_name, instances);
@@ -101,7 +101,7 @@ public class ObjectOfDM {
                                 allInstances
                                         .get(table_name)
                                         .get(instanceName)
-                                        .add(new CodeNamePair(field,
+                                        .add(new Pair<>(field,
                                                 value));
                             }
                         }

@@ -1,6 +1,7 @@
 package edu.virginia.cs.Synthesizer;
 
 import edu.virginia.cs.AppConfig;
+import edu.virginia.cs.Uniq.Pair;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -12,10 +13,10 @@ public class DataProvider implements Serializable {
     // pairs is used to store all code and real name
     // for example, a table pair will be <Table$0, Customer>
     // a field pair will be <field$1, customerID>
-    private final ArrayList<CodeNamePair> pairs;
-    private final ArrayList<CodeNamePair> types;
-    private final ArrayList<CodeNamePair> parents;
-    private HashMap<String, ArrayList<CodeNamePair>> tableItems;
+    private final ArrayList<Pair<String>> pairs;
+    private final ArrayList<Pair<String>> types;
+    private final ArrayList<Pair<String>> parents;
+    private HashMap<String, ArrayList<Pair<String>>> tableItems;
 
     public DataProvider() {
         pairs = new ArrayList<>();
@@ -25,21 +26,21 @@ public class DataProvider implements Serializable {
         // assert TableName.size() == TableItem.size();
     }
 
-    public HashMap<String, ArrayList<CodeNamePair>> getTables() {
+    public HashMap<String, ArrayList<Pair<String>>> getTables() {
         return this.tableItems;
     }
 
-    public ArrayList<CodeNamePair> getParents() {
+    public ArrayList<Pair<String>> getParents() {
         return this.parents;
     }
 
     public ArrayList<String> getAttrByTableName(String table) {
         ArrayList<String> attrs = new ArrayList<>();
-        for (Map.Entry<String, ArrayList<CodeNamePair>> entry : this.tableItems
+        for (Map.Entry<String, ArrayList<Pair<String>>> entry : this.tableItems
                 .entrySet()) {
             String tableName = entry.getKey();
             if (tableName.equalsIgnoreCase(table)) {
-                for (CodeNamePair pair : entry.getValue()) {
+                for (Pair<String> pair : entry.getValue()) {
                     if (pair.getFirst().equalsIgnoreCase("attr")) {
                         attrs.add(pair.getSecond());
                     }
@@ -51,11 +52,11 @@ public class DataProvider implements Serializable {
     }
 
     public Boolean isClassAssociate(String className) {
-        for (Map.Entry<String, ArrayList<CodeNamePair>> entry : this.tableItems
+        for (Map.Entry<String, ArrayList<Pair<String>>> entry : this.tableItems
                 .entrySet()) {
             String tableName = entry.getKey();
             if (tableName.equalsIgnoreCase(className)) {
-                for (CodeNamePair pair : entry.getValue()) {
+                for (Pair<String> pair : entry.getValue()) {
                     if (pair.getFirst().equalsIgnoreCase("src")) {
                         return true;
                     }
@@ -65,25 +66,25 @@ public class DataProvider implements Serializable {
         return false;
     }
 
-    public ArrayList<CodeNamePair> getTypes() {
-        ArrayList<CodeNamePair> list = new ArrayList<>();
-        for (CodeNamePair pair : this.types) {
-            CodeNamePair tmp = new CodeNamePair(pair.getFirst(), pair.getSecond());
+    public ArrayList<Pair<String>> getTypes() {
+        ArrayList<Pair<String>> list = new ArrayList<>();
+        for (Pair<String> pair : this.types) {
+            Pair<String> tmp = new Pair<>(pair.getFirst(), pair.getSecond());
             list.add(tmp);
         }
         return list;
     }
 
-    public ArrayList<CodeNamePair> getReverseIds() {
-        ArrayList<CodeNamePair> list = new ArrayList<>();
+    public ArrayList<Pair<String>> getReverseIds() {
+        ArrayList<Pair<String>> list = new ArrayList<>();
 
-        for (Map.Entry<String, ArrayList<CodeNamePair>> entry : this.tableItems
+        for (Map.Entry<String, ArrayList<Pair<String>>> entry : this.tableItems
                 .entrySet()) {
             String tableName = entry.getKey();
-            ArrayList<CodeNamePair> pair = entry.getValue();
-            for (CodeNamePair p : pair) {
+            ArrayList<Pair<String>> pair = entry.getValue();
+            for (Pair<String> p : pair) {
                 if (p.getFirst().equalsIgnoreCase("id")) {
-                    list.add(new CodeNamePair(p.getSecond(), tableName));
+                    list.add(new Pair<>(p.getSecond(), tableName));
                 }
             }
         }
@@ -92,32 +93,32 @@ public class DataProvider implements Serializable {
 
     public String addPair(String code, String name) {
         // check if same first existed
-        for (CodeNamePair pair : this.pairs) {
+        for (Pair<String> pair : this.pairs) {
             if (pair.getFirst().equalsIgnoreCase(code)) {
                 if (code.startsWith("Table")) {
                     return pair.getSecond();
                 }
             }
         }
-        CodeNamePair myPair = new CodeNamePair(code, name);
+        Pair<String> myPair = new Pair<>(code, name);
         this.pairs.add(myPair);
         return "true";
     }
 
     public void addItem(String table, String key, String value) {
         if (this.tableItems.containsKey(table)) {
-            CodeNamePair tmp = new CodeNamePair(key, value);
+            Pair<String> tmp = new Pair<>(key, value);
             this.tableItems.get(table).add(tmp);
         } else {
-            ArrayList<CodeNamePair> tmpArray = new ArrayList<>();
-            CodeNamePair tmpPair = new CodeNamePair(key, value);
+            ArrayList<Pair<String>> tmpArray = new ArrayList<>();
+            Pair<String> tmpPair = new Pair<>(key, value);
             tmpArray.add(tmpPair);
             this.tableItems.put(table, tmpArray);
         }
     }
 
     public boolean addType(String filed, String type) {
-        CodeNamePair newPair = new CodeNamePair(filed, type);
+        Pair<String> newPair = new Pair<>(filed, type);
         if (this.types.contains(newPair)) {
             return false;
         } else {
@@ -127,7 +128,7 @@ public class DataProvider implements Serializable {
     }
 
     public boolean addParent(String child, String parent) {
-        CodeNamePair newPair = new CodeNamePair(child, parent);
+        Pair<String> newPair = new Pair<>(child, parent);
         if (this.parents.contains(newPair)) {
             return false;
         } else {
@@ -138,7 +139,7 @@ public class DataProvider implements Serializable {
 
     public String getSecondByFirst(String first) {
         String second = null;
-        for (CodeNamePair pair : this.pairs) {
+        for (Pair<String> pair : this.pairs) {
             if (pair.getFirst().equals(first)) {
                 second = pair.getSecond();
             }
@@ -151,13 +152,13 @@ public class DataProvider implements Serializable {
      * all table items with $ symbol
      */
     public void refineTable() {
-        HashMap<String, ArrayList<CodeNamePair>> tmpTableItems = new HashMap<>();
-        Set<Map.Entry<String, ArrayList<CodeNamePair>>> tableItemSet = this.tableItems
+        HashMap<String, ArrayList<Pair<String>>> tmpTableItems = new HashMap<>();
+        Set<Map.Entry<String, ArrayList<Pair<String>>>> tableItemSet = this.tableItems
                 .entrySet();
         // replace all items with $ symbol
-        for (Map.Entry<String, ArrayList<CodeNamePair>> entry : tableItemSet) {
+        for (Map.Entry<String, ArrayList<Pair<String>>> entry : tableItemSet) {
             String tableName = entry.getKey();
-            ArrayList<CodeNamePair> tableContents = entry.getValue();
+            ArrayList<Pair<String>> tableContents = entry.getValue();
 
             if (tableName.contains("$")) {
                 tableName = getSecondByFirst(tableName);
@@ -166,7 +167,7 @@ public class DataProvider implements Serializable {
                             new ArrayList<>());
                 }
 
-                for (CodeNamePair tableContent : tableContents) {
+                for (Pair<String> tableContent : tableContents) {
                     String firstField = tableContent.getFirst();
                     if (firstField.contains("$")) {
                         firstField = this.getSecondByFirst(firstField);
@@ -176,14 +177,14 @@ public class DataProvider implements Serializable {
                         secondField = this.getSecondByFirst(secondField);
                     }
                     // add new items into tmpTableItems
-                    CodeNamePair tmpPair = new CodeNamePair(firstField,
+                    Pair<String> tmpPair = new Pair<>(firstField,
                             secondField);
                     tmpTableItems.get(tableName).add(tmpPair);
                 }
             } else {
                 if (tmpTableItems.containsKey(tableName)) {
                     // add all items in this.tableItems in to tmpTableItems
-                    for (CodeNamePair tableContent : tableContents) {
+                    for (Pair<String> tableContent : tableContents) {
                         tmpTableItems.get(tableName).add(tableContent);
                     }
                 } else {
@@ -201,7 +202,7 @@ public class DataProvider implements Serializable {
         // }
         // }
         // handle type here
-        for (CodeNamePair type : this.types) {
+        for (Pair<String> type : this.types) {
             String typeName = type.getFirst();
             if (typeName.contains("$")) {
                 type.setFirst(typeName.split("\\$")[0]);
@@ -209,7 +210,7 @@ public class DataProvider implements Serializable {
         }
 
         // remove pairs from parents which the child is an independent table
-        for (CodeNamePair pair : this.pairs) {
+        for (Pair<String> pair : this.pairs) {
             if (pair.getFirst().startsWith("Table")) {
                 int j;
                 for (j = 0; j < this.parents.size(); j++) {
@@ -226,9 +227,9 @@ public class DataProvider implements Serializable {
             }
         }
 
-        for (CodeNamePair parent : this.parents) {
+        for (Pair<String> parent : this.parents) {
             // change DType$0 in parent to DType
-            ArrayList<CodeNamePair> tmpList1 = tmpTableItems
+            ArrayList<Pair<String>> tmpList1 = tmpTableItems
                     .get(parent.getSecond());
             if (tmpList1 == null) {
                 continue;
@@ -244,9 +245,9 @@ public class DataProvider implements Serializable {
                 }
             }
 
-            ArrayList<CodeNamePair> tmpList = tmpTableItems
+            ArrayList<Pair<String>> tmpList = tmpTableItems
                     .get(parent.getFirst());
-            for (CodeNamePair codeNamePair : tmpList) {
+            for (Pair<String> codeNamePair : tmpList) {
                 if (!hasItemInArray(
                         tmpTableItems.get(parent.getSecond()),
                         codeNamePair)) {
@@ -262,10 +263,10 @@ public class DataProvider implements Serializable {
         this.tableItems = tmpTableItems;
     }
 
-    public boolean hasItemInArray(ArrayList<CodeNamePair> list,
-                                  CodeNamePair pair) {
+    public boolean hasItemInArray(ArrayList<Pair<String>> list,
+                                  Pair<String> pair) {
         boolean has = false;
-        for (CodeNamePair codeNamePair : list) {
+        for (Pair<String> codeNamePair : list) {
             if (codeNamePair.getFirst()
                     .equalsIgnoreCase(pair.getFirst())
                     && codeNamePair.getSecond()
@@ -278,8 +279,8 @@ public class DataProvider implements Serializable {
 
     public ArrayList<String> getPrimaryKey(String tableName) {
         ArrayList<String> keys = new ArrayList<>();
-        ArrayList<CodeNamePair> items = this.tableItems.get(tableName);
-        for (CodeNamePair pair : items) {
+        ArrayList<Pair<String>> items = this.tableItems.get(tableName);
+        for (Pair<String> pair : items) {
             String tmp = pair.getFirst();
             if (tmp.equalsIgnoreCase("primaryKey")) {
                 keys.add(pair.getSecond());
@@ -298,11 +299,11 @@ public class DataProvider implements Serializable {
     public String tableNameByID(String ID) {
 
         String tableName = "NULL";
-        Set<Map.Entry<String, ArrayList<CodeNamePair>>> tableItemSet = this.tableItems
+        Set<Map.Entry<String, ArrayList<Pair<String>>>> tableItemSet = this.tableItems
                 .entrySet();
-        for (Map.Entry<String, ArrayList<CodeNamePair>> entry : tableItemSet) {
+        for (Map.Entry<String, ArrayList<Pair<String>>> entry : tableItemSet) {
 
-            ArrayList<CodeNamePair> tmpArray = entry.getValue();
+            ArrayList<Pair<String>> tmpArray = entry.getValue();
             int arraySize = tmpArray.size();
             for (int i = 0; i < arraySize; i++) {
                 // if
@@ -315,7 +316,7 @@ public class DataProvider implements Serializable {
                         // tableName = entry.getKey();
                         // System.out.println("Find Table: "+ tableName);
                         // check the ID is also in attr
-                        for (CodeNamePair codeNamePair : tmpArray) {
+                        for (Pair<String> codeNamePair : tmpArray) {
                             if (codeNamePair.getFirst()
                                     .equalsIgnoreCase("attr")) {
                                 if (codeNamePair.getSecond()
@@ -334,9 +335,9 @@ public class DataProvider implements Serializable {
 
     public int hasMultipleItem(String tableName, String item) {
         int key = 0;
-        ArrayList<CodeNamePair> table1 = this.tableItems.get(tableName);
+        ArrayList<Pair<String>> table1 = this.tableItems.get(tableName);
 
-        for (CodeNamePair codeNamePair : table1) {
+        for (Pair<String> codeNamePair : table1) {
             if (codeNamePair.getFirst().equalsIgnoreCase(item)) {
                 key++;
             }
@@ -347,9 +348,9 @@ public class DataProvider implements Serializable {
 
     public boolean isID(String field, String table) {
         boolean isID = false;
-        ArrayList<CodeNamePair> table1 = this.tableItems.get(table);
+        ArrayList<Pair<String>> table1 = this.tableItems.get(table);
 
-        for (CodeNamePair codeNamePair : table1) {
+        for (Pair<String> codeNamePair : table1) {
             // if (table1.get(i).getFirst().toString().equalsIgnoreCase("Id")) {
             if (codeNamePair.getFirst()
                     .equalsIgnoreCase("primaryKey")) {
@@ -365,7 +366,7 @@ public class DataProvider implements Serializable {
 
     public String getTypesByName(String name) {
         String second = null;
-        for (CodeNamePair type : this.types) {
+        for (Pair<String> type : this.types) {
             if (type.getFirst().equalsIgnoreCase(name)) {
                 second = type.getSecond();
             }
@@ -374,7 +375,7 @@ public class DataProvider implements Serializable {
     }
 
     public boolean hasPairCode(String code) {
-        for (CodeNamePair tmp : this.pairs) {
+        for (Pair<String> tmp : this.pairs) {
             if (tmp.getFirst().equalsIgnoreCase(code)) {
                 return true;
             }
@@ -385,7 +386,7 @@ public class DataProvider implements Serializable {
     public void removePairByCode(String code) {
         int i;
         for (i = 0; i < this.pairs.size(); i++) {
-            CodeNamePair tmp = this.pairs.get(i);
+            Pair<String> tmp = this.pairs.get(i);
             if (tmp.getFirst().equalsIgnoreCase(code)) {
                 break;
             }
@@ -422,10 +423,10 @@ public class DataProvider implements Serializable {
 
         int PKNum, FKNum;
         ArrayList<String> foreignKeyList = new ArrayList<>();
-        Set<Map.Entry<String, ArrayList<CodeNamePair>>> entrySet = this.tableItems
+        Set<Map.Entry<String, ArrayList<Pair<String>>>> entrySet = this.tableItems
                 .entrySet();
         // iterate all tables
-        for (Map.Entry<String, ArrayList<CodeNamePair>> entry : entrySet) {
+        for (Map.Entry<String, ArrayList<Pair<String>>> entry : entrySet) {
             tableName = entry.getKey();
             ArrayList<String> primaryKeys = getPrimaryKey(tableName);
             if (primaryKeys.size() == 0) {
@@ -440,7 +441,7 @@ public class DataProvider implements Serializable {
             pPRINT.println("--" + "\n");
 
             pPRINT.println("CREATE TABLE " + tableName + " (");
-            ArrayList<CodeNamePair> tableItems = entry.getValue();
+            ArrayList<Pair<String>> tableItems = entry.getValue();
             boolean firstPK = true;
 
             // primaryKeyStr will write to file at the end of every create table
@@ -451,7 +452,7 @@ public class DataProvider implements Serializable {
                     + "\n");
             int lastFKCounter = 0;
             // iterate all items of every table
-            for (CodeNamePair tableItem : tableItems) {
+            for (Pair<String> tableItem : tableItems) {
                 // the itemName is the name of this item, like customerID,
                 // orderID
                 String itemName = tableItem.getSecond();
@@ -552,10 +553,10 @@ public class DataProvider implements Serializable {
 
         int PKNum, FKNum;
         ArrayList<String> foreignKeyList = new ArrayList<>();
-        Set<Map.Entry<String, ArrayList<CodeNamePair>>> entrySet = this.tableItems
+        Set<Map.Entry<String, ArrayList<Pair<String>>>> entrySet = this.tableItems
                 .entrySet();
         // iterate all tables
-        for (Map.Entry<String, ArrayList<CodeNamePair>> entry : entrySet) {
+        for (Map.Entry<String, ArrayList<Pair<String>>> entry : entrySet) {
             tableName = entry.getKey();
             ArrayList<String> primaryKeys = getPrimaryKey(tableName);
             if (primaryKeys.size() == 0) {
@@ -571,7 +572,7 @@ public class DataProvider implements Serializable {
 
             // pPRINT.println("CREATE TABLE `"+filename+"`.`"+tableName +"` (");
             pPRINT.println("CREATE TABLE `" + tableName + "` (");
-            ArrayList<CodeNamePair> tableItems = entry.getValue();
+            ArrayList<Pair<String>> tableItems = entry.getValue();
             boolean firstPK = true;
 
             // primaryKeyStr will write to file at the end of every create table
@@ -582,7 +583,7 @@ public class DataProvider implements Serializable {
                     + "`\n");
             int lastFKCounter = 0;
             // iterate all items of every table
-            for (CodeNamePair tableItem : tableItems) {
+            for (Pair<String> tableItem : tableItems) {
                 // the itemName is the name of this item, like customerID,
                 // orderID
                 String itemName = tableItem.getSecond();
