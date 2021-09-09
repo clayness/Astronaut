@@ -16,12 +16,7 @@ import edu.virginia.cs.Synthesizer.DataProvider
 
 import java.io.Serializable
 
-/**
- * Created by tang on 8/9/14.
- */
-
 // ImpelementationType here will be the file path of SQL schema script
-
 class DBImplementation(path:String) extends Serializable { //extends FrameworkTypeWrapper {
 
   private val implPath: String = path
@@ -35,7 +30,6 @@ class DBImplementation(path:String) extends Serializable { //extends FrameworkTy
   private var fields: java.util.ArrayList[CodeNamePair] = _
   private var allFields: java.util.ArrayList[String] = _
   private var fieldsTable: java.util.ArrayList[CodeNamePair] = _
-
 
   // this the reverse of "id" in implementation
   private var reverseIDs: java.util.ArrayList[CodeNamePair] = _
@@ -72,9 +66,6 @@ class DBImplementation(path:String) extends Serializable { //extends FrameworkTy
   def setTypeMap(typeMap: java.util.HashMap[String, String]): Unit = {
     this.typeMap = typeMap
   }
-
-  // store benchmark path to innerValue
-  //makeWrapper(implementationPath)
 
   // get file content, file path can be retrieved by calling getInnerValue()
   def getFileContent:String = {

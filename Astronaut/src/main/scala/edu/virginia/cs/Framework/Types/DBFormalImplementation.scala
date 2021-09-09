@@ -5,8 +5,7 @@ import edu.virginia.cs.Synthesizer.Sig
 import java.util
 
 // This class must be Scala class to be pluged into the framework
-class DBFormalImplementation { // extends FrameworkTypeWrapper {
-  //  override type WrapperType = String
+class DBFormalImplementation {
   private var formalImplementation: String = ""
 
   // Chong: these members are really need to be in DBImplementation
@@ -16,7 +15,6 @@ class DBFormalImplementation { // extends FrameworkTypeWrapper {
   private var ids: java.util.ArrayList[String] = new java.util.ArrayList[String]()
   private var associationsForCreateSchemas: java.util.ArrayList[String] = _
   private var typeMap: java.util.HashMap[String, String] = _
-
 
   def getAssociationsForCreateSchemas: util.ArrayList[String] = {
     this.associationsForCreateSchemas
@@ -46,31 +44,15 @@ class DBFormalImplementation { // extends FrameworkTypeWrapper {
     this.sigs = sigs
   }
 
-
   def getIds: java.util.ArrayList[String] = {
     this.ids
   }
 
-
   // store benchmark path to innerValue
-  //  makeWrapper(solutionPath)
   def getImplementation: String = formalImplementation
 
   def setImp(imp: String): Unit = {
     this.formalImplementation = imp
   }
 
-  /**
-   * Need to set all needed information for test cases generation here
-   */
-  //    schemas.put(fImpFileName, parser.getDataSchemas());
-  //    parents.put(fImpFileName, parser.getParents());
-  //    reverseTAss.put(fImpFileName, parser.getReverseTAssociate());
-  //    foreignKeys.put(fImpFileName, parser.getForeignKey());
-  //    association.put(fImpFileName, parser.getAssociation());
-  //    primaryKeys.put(fImpFileName, parser.getPrimaryKeys());
-  //    fields.put(fImpFileName, parser.getFields());
-  //    allFields.put(fImpFileName, parser.getallFields());
-  //    fieldsTable.put(fImpFileName, parser.getFieldsTable());
-  //    fieldType.put(fImpFileName, parser.getFieldType());
 }

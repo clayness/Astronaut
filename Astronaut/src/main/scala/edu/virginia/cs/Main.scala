@@ -3,11 +3,6 @@ package edu.virginia.cs
 import java.io._
 import java.util
 
-/**
- * @author tang
- */
-
-
 // This is the Main class, the entry point of the DB instance of Trademaker Framework
 object Main {
   var isDebugOn: Boolean = AppConfig.getDebug

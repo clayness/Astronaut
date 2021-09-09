@@ -102,18 +102,6 @@ object AppConfig {
     this.mysqlPassword
   }
 
-  //  def getSpecificationPath(): String = {
-  //    this.specificationPath
-  //  }
-
-  //  def getImplsPath(): String = {
-  //    this.implsPath
-  //  }
-
-  //  def getTestCasesPath(): String = {
-  //    this.testCasesPath
-  //  }
-
   def getIntScopeForImpl: Integer = {
     this.intScopeForImpl
   }

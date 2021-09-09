@@ -8,17 +8,11 @@ import edu.virginia.cs.Synthesizer.{AlloyOMToAlloyDM, Sig}
 
 import scala.io.Source
 
-class DBFormalSpecification(specPath: String) { //extends FrameworkTypeWrapper {
-  //override type WrapperType = String
-  //  private var specPath: String = ""
-
+class DBFormalSpecification(specPath: String) {
   private var ids: java.util.ArrayList[String] = new java.util.ArrayList[String]()
   private var associations: java.util.ArrayList[String] = _
   private var typeMap: java.util.HashMap[String, String] = _
   private var sigs: java.util.ArrayList[Sig] = _
-
-  // store benchmark path to innerValue
-  //makeWrapper(path)
 
   // get file content
   def getSpecContent: String = {
@@ -30,17 +24,12 @@ class DBFormalSpecification(specPath: String) { //extends FrameworkTypeWrapper {
     }
   }
 
-  //  def setSpec(path: String) = {
-  //    specPath = path
-  //  }
-
   def getSpec: String = specPath
 
   def parseSpec(): Unit = {
     // Chong: in order to fill in these members, and call legacy code, 
     // I have to create AlloyDM here, and in this procedure, fill those information
 
-    //    var fSpecPath = specPath.asInstanceOf[DBFormalSpecification].getSpec
     val objSpecPath = specPath.substring(0, specPath.length() - 4) + "_dm.als"
     val intScope = 6
 
