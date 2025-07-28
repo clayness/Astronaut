@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="7e895478-c026-4ba3-8f7f-ec0738f6b655" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/Astronaut/build.sbt" beforeDir="false" afterPath="$PROJECT_DIR$/Astronaut/build.sbt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Astronaut/project/assembly.sbt" beforeDir="false" afterPath="$PROJECT_DIR$/Astronaut/project/assembly.sbt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Astronaut/project/build.properties" beforeDir="false" afterPath="$PROJECT_DIR$/Astronaut/project/build.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Astronaut/src/main/scala/edu/virginia/cs/AppConfig.scala" beforeDir="false" afterPath="$PROJECT_DIR$/Astronaut/src/main/scala/edu/virginia/cs/AppConfig.scala" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Astronaut/src/main/scala/edu/virginia/cs/DBTrademaker.scala" beforeDir="false" afterPath="$PROJECT_DIR$/Astronaut/src/main/scala/edu/virginia/cs/DBTrademaker.scala" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Astronaut/src/main/scala/edu/virginia/cs/Framework/AstronautFramework.scala" beforeDir="false" afterPath="$PROJECT_DIR$/Astronaut/src/main/scala/edu/virginia/cs/Framework/AstronautFramework.scala" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Astronaut/src/main/scala/edu/virginia/cs/Framework/Types/DBFormalImplementation.scala" beforeDir="false" afterPath="$PROJECT_DIR$/Astronaut/src/main/scala/edu/virginia/cs/Framework/Types/DBFormalImplementation.scala" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Astronaut/src/main/scala/edu/virginia/cs/Framework/Types/DBFormalSpecification.scala" beforeDir="false" afterPath="$PROJECT_DIR$/Astronaut/src/main/scala/edu/virginia/cs/Framework/Types/DBFormalSpecification.scala" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Astronaut/src/main/scala/edu/virginia/cs/Framework/Types/DBImplementation.scala" beforeDir="false" afterPath="$PROJECT_DIR$/Astronaut/src/main/scala/edu/virginia/cs/Framework/Types/DBImplementation.scala" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Astronaut/src/main/scala/edu/virginia/cs/Framework/Types/DBSpecification.scala" beforeDir="false" afterPath="$PROJECT_DIR$/Astronaut/src/main/scala/edu/virginia/cs/Framework/Types/DBSpecification.scala" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Astronaut/src/main/scala/edu/virginia/cs/Main.scala" beforeDir="false" afterPath="$PROJECT_DIR$/Astronaut/src/main/scala/edu/virginia/cs/Main.scala" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="ProjectCodeStyleSettingsMigration">
+    <option name="version" value="2" />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 6
+}</component>
+  <component name="ProjectId" id="30VvyGzONOOLy9ViiJAx9LbkNF0" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;project.structure.last.edited&quot;: &quot;SDKs&quot;,
+    &quot;project.structure.proportion&quot;: &quot;0.15&quot;,
+    &quot;project.structure.side.proportion&quot;: &quot;0.2&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;sbt.project.settings.configurable&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  }
+}</component>
+  <component name="ScalaProjectSettings">
+    <option name="scala3DisclaimerShown" value="true" />
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-jdk-9823dce3aa75-fbdcb00ec9e3-intellij.indexing.shared.core-IU-251.27812.49" />
+        <option value="bundled-js-predefined-d6986cc7102b-09060db00ec0-JavaScript-IU-251.27812.49" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="7e895478-c026-4ba3-8f7f-ec0738f6b655" name="Changes" comment="" />
+      <created>1753725809322</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1753725809322</updated>
+      <workItem from="1753725810358" duration="24000" />
+      <workItem from="1753725839704" duration="153000" />
+      <workItem from="1753725998714" duration="305000" />
+      <workItem from="1753726433053" duration="604000" />
+      <workItem from="1753727535954" duration="1961000" />
+      <workItem from="1753729553351" duration="1624000" />
+      <workItem from="1753731189273" duration="17000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="XSLT-Support.FileAssociations.UIState">
+    <expand />
+    <select />
+  </component>
+</project>

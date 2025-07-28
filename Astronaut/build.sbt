@@ -1,17 +1,14 @@
 name := "Astronaut"
-
 version := "1.0"
+scalaVersion := "2.13.16"
 
-scalaVersion := "2.11.7"
+libraryDependencies ++= Seq(
+  "org.jdom" % "jdom2" % "2.0.6.1",
+  "com.mysql" % "mysql-connector-j" % "8.3.0",
+  "com.typesafe" % "config" % "1.4.3",
+  "org.apache.spark" %% "spark-core" % "4.0.0" % "provided"
+)
 
-libraryDependencies += "org.jdom" % "jdom" % "2.0.2"
+assembly / assemblyJarName := "astronaut.jar"
 
-libraryDependencies += "mysql" % "mysql-connector-java" % "5.1.38"
-
-libraryDependencies += "com.typesafe" % "config" % "1.3.0"
-
-libraryDependencies += "org.apache.spark" % "spark-core_2.10" % "1.6.1" % "provided"
-
-assemblyJarName in assembly := "astronaut.jar"
-
-mainClass in assembly := Some("edu.virginia.cs.Main")
+assembly / mainClass := Some("edu.virginia.cs.Main")

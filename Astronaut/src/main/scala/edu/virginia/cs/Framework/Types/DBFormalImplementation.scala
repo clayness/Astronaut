@@ -1,61 +1,62 @@
 package edu.virginia.cs.Framework.Types
 
-import java.util.ArrayList
-import java.util.HashMap
 import edu.virginia.cs.Synthesizer.Sig
+
+import java.util
 
 // This class must be Scala class to be pluged into the framework
 class DBFormalImplementation { // extends FrameworkTypeWrapper {
   //  override type WrapperType = String
   private var formalImplementation: String = ""
 
-    // Chong: these members are really need to be in DBImplementation
-    // when create schemas, these members can be filled with values
+  // Chong: these members are really need to be in DBImplementation
+  // when create schemas, these members can be filled with values
 
-  private var sigs: ArrayList[Sig] = null
-  private var ids: ArrayList[String] = new ArrayList[String]();
-  private var associationsForCreateSchemas: ArrayList[String] = null;
-  private var typeMap: HashMap[String, String] = null;
-  
-  
-  def getAssociationsForCreateSchemas() = {
-    this.associationsForCreateSchemas 
+  private var sigs: util.ArrayList[Sig] = _
+  private var ids: util.ArrayList[String] = new util.ArrayList[String]()
+  private var associationsForCreateSchemas: util.ArrayList[String] = _
+  private var typeMap: util.HashMap[String, String] = _
+
+
+  def getAssociationsForCreateSchemas: util.ArrayList[String] = {
+    this.associationsForCreateSchemas
   }
 
-  def getTypeMap(): HashMap[String, String] = {
-    this.typeMap 
+  def getTypeMap: util.HashMap[String, String] = {
+    this.typeMap
   }
-  def setIds(list: ArrayList[String]) = {
+
+  def setIds(list: util.ArrayList[String]): Unit = {
     this.ids = list
   }
-  
-  def setAssociationsForCreateSchemas(list: ArrayList[String]) = {
-    this.associationsForCreateSchemas  = list
+
+  def setAssociationsForCreateSchemas(list: util.ArrayList[String]): Unit = {
+    this.associationsForCreateSchemas = list
   }
-  
-  def setTypeMap(hm: HashMap[String, String]) = {
+
+  def setTypeMap(hm: util.HashMap[String, String]): Unit = {
     this.typeMap = hm
   }
 
-  def getSigs(): ArrayList[Sig] = {
+  def getSigs: util.ArrayList[Sig] = {
     this.sigs
   }
 
-  def setSigs(sigs: ArrayList[Sig]) = {
+  def setSigs(sigs: util.ArrayList[Sig]): Unit = {
     this.sigs = sigs
   }
-  
-  
-  def getIds() :ArrayList[String]  = {
-    this.ids 
+
+
+  def getIds: util.ArrayList[String] = {
+    this.ids
   }
-  
+
 
   // store benchmark path to innerValue
   //  makeWrapper(solutionPath)
-  def getImplementation() = formalImplementation
+  def getImplementation: String = formalImplementation
 
-  def setImp(imp: String) = {
+  def setImp(imp: String): Unit = {
     this.formalImplementation = imp
   }
 

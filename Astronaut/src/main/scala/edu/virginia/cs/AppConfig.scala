@@ -1,158 +1,126 @@
 package edu.virginia.cs
 
-import java.util._
-
 import com.typesafe.config._
-import collection.JavaConversions._
+
+import java.util
+import scala.jdk.CollectionConverters._
 
 object AppConfig {
-  private final var params: Config = ConfigFactory.load("application")
+  private final val params: Config = ConfigFactory.load("application")
 
-  private final var debug: Boolean = params.getBoolean("dev.debug")
-  private final var mysqlUser: String = params.getString("mysql.user")
-  private final var mysqlPassword: String = params.getString("mysql.password")
-//  private final var specificationPath: String = params.getString("app.specificationPath");
-//  private final var implsPath: String = params.getString("app.implsPath");
-//  private final var testCasesPath: String = params.getString("app.testCasesPath");
-  private final var intScopeForImpl: Integer = params.getInt("alloy.intScopeForImpl")
-  private final var intScopeForTestCases: Integer = params.getInt("alloy.intScopeForTestCases")
-  private final var maxSolForImpl: Integer = params.getInt("alloy.maxSolForImpl")
-  private final var maxSolForTest: Integer = params.getInt("alloy.maxSolForTest")
-  private final var A4ReportSymmetry: Integer = params.getInt("alloy.A4Report.symmetry")
-  private final var A4ReportSkolemDepth: Integer = params.getInt("alloy.A4Report.skolemDepth")
-  private final var isRandom: Integer = params.getInt("alloy.tlGenerator")
-  private final var randomRange: Integer = params.getInt("alloy.randomRange")
-  private final var subRange: Integer = params.getInt("alloy.subRange")
-  private final var specList: List[String] = params.getStringList("app.specs").toList
-  private final val solver = params.getString("app.solver")
-  private final var storeAllSolutions: Boolean = params.getBoolean("app.storeAllSolution")
-  private final val hdfsURL = params.getString("hadoop.server")
-  private final val hdfsFile = params.getString("hadoop.file")
-  private final val sparkMaster = params.getString("spark.master")
+  private final val debug: Boolean = params.getBoolean("dev.debug")
+  private final val mysqlUser: String = params.getString("mysql.user")
+  private final val mysqlPassword: String = params.getString("mysql.password")
+  private final val intScopeForTestCases: Integer = params.getInt("alloy.intScopeForTestCases")
+  private final val maxSolForImpl: Integer = params.getInt("alloy.maxSolForImpl")
+  private final val maxSolForTest: Integer = params.getInt("alloy.maxSolForTest")
+  private final val A4ReportSymmetry: Integer = params.getInt("alloy.A4Report.symmetry")
+  private final val A4ReportSkolemDepth: Integer = params.getInt("alloy.A4Report.skolemDepth")
+  private final val isRandom: Integer = params.getInt("alloy.tlGenerator")
+  private final val randomRange: Integer = params.getInt("alloy.randomRange")
+  private final val subRange: Integer = params.getInt("alloy.subRange")
+  private final var specList: List[String] = params.getStringList("app.specs").asScala.toList
+  private final val storeAllSolutions: Boolean = params.getBoolean("app.storeAllSolution")
   private final val resultFile = params.getString("resultFile")
-  private final var sparkSlaves: List[String] = params.getStringList("spark.slaves").toList
+  private final val sparkSlaves: List[String] = params.getStringList("spark.slaves").asScala.toList
   private final var testDB: String = params.getString("app.testDB")
   private final val postgresUser: String = params.getString("postgres.user")
   private final val postgresPassword: String = params.getString("postgres.password")
-  private final var icse2022SolutionFolder: String = if (params.hasPath("icse2022.solutionFolder")) params.getString("icse2022.solutionFolder") else ""
+  private final val icse2022SolutionFolder: String = if (params.hasPath("icse2022.solutionFolder")) params.getString("icse2022.solutionFolder") else ""
 
-  def getPostgresUser(): String = {
+  def getPostgresUser: String = {
     this.postgresUser
   }
 
-  def getPostgresPassword(): String = {
+  def getPostgresPassword: String = {
     this.postgresPassword
   }
 
-  def getTestDB(): String = {
+  def getTestDB: String = {
     this.testDB
   }
 
-  def setTestDB(testDB: String) {
+  def setTestDB(testDB: String): Unit = {
     this.testDB = testDB
   }
-  
-  def getSolutionFolder(): String = {
+
+  def getSolutionFolder: String = {
     this.icse2022SolutionFolder
   }
-  
-  def setSolutionFolder(folder: String) {
-    this.icse2022SolutionFolder = folder
-  }
 
-  def setSpecList(list:List[String]) {
+  def setSpecList(list: List[String]): Unit = {
     this.specList = list
   }
 
-  def getResultFile(): String = {
+  def getResultFile: String = {
     this.resultFile
   }
 
-  def getHdfsURL(): String = {
-    this.hdfsURL
+  def getSparkSlaves: util.List[String] = {
+    this.sparkSlaves.asJava
   }
 
-  def getHdfsFile(): String = {
-    this.hdfsFile
-  }
-
-  def getSparkMaster(): String = {
-    this.sparkMaster
-  }
-
-  def getSparkSlaves():List[String] = {
-    this.sparkSlaves
-  }
-  
-  def getStoreAllSolutions(): Boolean = {
+  def getStoreAllSolutions: Boolean = {
     this.storeAllSolutions
   }
-  
-  def getSolver(): String = {
-    this.solver
-  }
-  
-  def getSpecs():List[String] = {
-    this.specList 
+
+  def getSpecs: List[String] = {
+    this.specList
   }
 
-  def getDebug(): Boolean = {
+  def getDebug: Boolean = {
     this.debug
   }
 
-  def getMySQLUser(): String = {
+  def getMySQLUser: String = {
     this.mysqlUser
   }
 
-  def getMysqlPassword(): String = {
+  def getMysqlPassword: String = {
     this.mysqlPassword
   }
 
-//  def getSpecificationPath(): String = {
-//    this.specificationPath
-//  }
+  //  def getSpecificationPath(): String = {
+  //    this.specificationPath
+  //  }
 
-//  def getImplsPath(): String = {
-//    this.implsPath
-//  }
+  //  def getImplsPath(): String = {
+  //    this.implsPath
+  //  }
 
-//  def getTestCasesPath(): String = {
-//    this.testCasesPath
-//  }
+  //  def getTestCasesPath(): String = {
+  //    this.testCasesPath
+  //  }
 
-  def getIntScopeForImpl(): Integer = {
-    this.intScopeForImpl
-  }
-
-  def getIntScopeForTestCases(): Integer = {
+  def getIntScopeForTestCases: Integer = {
     this.intScopeForTestCases
   }
 
-  def getMaxSolForImpl(): Integer = {
+  def getMaxSolForImpl: Integer = {
     this.maxSolForImpl
   }
 
-  def getMaxSolForTest(): Integer = {
+  def getMaxSolForTest: Integer = {
     this.maxSolForTest
   }
 
-  def getA4ReportSymmetry(): Integer = {
+  def getA4ReportSymmetry: Integer = {
     this.A4ReportSymmetry
   }
 
-  def getA4ReportSkolemDepth(): Integer = {
+  def getA4ReportSkolemDepth: Integer = {
     this.A4ReportSkolemDepth
   }
 
-  def getIsRandom(): Integer = {
+  def getIsRandom: Integer = {
     this.isRandom
   }
 
-  def getRandomRange(): Integer = {
-    this.randomRange 
+  def getRandomRange: Integer = {
+    this.randomRange
   }
-  
-  def getSubRange(): Integer = {
-    this.subRange 
+
+  def getSubRange: Integer = {
+    this.subRange
   }
 }

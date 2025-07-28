@@ -1,19 +1,10 @@
 package edu.virginia.cs.Framework.Types
 
-import scala.io.Source
-import java.util.ArrayList
-import java.util.HashMap
-import edu.virginia.cs.Synthesizer.CodeNamePair
-import javax.xml.parsers.DocumentBuilderFactory
-import javax.xml.parsers.DocumentBuilder
-import org.w3c.dom.Document
+import edu.virginia.cs.Synthesizer.{CodeNamePair, DataProvider, Sig}
 import org.w3c.dom.Element
-import org.w3c.dom.NodeList
-import org.w3c.dom.Node
-import edu.virginia.cs.Synthesizer.Sig
-import scala.collection.JavaConversions._
-import edu.virginia.cs.Synthesizer.DataProvider
-import java.io.Serializable
+
+import java.util
+import scala.jdk.CollectionConverters._
 
 /**
  * Created by tang on 8/9/14.
@@ -21,244 +12,135 @@ import java.io.Serializable
 
 // ImpelementationType here will be the file path of SQL schema script
 
-class DBImplementation(path:String) extends Serializable { //extends FrameworkTypeWrapper {
+class DBImplementation(path: String) extends Serializable { //extends FrameworkTypeWrapper {
 
-  private var implPath: String = path
+  private val implPath: String = path
 
-  private var dataProvider: DataProvider = null
-  private var reverseTAssociate: ArrayList[CodeNamePair] = null
-  private var foreignKeys: ArrayList[CodeNamePair] = null
+  private var dataProvider: DataProvider = _
+  private var reverseTAssociate: util.ArrayList[CodeNamePair] = _
+  private var foreignKeys: util.ArrayList[CodeNamePair] = _
   // HashMap[Association Name, pair[src, dst], src and dst are class name
-  private var associations: HashMap[String, CodeNamePair] = null
-  private var primaryKeys: ArrayList[CodeNamePair] = null
-  private var fields: ArrayList[CodeNamePair] = null
-  private var allFields: ArrayList[String] = null
-  private var fieldsTable: ArrayList[CodeNamePair] = null
+  private var associations: util.HashMap[String, CodeNamePair] = _
+  private var primaryKeys: util.ArrayList[CodeNamePair] = _
+  private var fields: util.ArrayList[CodeNamePair] = _
+  private var allFields: util.ArrayList[String] = _
+  private var fieldsTable: util.ArrayList[CodeNamePair] = _
 
 
   // this the reverse of "id" in implementation
-  private var reverseIDs: ArrayList[CodeNamePair] = null
+  private var reverseIDs: util.ArrayList[CodeNamePair] = _
 
-  private var sigs: ArrayList[Sig] = null
-  private var ids: ArrayList[String] = null
-  private var associationsForCreateSchemas: ArrayList[String] = null
-  private var typeMap: HashMap[String, String] = null
+  private var sigs: util.ArrayList[Sig] = _
+  private var ids: util.ArrayList[String] = _
+  private var associationsForCreateSchemas: util.ArrayList[String] = _
+  private var typeMap: util.HashMap[String, String] = _
 
-  def setSigs(sigs: ArrayList[Sig]) = {
+  def setSigs(sigs: util.ArrayList[Sig]): Unit = {
     this.sigs = sigs
   }
 
-  def getIds(): ArrayList[String] = {
+  def getIds: util.ArrayList[String] = {
     this.ids
   }
 
-  def setIds(ids: ArrayList[String]) = {
+  def setIds(ids: util.ArrayList[String]): Unit = {
     this.ids = ids
   }
 
-  def getAssociationsForCreateSchemas(): ArrayList[String] = {
+  def getAssociationsForCreateSchemas: util.ArrayList[String] = {
     this.associationsForCreateSchemas
   }
 
-  def setAssociationsForCreateSchemas(asss: ArrayList[String]) = {
+  def setAssociationsForCreateSchemas(asss: util.ArrayList[String]): Unit = {
     this.associationsForCreateSchemas = asss
   }
 
-  def getTypeMap(): HashMap[String, String] = {
+  def getTypeMap: util.HashMap[String, String] = {
     this.typeMap
   }
 
-  def setTypeMap(typeMap: HashMap[String, String]) = {
+  def setTypeMap(typeMap: util.HashMap[String, String]): Unit = {
     this.typeMap = typeMap
   }
 
   // store benchmark path to innerValue
   //makeWrapper(implementationPath)
 
-  // get file content, file path can be retrieved by calling getInnerValue()
-  def getFileContent():String = {
-    val content = Source.fromFile(implPath).getLines().mkString
-    content
-  }
+  def getImPath: String = implPath
 
-  def getImPath():String = implPath
-
-  def getDataProvider(): DataProvider = {
+  def getDataProvider: DataProvider = {
     this.dataProvider
   }
 
-  def setDataProvider(dp: DataProvider) = {
+  def setDataProvider(dp: DataProvider): Unit = {
     this.dataProvider = dp
   }
 
-  def getReverseTAssociate(): ArrayList[CodeNamePair] = {
-    this.reverseTAssociate 
+  def getReverseTAssociate: util.ArrayList[CodeNamePair] = {
+    this.reverseTAssociate
   }
 
-  def setReverseTAssociate(rTAss: ArrayList[CodeNamePair]) = {
+  def setReverseTAssociate(rTAss: util.ArrayList[CodeNamePair]): Unit = {
     this.reverseTAssociate = rTAss
   }
 
-  def getForeignKeys(): ArrayList[CodeNamePair] = {
-    this.foreignKeys 
-  }
-
-  def setForeignKeys(fKeys: ArrayList[CodeNamePair]) = {
+  def setForeignKeys(fKeys: util.ArrayList[CodeNamePair]): Unit = {
     this.foreignKeys = fKeys
   }
 
-  def getAssociations(): HashMap[String, CodeNamePair] = {
-    this.associations 
+  def getAssociations: util.HashMap[String, CodeNamePair] = {
+    this.associations
   }
 
-  def setAssociations(ass: HashMap[String, CodeNamePair]) = {
+  def setAssociations(ass: util.HashMap[String, CodeNamePair]): Unit = {
     this.associations = ass
   }
 
-  def getPrimaryKeys(): ArrayList[CodeNamePair] = {
-    this.primaryKeys 
+  def getPrimaryKeys: util.ArrayList[CodeNamePair] = {
+    this.primaryKeys
   }
 
-  def setPrimaryKeys(pKeys: ArrayList[CodeNamePair]) = {
+  def setPrimaryKeys(pKeys: util.ArrayList[CodeNamePair]): Unit = {
     this.primaryKeys = pKeys
   }
 
-  def getFields(): ArrayList[CodeNamePair] = {
-    this.fields 
+  def getFields: util.ArrayList[CodeNamePair] = {
+    this.fields
   }
 
-  def setFields(fields: ArrayList[CodeNamePair]) = {
+  def setFields(fields: util.ArrayList[CodeNamePair]): Unit = {
     this.fields = fields
   }
 
-  def getAllFields(): ArrayList[String] = {
-    this.allFields 
-  }
-
-  def setAllFields(af: ArrayList[String]) = {
+  def setAllFields(af: util.ArrayList[String]): Unit = {
     this.allFields = af
   }
 
-  def getFieldsTable(): ArrayList[CodeNamePair] = {
-    this.fieldsTable 
+  def getFieldsTable: util.ArrayList[CodeNamePair] = {
+    this.fieldsTable
   }
 
-  def setFieldsTable(ft: ArrayList[CodeNamePair]) = {
+  def setFieldsTable(ft: util.ArrayList[CodeNamePair]): Unit = {
     this.fieldsTable = ft
   }
 
-  def getReverseIDs: ArrayList[CodeNamePair] = {
+  def getReverseIDs: util.ArrayList[CodeNamePair] = {
     this.reverseIDs
   }
 
-  def setReverseIDs(ids:ArrayList[CodeNamePair]) = {
+  def setReverseIDs(ids: util.ArrayList[CodeNamePair]): Unit = {
     this.reverseIDs = ids
   }
 
-  def getSigs(): ArrayList[Sig] = {
+  def getSigs: util.ArrayList[Sig] = {
     this.sigs
   }
 
-  // parse the xml file and store all information back to data structures
-  def parseImplXMLFile() = {
-    var schemas: HashMap[String, ArrayList[CodeNamePair]] = new HashMap[String, ArrayList[CodeNamePair]]()
-    var dbf: DocumentBuilderFactory = DocumentBuilderFactory.newInstance();
-    try {
-      //Using factory get an instance of document builder
-      var db: DocumentBuilder = dbf.newDocumentBuilder();
-      //parse using builder to get DOM representation of the XML file
-      var dom: Document = db.parse(this.implPath);
-
-      //get the root element
-      var docEle: Element = dom.getDocumentElement();
-      //get a nodelist of elements
-      var fieldnodes: NodeList = docEle.getElementsByTagName("field");
-      // handle parent first
-      for (i <- 0 to fieldnodes.getLength()) {
-        var node: Node = fieldnodes.item(i)
-        if (node.hasAttributes()) {
-          var element: Element = node.asInstanceOf[Element];
-          var labelValue: String = element.getAttribute("label");
-          if (labelValue.equalsIgnoreCase("parent")) {
-            parseParent(element);
-          }
-        }
-      }
-
-      // handle other labels
-      for (i <- 0 to fieldnodes.getLength()) {
-        var node: Node = fieldnodes.item(i);
-        // find different sub nodes based on label value
-        // find node if the "label" attribute is "primaryKey"
-        if (node.hasAttributes()) {
-          var element: Element = node.asInstanceOf[Element];
-          var labelValue: String = element.getAttribute("label");
-          if (labelValue.equalsIgnoreCase("primarykey")) {
-            parsePK(element);
-          } else if (labelValue.equalsIgnoreCase("fields")) {
-            parseFields(element);
-          } else if (labelValue.equalsIgnoreCase("foreignKey")) {
-            parseFK(element);
-          } else if (labelValue.equalsIgnoreCase("tAssociate")) {
-            parse_tAssociate(element);
-          } else if (labelValue.equalsIgnoreCase("fAssociate")) {
-            parse_fAssociate(element);
-          } else if (labelValue.equalsIgnoreCase("attrSet")) {
-            parseAttrSet(element);
-          } else if (labelValue.equalsIgnoreCase("id")) {
-            parseId(element);
-          } else if (labelValue.equalsIgnoreCase("src")) {
-            parseSrc(element);
-          } else if (labelValue.equalsIgnoreCase("dst")) {
-            parseDst(element);
-          } else if (labelValue.equalsIgnoreCase("src_multiplicity")) {
-            parseSrcMultiplicity(element);
-          } else if (labelValue.equalsIgnoreCase("dst_multiplicity")) {
-            parseDstMultiplicity(element);
-          }
-        }
-      }
-
-      // get sig nodes
-      var signodes: NodeList = docEle.getElementsByTagName("sig");
-      for (i <- 0 to signodes.getLength()) {
-        var node: Node = signodes.item(i);
-        // find different subnodes based on label value
-        // find node if the "label" attribute is "primaryKey"
-        if (node.hasAttributes()) {
-          val element = node.asInstanceOf[Element]
-          val labelValue = element.getAttribute("label")
-          val tmp = labelValue.split("/")
-          val `type` = tmp(tmp.length - 1)
-          if (`type`.equalsIgnoreCase("Real") || `type`.equalsIgnoreCase("Integer") ||
-            `type`.equalsIgnoreCase("string") ||
-            `type`.equalsIgnoreCase("Class") ||
-            `type`.equalsIgnoreCase("DType") ||
-            `type`.equalsIgnoreCase("Bool") ||
-            `type`.equalsIgnoreCase("Longblob") ||
-            `type`.equalsIgnoreCase("Time")) {
-            val atoms = element.getElementsByTagName("atom")
-            for (j <- 0 until atoms.getLength) {
-              val node1 = atoms.item(j)
-              val tableCode = node1.asInstanceOf[Element]
-              val code = tableCode.getAttribute("label")
-              val atomLabel = code.split("/")
-              val name = atomLabel(atomLabel.length - 1)
-              this.dataProvider.addType(name, `type`)
-            }
-          }
-        }
-      }
-    } catch {
-      case pce: Exception => pce.printStackTrace()
-    }
-  }
-
-  def parse_tAssociate(element: Element) {
+  def parse_tAssociate(element: Element): Unit = {
     var children = element.getElementsByTagName("tuple")
     for (j <- 0 until children.getLength) {
       val child = children.item(j)
-      if (child.hasChildNodes()) {
+      if (child.hasChildNodes) {
         val singleTuple = child.asInstanceOf[Element]
         val code = getSingleAtom(singleTuple, 0)
         var name = getSingleAtom(singleTuple, 1)
@@ -274,7 +156,7 @@ class DBImplementation(path:String) extends Serializable { //extends FrameworkTy
     children = element.getElementsByTagName("tuple")
     for (j <- 0 until children.getLength) {
       val child = children.item(j)
-      if (child.hasChildNodes()) {
+      if (child.hasChildNodes) {
         val singleTuple = child.asInstanceOf[Element]
         val code = getSingleAtom(singleTuple, 0)
         val name = getSingleAtom(singleTuple, 1)
@@ -284,11 +166,11 @@ class DBImplementation(path:String) extends Serializable { //extends FrameworkTy
     }
   }
 
-  def parsePK(element: Element) {
+  def parsePK(element: Element): Unit = {
     val children = element.getElementsByTagName("tuple")
     for (j <- 0 until children.getLength) {
       val child = children.item(j)
-      if (child.hasChildNodes()) {
+      if (child.hasChildNodes) {
         val singleTuple = child.asInstanceOf[Element]
         val table = getSingleAtom(singleTuple, 0)
         val key = getSingleAtom(singleTuple, 1)
@@ -298,11 +180,11 @@ class DBImplementation(path:String) extends Serializable { //extends FrameworkTy
     }
   }
 
-  def parseFK(element: Element) {
+  def parseFK(element: Element): Unit = {
     val children = element.getElementsByTagName("tuple")
     for (j <- 0 until children.getLength) {
       val child = children.item(j)
-      if (child.hasChildNodes()) {
+      if (child.hasChildNodes) {
         val singleTuple = child.asInstanceOf[Element]
         val table = getSingleAtom(singleTuple, 0)
         val key = getSingleAtom(singleTuple, 1)
@@ -312,11 +194,11 @@ class DBImplementation(path:String) extends Serializable { //extends FrameworkTy
     }
   }
 
-  def parseFields(element: Element) {
+  def parseFields(element: Element): Unit = {
     val children = element.getElementsByTagName("tuple")
     for (j <- 0 until children.getLength) {
       val child = children.item(j)
-      if (child.hasChildNodes()) {
+      if (child.hasChildNodes) {
         val singleTuple = child.asInstanceOf[Element]
         val table = getSingleAtom(singleTuple, 0)
         val field = getSingleAtom(singleTuple, 1)
@@ -328,11 +210,11 @@ class DBImplementation(path:String) extends Serializable { //extends FrameworkTy
     }
   }
 
-  def parse_fAssociate(element: Element) {
+  def parse_fAssociate(element: Element): Unit = {
     val children = element.getElementsByTagName("tuple")
     for (j <- 0 until children.getLength) {
       val child = children.item(j)
-      if (child.hasChildNodes()) {
+      if (child.hasChildNodes) {
         val singleTuple = child.asInstanceOf[Element]
         val code = getSingleAtom(singleTuple, 0)
         val name = getSingleAtom(singleTuple, 1)
@@ -341,11 +223,11 @@ class DBImplementation(path:String) extends Serializable { //extends FrameworkTy
     }
   }
 
-  def parseId(element: Element) {
+  def parseId(element: Element): Unit = {
     val children = element.getElementsByTagName("tuple")
     for (j <- 0 until children.getLength) {
       val child = children.item(j)
-      if (child.hasChildNodes()) {
+      if (child.hasChildNodes) {
         val singleTuple = child.asInstanceOf[Element]
         val table = getSingleAtom(singleTuple, 0)
         val Id = getSingleAtom(singleTuple, 1)
@@ -354,11 +236,11 @@ class DBImplementation(path:String) extends Serializable { //extends FrameworkTy
     }
   }
 
-  def parseParent(element: Element) {
+  def parseParent(element: Element): Unit = {
     val children = element.getElementsByTagName("tuple")
     for (j <- 0 until children.getLength) {
       val child = children.item(j)
-      if (child.hasChildNodes()) {
+      if (child.hasChildNodes) {
         val singleTuple = child.asInstanceOf[Element]
         val childTable = getSingleAtom(singleTuple, 0)
         val parentTable = getSingleAtom(singleTuple, 1)
@@ -367,11 +249,11 @@ class DBImplementation(path:String) extends Serializable { //extends FrameworkTy
     }
   }
 
-  def parseSrc(element: Element) {
+  def parseSrc(element: Element): Unit = {
     val children = element.getElementsByTagName("tuple")
     for (j <- 0 until children.getLength) {
       val child = children.item(j)
-      if (child.hasChildNodes()) {
+      if (child.hasChildNodes) {
         val singleTuple = child.asInstanceOf[Element]
         val table = getSingleAtom(singleTuple, 0)
         val srcTable = getSingleAtom(singleTuple, 1)
@@ -385,11 +267,11 @@ class DBImplementation(path:String) extends Serializable { //extends FrameworkTy
     }
   }
 
-  def parseDst(element: Element) {
+  def parseDst(element: Element): Unit = {
     val children = element.getElementsByTagName("tuple")
     for (j <- 0 until children.getLength) {
       val child = children.item(j)
-      if (child.hasChildNodes()) {
+      if (child.hasChildNodes) {
         val singleTuple = child.asInstanceOf[Element]
         val table = getSingleAtom(singleTuple, 0)
         val dstTable = getSingleAtom(singleTuple, 1)
@@ -403,11 +285,11 @@ class DBImplementation(path:String) extends Serializable { //extends FrameworkTy
     }
   }
 
-  def parseSrcMultiplicity(element: Element) {
+  def parseSrcMultiplicity(element: Element): Unit = {
     val children = element.getElementsByTagName("tuple")
     for (j <- 0 until children.getLength) {
       val child = children.item(j)
-      if (child.hasChildNodes()) {
+      if (child.hasChildNodes) {
         val singleTuple = child.asInstanceOf[Element]
         val table = getSingleAtom(singleTuple, 0)
         val parentTable = getSingleAtom(singleTuple, 1)
@@ -416,11 +298,11 @@ class DBImplementation(path:String) extends Serializable { //extends FrameworkTy
     }
   }
 
-  def parseDstMultiplicity(element: Element) {
+  def parseDstMultiplicity(element: Element): Unit = {
     val children = element.getElementsByTagName("tuple")
     for (j <- 0 until children.getLength) {
       val child = children.item(j)
-      if (child.hasChildNodes()) {
+      if (child.hasChildNodes) {
         val singleTuple = child.asInstanceOf[Element]
         val table = getSingleAtom(singleTuple, 0)
         val parentTable = getSingleAtom(singleTuple, 1)
@@ -429,11 +311,11 @@ class DBImplementation(path:String) extends Serializable { //extends FrameworkTy
     }
   }
 
-  def parseAttrSet(element: Element) {
+  def parseAttrSet(element: Element): Unit = {
     val children = element.getElementsByTagName("tuple")
     for (j <- 0 until children.getLength) {
       val child = children.item(j)
-      if (child.hasChildNodes()) {
+      if (child.hasChildNodes) {
         val singleTuple = child.asInstanceOf[Element]
         val table = getSingleAtom(singleTuple, 0)
         val attr = getSingleAtom(singleTuple, 1)
@@ -452,37 +334,35 @@ class DBImplementation(path:String) extends Serializable { //extends FrameworkTy
   }
 
   // chong: maybe elem._2.setFirst() cannot set the value to associations map
-  def setAssociation(assName: String, target: String, value: String) {
+  def setAssociation(assName: String, target: String, value: String): Unit = {
     // iterate java hashmap
-    var it = this.associations.iterator
-    while (it.hasNext) {
-      var elem = it.next
-      var key = elem._1
-      if (key.equalsIgnoreCase(assName)) {
-        if (target.equalsIgnoreCase("src")) {
-          elem._2.setFirst(value)
-        } else if (target.equalsIgnoreCase("dst")) {
-          elem._2.setSecond(value)
-        }
+    for {
+      entry <- associations.entrySet().asScala
+      if entry.getKey.equalsIgnoreCase(assName)
+    } {
+      if (target.equalsIgnoreCase("src")) {
+        entry.getValue.setFirst(value)
+      } else if (target.equalsIgnoreCase("dst")) {
+        entry.getValue.setSecond(value)
       }
     }
   }
 
   def getRootTable(tableName: String): String = {
     for (i <- 0 to this.sigs.size()) {
-      var sig = this.sigs.get(i)
-      if (sig.getSigName().equalsIgnoreCase(tableName)) {
-        if (!sig.isHasParent()) {
-          return sig.getSigName()
+      val sig = this.sigs.get(i)
+      if (sig.getSigName.equalsIgnoreCase(tableName)) {
+        if (!sig.isHasParent) {
+          return sig.getSigName
         } else {
-          return getRootTable(sig.getParent())
+          return getRootTable(sig.getParent)
         }
       }
     }
     null
   }
-  
-  def getDataSchemas(): HashMap[String, ArrayList[CodeNamePair]] = {
-    this.dataProvider.getTables()
+
+  def getDataSchemas: util.HashMap[String, util.ArrayList[CodeNamePair]] = {
+    this.dataProvider.getTables
   }
 }
