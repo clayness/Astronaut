@@ -1,0 +1,14 @@
+module ecommerce_mapping_run
+open ORMStrategies
+open AssociationMappings
+open ecommerce
+open assertions
+fact{
+mixedAssociationStrategy[CustomerOrderAssociation+CustomerShippingCartAssociation+ShippingCartItemAssociation+OrderItemAssociation+ProductCategoryAssociation+ProductCatalogAssociation+ProductItemAssociation+ProductAssetAssociation]
+mixedStrategy[CartItem+OrderItem+PhysicalProduct+ElectronicProduct+Service+Media+Documents]
+}
+
+pred mapping_run_ecommerce{}
+run mapping_run_ecommerce for 49
+
+
