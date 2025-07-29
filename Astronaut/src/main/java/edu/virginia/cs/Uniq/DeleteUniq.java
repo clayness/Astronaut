@@ -1,135 +1,46 @@
 package edu.virginia.cs.Uniq;
 
-import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.util.*;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.HashSet;
+import java.util.Set;
 
 public class DeleteUniq {
-    public static void del(String path) {
-
-        String dirPath = path;
-        Set<String> uniqFileList = uniqueFiles(cksums(getFileList(dirPath)));
-
-        File folder = new File(dirPath);
-
-        ArrayList<String> delFiles = new ArrayList<String>();
-        for (final File fileEntry : folder.listFiles()) {
-            String filePath = fileEntry.getAbsolutePath();
-            if (filePath.endsWith("xml") && !uniqFileList.contains(filePath)) {
-                delFiles.add(filePath);
-            }
+    public static void del(String folder) {
+        // Get all XML files in the directory
+        Path dirPath = Path.of(folder);
+        if (!Files.isDirectory(dirPath)) {
+            throw new IllegalArgumentException("Provided path is not a directory");
         }
-
-        // delete xml files
-        for (String s : delFiles) {
-            new File(s).delete();
-        }
-
-    }
-
-    // get file list by path
-    public static ArrayList<String> getFileList(String dir) {
-        ArrayList<String> lists = new ArrayList<String>();
-        File folder = new File(dir);
-
-        for (final File fileEntry : folder.listFiles()) {
-            String filePath = fileEntry.getAbsolutePath();
-            if (filePath.endsWith("xml")) {
-                lists.add(filePath);
-            }
-        }
-        return lists;
-    }
-
-    // get checksum of all files
-    public static List<Map.Entry<String, String>> cksums(List<String> files) {
-        var cksums = new ArrayList<Map.Entry<String, String>>();
-        for (String s : files) {
-            try {
-                Process p = Runtime.getRuntime().exec("cksum " + s);
-                p.waitFor();
-
-                BufferedReader reader = new BufferedReader(
-                        new InputStreamReader(p.getInputStream()));
-                String firstLine = reader.readLine();
-                String[] splited = firstLine.split(" ");
-                cksums.add(Map.entry(splited[2], splited[0]));
-            } catch (IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            } catch (InterruptedException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-        }
-        return cksums;
-    }
-
-    public static Set<String> uniqueFiles(
-            List<Map.Entry<String, String>> filesWithCksums) {
-        var sums = new ArrayList<String>();
-        for (var p : filesWithCksums) {
-            sums.add(p.getValue());
-        }
-
-        Set<String> uniqueSums = new HashSet<String>(sums);
-
-        ArrayList<String> files = new ArrayList<String>();
-        // find out unique files with HashSet
-        HashSet<String> hashSet = new HashSet<String>();
-
-        for (String u : uniqueSums) {
-            for (var p : filesWithCksums) {
-                if (p.getValue().equals(u)) {
-                    hashSet.add(p.getKey());
-                    break;
-                }
-            }
-        }
-
-        return hashSet;
-    }
-
-    // compare files by contains
-    public static List<String> compare(List<String> files) {
-        int filesSize = files.size();
-        // 0 for same, 1 for different
-        int[][] matrix = new int[filesSize][filesSize];
-        List<String> fileList = new ArrayList<>();
-        Map<String, Integer> fileMap = new HashMap<>();
-        Process p;
-        try {
-            for (int i = 0; i < files.size(); i++) {
-                for (int j = 0; j < files.size(); j++) {
-                    String iFile = files.get(i);
-                    String jFile = files.get(j);
-                    p = Runtime.getRuntime()
-                            .exec("diff " + iFile + " " + jFile);
-                    p.waitFor();
-
-                    BufferedReader reader = new BufferedReader(
-                            new InputStreamReader(p.getInputStream()));
-                    String firstLine = reader.readLine();
-                    if (firstLine != null) {
-                        matrix[i][j] = 1;
+        try (DirectoryStream<Path> paths = Files.newDirectoryStream(dirPath)) {
+            Set<String> seen = new HashSet<>();
+            for (Path path : paths) {
+                if (Files.isRegularFile(path)) {
+                    // Generate the SHA-256 hash
+                    MessageDigest digest = MessageDigest.getInstance("SHA-256");
+                    byte[] hash = digest.digest(Files.readAllBytes(path));
+                    // Convert hash to hex string
+                    StringBuilder hexString = new StringBuilder();
+                    for (byte b : hash) {
+                        String hex = Integer.toHexString(0xff & b);
+                        if (hex.length() == 1) {
+                            hexString.append('0');
+                        }
+                        hexString.append(hex);
+                    }
+                    if (!seen.add(hexString.toString())) {
+                        // if the hash is in the set, this file is a duplicate
+                        Files.delete(path);
                     }
                 }
             }
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } catch (InterruptedException e) {
-            // TODO Auto-generated catch block
+        } catch (IOException | NoSuchAlgorithmException e) {
+            //noinspection CallToPrintStackTrace
             e.printStackTrace();
         }
-
-        // iterate map and copy to a list
-        Set<String> set = fileMap.keySet();
-        for (String s : set) {
-            fileList.add(s);
-        }
-        return fileList;
     }
 }
