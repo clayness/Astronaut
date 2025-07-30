@@ -1,38 +1,38 @@
 package edu.virginia.cs.Framework.Types;
 
 import java.io.Serializable;
-import java.util.ArrayList;
+import java.util.List;
 
 
-public class DBFormalAbstractMeasurementFunction implements Serializable{
-	public 	enum MeasurementType {
-		TIME, SPACE
-	}
-	
-	private MeasurementType mType = null;
-	private ArrayList<AbstractLoad> loads; 
-	
-	public DBFormalAbstractMeasurementFunction(MeasurementType m){
-		this.setmType(m);
-	}
-	
+public class DBFormalAbstractMeasurementFunction implements Serializable {
+    public enum MeasurementType {
+        TIME, SPACE
+    }
 
-	public MeasurementType getmType() {
-		return mType;
-	}
+    private MeasurementType mType = null;
+    private List<AbstractLoad> loads;
+
+    public DBFormalAbstractMeasurementFunction(MeasurementType m) {
+        this.setmType(m);
+    }
 
 
-	public void setmType(MeasurementType mType) {
-		this.mType = mType;
-	}
-	
-	public ArrayList<AbstractLoad> getLoads() {
-		return loads;
-	}
-	
-	public void setLoads(ArrayList<AbstractLoad> loads) {
-		this.loads = loads;
-	}
+    public MeasurementType getmType() {
+        return mType;
+    }
+
+
+    public void setmType(MeasurementType mType) {
+        this.mType = mType;
+    }
+
+    public List<AbstractLoad> getLoads() {
+        return loads;
+    }
+
+    public void setLoads(List<AbstractLoad> loads) {
+        this.loads = loads;
+    }
 }
 
 

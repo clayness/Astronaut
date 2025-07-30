@@ -17,49 +17,49 @@ class DBImplementation(path: String) extends Serializable { //extends FrameworkT
   private val implPath: String = path
 
   private var dataProvider: DataProvider = _
-  private var reverseTAssociate: util.ArrayList[CodeNamePair] = _
-  private var foreignKeys: util.ArrayList[CodeNamePair] = _
+  private var reverseTAssociate: util.List[CodeNamePair] = _
+  private var foreignKeys: util.List[CodeNamePair] = _
   // HashMap[Association Name, pair[src, dst], src and dst are class name
-  private var associations: util.HashMap[String, CodeNamePair] = _
-  private var primaryKeys: util.ArrayList[CodeNamePair] = _
-  private var fields: util.ArrayList[CodeNamePair] = _
-  private var allFields: util.ArrayList[String] = _
-  private var fieldsTable: util.ArrayList[CodeNamePair] = _
+  private var associations: util.Map[String, CodeNamePair] = _
+  private var primaryKeys: util.List[CodeNamePair] = _
+  private var fields: util.List[CodeNamePair] = _
+  private var allFields: util.List[String] = _
+  private var fieldsTable: util.List[CodeNamePair] = _
 
 
   // this the reverse of "id" in implementation
-  private var reverseIDs: util.ArrayList[CodeNamePair] = _
+  private var reverseIDs: util.List[CodeNamePair] = _
 
-  private var sigs: util.ArrayList[Sig] = _
-  private var ids: util.ArrayList[String] = _
-  private var associationsForCreateSchemas: util.ArrayList[String] = _
-  private var typeMap: util.HashMap[String, String] = _
+  private var sigs: util.List[Sig] = _
+  private var ids: util.List[String] = _
+  private var associationsForCreateSchemas: util.List[String] = _
+  private var typeMap: util.Map[String, String] = _
 
-  def setSigs(sigs: util.ArrayList[Sig]): Unit = {
+  def setSigs(sigs: util.List[Sig]): Unit = {
     this.sigs = sigs
   }
 
-  def getIds: util.ArrayList[String] = {
+  def getIds: util.List[String] = {
     this.ids
   }
 
-  def setIds(ids: util.ArrayList[String]): Unit = {
+  def setIds(ids: util.List[String]): Unit = {
     this.ids = ids
   }
 
-  def getAssociationsForCreateSchemas: util.ArrayList[String] = {
+  def getAssociationsForCreateSchemas: util.List[String] = {
     this.associationsForCreateSchemas
   }
 
-  def setAssociationsForCreateSchemas(asss: util.ArrayList[String]): Unit = {
+  def setAssociationsForCreateSchemas(asss: util.List[String]): Unit = {
     this.associationsForCreateSchemas = asss
   }
 
-  def getTypeMap: util.HashMap[String, String] = {
+  def getTypeMap: util.Map[String, String] = {
     this.typeMap
   }
 
-  def setTypeMap(typeMap: util.HashMap[String, String]): Unit = {
+  def setTypeMap(typeMap: util.Map[String, String]): Unit = {
     this.typeMap = typeMap
   }
 
@@ -76,63 +76,63 @@ class DBImplementation(path: String) extends Serializable { //extends FrameworkT
     this.dataProvider = dp
   }
 
-  def getReverseTAssociate: util.ArrayList[CodeNamePair] = {
+  def getReverseTAssociate: util.List[CodeNamePair] = {
     this.reverseTAssociate
   }
 
-  def setReverseTAssociate(rTAss: util.ArrayList[CodeNamePair]): Unit = {
+  def setReverseTAssociate(rTAss: util.List[CodeNamePair]): Unit = {
     this.reverseTAssociate = rTAss
   }
 
-  def setForeignKeys(fKeys: util.ArrayList[CodeNamePair]): Unit = {
+  def setForeignKeys(fKeys: util.List[CodeNamePair]): Unit = {
     this.foreignKeys = fKeys
   }
 
-  def getAssociations: util.HashMap[String, CodeNamePair] = {
+  def getAssociations: util.Map[String, CodeNamePair] = {
     this.associations
   }
 
-  def setAssociations(ass: util.HashMap[String, CodeNamePair]): Unit = {
+  def setAssociations(ass: util.Map[String, CodeNamePair]): Unit = {
     this.associations = ass
   }
 
-  def getPrimaryKeys: util.ArrayList[CodeNamePair] = {
+  def getPrimaryKeys: util.List[CodeNamePair] = {
     this.primaryKeys
   }
 
-  def setPrimaryKeys(pKeys: util.ArrayList[CodeNamePair]): Unit = {
+  def setPrimaryKeys(pKeys: util.List[CodeNamePair]): Unit = {
     this.primaryKeys = pKeys
   }
 
-  def getFields: util.ArrayList[CodeNamePair] = {
+  def getFields: util.List[CodeNamePair] = {
     this.fields
   }
 
-  def setFields(fields: util.ArrayList[CodeNamePair]): Unit = {
+  def setFields(fields: util.List[CodeNamePair]): Unit = {
     this.fields = fields
   }
 
-  def setAllFields(af: util.ArrayList[String]): Unit = {
+  def setAllFields(af: util.List[String]): Unit = {
     this.allFields = af
   }
 
-  def getFieldsTable: util.ArrayList[CodeNamePair] = {
+  def getFieldsTable: util.List[CodeNamePair] = {
     this.fieldsTable
   }
 
-  def setFieldsTable(ft: util.ArrayList[CodeNamePair]): Unit = {
+  def setFieldsTable(ft: util.List[CodeNamePair]): Unit = {
     this.fieldsTable = ft
   }
 
-  def getReverseIDs: util.ArrayList[CodeNamePair] = {
+  def getReverseIDs: util.List[CodeNamePair] = {
     this.reverseIDs
   }
 
-  def setReverseIDs(ids: util.ArrayList[CodeNamePair]): Unit = {
+  def setReverseIDs(ids: util.List[CodeNamePair]): Unit = {
     this.reverseIDs = ids
   }
 
-  def getSigs: util.ArrayList[Sig] = {
+  def getSigs: util.List[Sig] = {
     this.sigs
   }
 
@@ -362,7 +362,7 @@ class DBImplementation(path: String) extends Serializable { //extends FrameworkT
     null
   }
 
-  def getDataSchemas: util.HashMap[String, util.ArrayList[CodeNamePair]] = {
+  def getDataSchemas: util.Map[String, util.List[CodeNamePair]] = {
     this.dataProvider.getTables
   }
 }

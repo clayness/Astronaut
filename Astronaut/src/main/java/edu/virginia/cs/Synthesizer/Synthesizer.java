@@ -21,9 +21,9 @@ public class Synthesizer implements Serializable {
 	String trimmedFilename = "";
 
 	// The list of quality equivalence classes on the Pareto optimal frontier.
-	ArrayList<MetricValue> solutionsMV = new ArrayList<MetricValue>();
+	List<MetricValue> solutionsMV = new ArrayList<MetricValue>();
 	// The list of Solutions on the Pareto optimal frontier.
-	ArrayList<MetricValue> paretoOptimalSolutions = new ArrayList<MetricValue>();
+	List<MetricValue> paretoOptimalSolutions = new ArrayList<MetricValue>();
 	private Integer overallNIC = 0;
 	static boolean storeAllSolutions = false;
 
@@ -90,16 +90,16 @@ public class Synthesizer implements Serializable {
 			folderOfAlloyOMSols = file.getAbsolutePath();
 		}
 		// String folderOfAlloyOMSols = "C:\\Users\\ct4ew\\Desktop\\CSOS\\";
-		HashMap<String, HashMap<String, ArrayList<CodeNamePair>>> schemas = new HashMap<>();
-		HashMap<String, ArrayList<CodeNamePair>> parents = new HashMap<>();
-		HashMap<String, ArrayList<CodeNamePair>> reverseTAss = new HashMap<>();
-		HashMap<String, ArrayList<CodeNamePair>> foreignKeys = new HashMap<>();
-		HashMap<String, HashMap<String, CodeNamePair>> association = new HashMap<>();
-		HashMap<String, ArrayList<CodeNamePair>> primaryKeys = new HashMap<>();
-		HashMap<String, ArrayList<CodeNamePair>> fields = new HashMap<>();
-		HashMap<String, ArrayList<CodeNamePair>> fieldsTable = new HashMap<>();
-		HashMap<String, ArrayList<String>> allFields = new HashMap<>();
-		HashMap<String, ArrayList<CodeNamePair>> fieldType = new HashMap<>();
+		Map<String, Map<String, List<CodeNamePair>>> schemas = new HashMap<>();
+		Map<String, List<CodeNamePair>> parents = new HashMap<>();
+		Map<String, List<CodeNamePair>> reverseTAss = new HashMap<>();
+		Map<String, List<CodeNamePair>> foreignKeys = new HashMap<>();
+		Map<String, Map<String, CodeNamePair>> association = new HashMap<>();
+		Map<String, List<CodeNamePair>> primaryKeys = new HashMap<>();
+		Map<String, List<CodeNamePair>> fields = new HashMap<>();
+		Map<String, List<CodeNamePair>> fieldsTable = new HashMap<>();
+		Map<String, List<String>> allFields = new HashMap<>();
+		Map<String, List<CodeNamePair>> fieldType = new HashMap<>();
 		boolean isRandom;
 
 		String alloyOM = args[1];
@@ -129,10 +129,10 @@ public class Synthesizer implements Serializable {
 		}
 		AlloyOMToAlloyDM aotad = new AlloyOMToAlloyDM();
 		aotad.run(alloyOM, alloyInstanceModel, intScope);
-		ArrayList<String> ids = aotad.getIDs();
-		ArrayList<String> associations = aotad.getAss();
-		HashMap<String, String> typeList = aotad.getTypeList();
-		ArrayList<Sig> sigs = aotad.getSigs();
+		List<String> ids = aotad.getIDs();
+		List<String> associations = aotad.getAss();
+		Map<String, String> typeList = aotad.getTypeList();
+		List<Sig> sigs = aotad.getSigs();
 
 		File dir = new File(folderOfAlloyOMSols);
 		for (File singleFile : dir.listFiles()) {
@@ -164,14 +164,14 @@ public class Synthesizer implements Serializable {
 				foreignKeys, association, primaryKeys, fields, allFields,
 				fieldsTable, fieldType, ids, associations, intScope, typeList,
 				sigs);
-		for (Map.Entry<String, HashMap<String, ArrayList<CodeNamePair>>> entry : schemas
+		for (Map.Entry<String, Map<String, List<CodeNamePair>>> entry : schemas
 				.entrySet()) {
 			String dbScheme = entry.getKey();
 			System.out.print("NCT of " + dbScheme + ": ");
 			System.out.println(solver.getNCTSum(dbScheme));
 			System.out.println("-------------------------------");
 		}
-		for (Map.Entry<String, HashMap<String, ArrayList<CodeNamePair>>> entry : schemas
+		for (Map.Entry<String, Map<String, List<CodeNamePair>>> entry : schemas
 				.entrySet()) {
 			String dbScheme = entry.getKey();
 			System.out.print("TATI of " + dbScheme + ": ");

@@ -1,55 +1,56 @@
 package edu.virginia.cs.Framework.Types;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-
 import edu.virginia.cs.Synthesizer.Sig;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
 public class ObjectSpec {
-	private String specPath = "";
-	
-	private ArrayList<String> ids= new ArrayList<String>();
-	private ArrayList<String>  associations = null;
-	private HashMap<String, String> typeList = null;
-	private ArrayList<Sig>  sigs = null;
-	
-	public ArrayList<String> getIds() {
-		return ids;
-	}
+    private String specPath = "";
 
-	public void setIds(ArrayList<String> ids) {
-		this.ids = ids;
-	}
+    private List<String> ids = new ArrayList<>();
+    private List<String> associations = null;
+    private Map<String, String> typeList = null;
+    private List<Sig> sigs = null;
 
-	public ArrayList<String> getAssociations() {
-		return associations;
-	}
+    public List<String> getIds() {
+        return ids;
+    }
 
-	public void setAssociations(ArrayList<String> associations) {
-		this.associations = associations;
-	}
+    public void setIds(List<String> ids) {
+        this.ids = ids;
+    }
 
-	public HashMap<String, String> getTypeList() {
-		return typeList;
-	}
+    public List<String> getAssociations() {
+        return associations;
+    }
 
-	public void setTypeList(HashMap<String, String> typeList) {
-		this.typeList = typeList;
-	}
+    public void setAssociations(List<String> associations) {
+        this.associations = associations;
+    }
 
-	public ArrayList<Sig> getSigs() {
-		return sigs;
-	}
+    public Map<String, String> getTypeList() {
+        return typeList;
+    }
 
-	public void setSigs(ArrayList<Sig> sigs) {
-		this.sigs = sigs;
-	}
+    public void setTypeList(Map<String, String> typeList) {
+        this.typeList = typeList;
+    }
 
-	public String getSpecPath(){
-		return this.specPath;
-	}
-	
-	public void setSpecPath(String path){
-		this.specPath = path;
-	}
+    public List<Sig> getSigs() {
+        return sigs;
+    }
+
+    public void setSigs(List<Sig> sigs) {
+        this.sigs = sigs;
+    }
+
+    public String getSpecPath() {
+        return this.specPath;
+    }
+
+    public void setSpecPath(String path) {
+        this.specPath = path;
+    }
 }

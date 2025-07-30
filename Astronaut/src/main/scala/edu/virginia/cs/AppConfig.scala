@@ -19,14 +19,14 @@ object AppConfig {
   private final val isRandom: Integer = params.getInt("alloy.tlGenerator")
   private final val randomRange: Integer = params.getInt("alloy.randomRange")
   private final val subRange: Integer = params.getInt("alloy.subRange")
-  private final var specList: List[String] = params.getStringList("app.specs").asScala.toList
   private final val storeAllSolutions: Boolean = params.getBoolean("app.storeAllSolution")
   private final val resultFile = params.getString("resultFile")
   private final val sparkSlaves: List[String] = params.getStringList("spark.slaves").asScala.toList
-  private final var testDB: String = params.getString("app.testDB")
   private final val postgresUser: String = params.getString("postgres.user")
   private final val postgresPassword: String = params.getString("postgres.password")
   private final val icse2022SolutionFolder: String = if (params.hasPath("icse2022.solutionFolder")) params.getString("icse2022.solutionFolder") else ""
+  private final var specList: List[String] = params.getStringList("app.specs").asScala.toList
+  private final var testDB: String = params.getString("app.testDB")
 
   def getPostgresUser: String = {
     this.postgresUser

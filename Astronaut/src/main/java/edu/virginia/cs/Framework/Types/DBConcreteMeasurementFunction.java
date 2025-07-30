@@ -1,24 +1,25 @@
 package edu.virginia.cs.Framework.Types;
 
+import edu.virginia.cs.AppConfig;
+import edu.virginia.cs.Evaluator.ScriptRunner;
+import edu.virginia.cs.Framework.Types.DBFormalAbstractMeasurementFunction.MeasurementType;
+import edu.virginia.cs.Synthesizer.CodeNamePair;
+
 import java.io.*;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
-
-import edu.virginia.cs.AppConfig;
-import edu.virginia.cs.Evaluator.ScriptRunner;
-import edu.virginia.cs.Framework.Types.DBFormalAbstractMeasurementFunction.MeasurementType;
-import edu.virginia.cs.Synthesizer.CodeNamePair;
 
 public class DBConcreteMeasurementFunction implements Serializable {
     private MeasurementType mType = null;
     //	private ArrayList<ConcreteLoad> loads;
 //	private DBImplementation impl;
     private Boolean isDebugOn = AppConfig.getDebug();
-    private HashMap<String, HashMap<String, ArrayList<CodeNamePair>>> instances;
+    private Map<String, Map<String, List<CodeNamePair>>> instances;
 
     public MeasurementFunctionByDB mfByDB = null;
 
@@ -35,11 +36,11 @@ public class DBConcreteMeasurementFunction implements Serializable {
         }
     }
 
-    public HashMap<String, HashMap<String, ArrayList<CodeNamePair>>> getInstances() {
+    public Map<String, Map<String, List<CodeNamePair>>> getInstances() {
         return instances;
     }
 
-    public void setInstances(HashMap<String, HashMap<String, ArrayList<CodeNamePair>>> ins) {
+    public void setInstances(Map<String, Map<String, List<CodeNamePair>>> ins) {
         this.instances = ins;
     }
 
@@ -59,11 +60,11 @@ public class DBConcreteMeasurementFunction implements Serializable {
         this.mType = mType;
     }
 
-    public ArrayList<ConcreteLoad> getLoads() {
+    public List<ConcreteLoad> getLoads() {
         return this.mfByDB.getLoads();
     }
 
-    public void setLoads(ArrayList<ConcreteLoad> loads) {
+    public void setLoads(List<ConcreteLoad> loads) {
         this.mfByDB.setLoads(loads);
     }
 
@@ -71,14 +72,14 @@ public class DBConcreteMeasurementFunction implements Serializable {
 
 abstract class MeasurementFunctionByDB implements Serializable {
 
-    protected ArrayList<ConcreteLoad> loads;
+    protected List<ConcreteLoad> loads;
     protected DBImplementation impl;
 
-    public ArrayList<ConcreteLoad> getLoads() {
+    public List<ConcreteLoad> getLoads() {
         return loads;
     }
 
-    public void setLoads(ArrayList<ConcreteLoad> loads) {
+    public void setLoads(List<ConcreteLoad> loads) {
         this.loads = loads;
     }
 
@@ -441,7 +442,7 @@ class PostgresMeasurementFunction extends MeasurementFunctionByDB implements Ser
 //                "-c",
 //                this.postgresCMD + " " + dbName, "-c", "\"SELECT pg_database_size('"+ dbName +"');\""};
         String[] command = new String[]{"bash", "-c",
-                "psql -c \"SELECT pg_database_size('"+dbName.toLowerCase()+"');\" " + dbName.toLowerCase()};
+                "psql -c \"SELECT pg_database_size('" + dbName.toLowerCase() + "');\" " + dbName.toLowerCase()};
         Process p;
         try {
             System.out.println("Prepare to execute command: Check Space");
@@ -464,10 +465,10 @@ class PostgresMeasurementFunction extends MeasurementFunctionByDB implements Ser
                 lines.add(line);
             }
 
-            for(String s : lines){
-                if(s.startsWith("    ")) {
-                    System.out.println("Database: "+dbName+" ; Size: "+s);
-                    return Double.parseDouble(s.trim())/1024;   // in KB
+            for (String s : lines) {
+                if (s.startsWith("    ")) {
+                    System.out.println("Database: " + dbName + " ; Size: " + s);
+                    return Double.parseDouble(s.trim()) / 1024;   // in KB
                 }
             }
         } catch (Exception e) {
@@ -489,7 +490,7 @@ class PostgresMeasurementFunction extends MeasurementFunctionByDB implements Ser
                 implPath.lastIndexOf("."));
 
         String[] command = new String[]{"bash", "-c",
-                "psql -c \"drop database "+dbName.toLowerCase()+";\" postgres &> /dev/null"};
+                "psql -c \"drop database " + dbName.toLowerCase() + ";\" postgres &> /dev/null"};
 //        System.out.println(String.join(" ", command));
         try {
             System.out.println("Prepare to execute command: DROP DB");
@@ -543,7 +544,7 @@ class PostgresMeasurementFunction extends MeasurementFunctionByDB implements Ser
                 implPath.lastIndexOf("."));
 
         String[] command = new String[]{"bash", "-c",
-                "psql -c \"create database "+dbName.toLowerCase()+";\" postgres  &> /dev/null"};
+                "psql -c \"create database " + dbName.toLowerCase() + ";\" postgres  &> /dev/null"};
         System.out.println(String.join(" ", command));
         try {
             System.out.println("Prepare to execute command: CREATE DB");
@@ -597,7 +598,7 @@ class PostgresMeasurementFunction extends MeasurementFunctionByDB implements Ser
                 implPath.lastIndexOf(File.separator) + 1,
                 implPath.lastIndexOf("."));
         String[] command = new String[]{"bash", "-c",
-                "psql -f "+implPath+" " + dbName.toLowerCase() + " &> /dev/null"};
+                "psql -f " + implPath + " " + dbName.toLowerCase() + " &> /dev/null"};
 
         try {
             Process p = Runtime.getRuntime().exec(command);
@@ -635,7 +636,7 @@ class PostgresMeasurementFunction extends MeasurementFunctionByDB implements Ser
 
             long startTime = System.currentTimeMillis();
             String[] command = new String[]{"bash", "-c",
-                    "psql -f "+insertPath+" " + dbName.toLowerCase() + " &> /dev/null"};
+                    "psql -f " + insertPath + " " + dbName.toLowerCase() + " &> /dev/null"};
 
             try {
                 System.out.println("Prepare to execute command: Run Insert");
@@ -686,7 +687,7 @@ class PostgresMeasurementFunction extends MeasurementFunctionByDB implements Ser
 //            String[] cmd = new String[]{"bash", "-c", "\"" + this.postgresCMD + " " + dbName + " -f ", selectPath+"\""};
 //            String cmd = this.postgresCMD + " " + dbName + " -f " + selectPath;
             String[] command = new String[]{"bash", "-c",
-                    "psql -f "+selectPath+" " + dbName.toLowerCase()+ " &> /dev/null"};
+                    "psql -f " + selectPath + " " + dbName.toLowerCase() + " &> /dev/null"};
 
             try {
                 System.out.println("Prepare to execute command: Run Select");

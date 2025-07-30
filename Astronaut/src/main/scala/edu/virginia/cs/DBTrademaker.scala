@@ -8,370 +8,171 @@ import edu.virginia.cs.Uniq.DeleteUniq
 import org.apache.spark.{SparkConf, SparkContext}
 
 import java.io.{File, FileWriter, PrintWriter}
+import java.nio.file.Path
 import java.text.{NumberFormat, ParsePosition}
 import java.util
-import java.util.concurrent.TimeUnit
 import java.util.{Random, UUID}
 import scala.jdk.CollectionConverters._
-
-//import scala.tools.nsc.transform.SpecializeTypes.Implementation
+import scala.util.Using
 
 class DBTrademaker extends AstronautFramework {
 
+  // analyze and tradespace are already defined in Tradespace specification
+  // we can call "tradespace" function to synthesize implementation and benchmark
+  private val myTradespace: Tradespace = Build_Tradespace(synthesizeImplAndFuncFromSpec, myRunBenchmark, myMapReduce)
   var isDebugOn: Boolean = AppConfig.getDebug
-  private var timeInterval: Long = 1
   var startTime: Long = 1
   var endTime: Long = 1
-
-  type SpecificationType >: DBSpecification
-  type ImplementationType >: DBImplementation
+  private var timeInterval: Long = 1
 
   def run(): Unit = {
-
-    if (isDebugOn) {
-      println("hello world")
-    }
-
+    // iterate the list of specs from the configuration
     val specs = AppConfig.getSpecs
     for (spec <- specs) {
-
+      // get the name of the specification file
+      val leaf = Path.of(spec).getFileName.toString.replaceFirst("\\.[^.]+$", "")
       // synthesize the tradespace for the spec
       val mySpec: DBSpecification = new DBSpecification(spec)
       val evaluatedResults = tradespaceFunction(mySpec)
 
-      // write the result to files and print it out
-      // iterate list of results
-      // get head of the list 
-      // get the tail of the list
-      val defaultValue = Pair[ImplementationType, MeasurementResultSetType](new DBImplementation(""),
-        new DBMeasurementResult(new DBTimeMeasurementResult(-1.0, -1.0), new DBSpaceMeasurementResult(-1.0)))
-
-      val castedResults = evaluatedResults.asInstanceOf[List[Pair[ImplementationType, MeasurementResultSetType]]]
-      var resultHead = hd[Pair[ImplementationType, MeasurementResultSetType]](defaultValue)(castedResults)
-      var resultTail = tl[Pair[ImplementationType, MeasurementResultSetType]](castedResults)
-
-      if (resultHead != defaultValue) {
-        var implPath: String = fst(resultHead).asInstanceOf[DBImplementation].getImPath
-        val startIdx = implPath.lastIndexOf(File.separator) + 1
+      // if there are any results, create the output files
+      if (evaluatedResults.nonEmpty) {
         // get solution file name, which is like: customerOrderObjectModel_Sol_2.sql
-        val tmpPath = implPath.substring(startIdx)
-        val endIdx = tmpPath.indexOf("_")
-        val specName = tmpPath.substring(0, endIdx)
-        implPath = implPath.substring(0, implPath.lastIndexOf(File.separator))
-        implPath = implPath.substring(0, implPath.lastIndexOf(File.separator) + 1)
-        val resultFilePath = implPath + specName + ".txt"
+        val outPath = Path.of(evaluatedResults.head._1.getImPath).resolveSibling(leaf + ".txt")
 
-        val resultFile = new File(resultFilePath)
-        val pw = new PrintWriter(resultFile)
-
-        while (resultHead != defaultValue) {
-          val impl = fst(resultHead)
-          val mr = snd(resultHead)
-
-          val sol = impl.asInstanceOf[DBImplementation].getImPath
-          val solName = sol.substring(sol.lastIndexOf(File.separator) + 1, sol.lastIndexOf("."))
-          pw.println(solName + ":" + mr.asInstanceOf[DBMeasurementResult].getTmr.getInsertTime + ":" +
-            mr.asInstanceOf[DBMeasurementResult].getTmr.getSelectTime + ":" +
-            mr.asInstanceOf[DBMeasurementResult].getSmr.getDbSpace)
-
-          resultHead = hd[Pair[ImplementationType, MeasurementResultSetType]](defaultValue)(resultTail)
-          resultTail = tl[Pair[ImplementationType, MeasurementResultSetType]](resultTail)
+        // iterate the results and print each result to the output file
+        Using(new PrintWriter(outPath.toFile)) { pw =>
+          for ((impl, mr) <- evaluatedResults) {
+            val sol = impl.getImPath
+            val solName = sol.substring(sol.lastIndexOf(File.separator) + 1, sol.lastIndexOf("."))
+            pw.printf("%s:%d:%d:%d%n", solName,
+              mr.getTmr.getInsertTime,
+              mr.getTmr.getSelectTime,
+              mr.getSmr.getDbSpace)
+          }
         }
-        pw.close()
       }
-    }
-
-    //    var mySpec: DBSpecification = new DBSpecification(AppConfig.getSpecificationPath)
-    //    mySpec.setSpecFile("/Users/tang/Desktop/ORM/Parser/customerOrderObjectModel.als")
-
-    //    var myDBTrademaker = new DBTrademaker()
-    // get solutions and test results
-
-    if (isDebugOn) {
-      println("Done")
     }
   }
 
-  private def mySynthesizer(spec: SpecificationType): List[Prod[ImplementationType, MeasurementFunctionSetType]] = {
-    println("mySynthesizer starts")
-    val fSpec: FormalSpecificationType = mySFunction(spec)
+  def getIDBySigName(sigs: util.List[Sig], sigName: String): String = {
+    for (s <- sigs.asScala) {
+      if (s.getSigName.equalsIgnoreCase(sigName)) {
+        return s.getId
+      }
+    }
+    ""
+  }
 
-    val fImpl: List[FormalImplementationType] = myCFunction(fSpec)
+  def getAssByKey(scheme: util.Map[String, util.List[CodeNamePair]],
+                  pTable: String, fTable: String): util.Map[String, CodeNamePair] = {
+    val ass_map: util.Map[String, CodeNamePair] = new util.HashMap[String, CodeNamePair]()
+    var src: String = ""
+    var dst: String = ""
+    var ass: String = ""
 
-    val impls = myIFunctionHelper(fImpl)
+    val schemeIt = scheme.asScala.iterator
+    while (schemeIt.hasNext) {
+      val table = schemeIt.next
+      val fields = table._2
+      for (pair <- fields.asScala) {
+        if (pair.getFirst.equalsIgnoreCase("src")) {
+          if (pair.getSecond.equalsIgnoreCase(pTable)) {
+            src = pTable
+          }
+          if (pair.getSecond.equalsIgnoreCase(fTable)) {
+            src = fTable
+          }
+        }
+        if (pair.getFirst.equalsIgnoreCase("dst")) {
+          if (pair.getSecond.equalsIgnoreCase(pTable)) {
+            dst = pTable
+          }
+          if (pair.getSecond.equalsIgnoreCase(fTable)) {
+            dst = fTable
+          }
+        }
+      }
+      if (src.nonEmpty && dst.nonEmpty) {
+        ass = table._1
+        val pair: CodeNamePair = new CodeNamePair(src, dst)
+        ass_map.put(ass, pair)
+        return ass_map
+      }
+    }
+    null
+  }
+
+  // get table name by the primary key
+  // we need to filter out the association table by check if the primary key is foreign key at the same time
+  def getTablesByPrimaryKey(pKeys: util.List[CodeNamePair], primaryKey: String): util.List[String] = {
+    val tables: util.List[String] = new util.ArrayList[String]()
+    for (pair <- pKeys.asScala) {
+      if (pair.getSecond.equalsIgnoreCase(primaryKey)) {
+        tables.add(pair.getFirst)
+      }
+    }
+    tables
+  }
+
+  def isNumeric(str: String): Boolean = {
+    val formatter: NumberFormat = NumberFormat.getInstance()
+    val pos: ParsePosition = new ParsePosition(0)
+    formatter.parse(str, pos)
+    str.length() == pos.getIndex
+  }
+
+  private def synthesizeImplAndFuncFromSpec(spec: SpecificationType)
+  : List[(ImplementationType, MeasurementFunctionSetType)] = {
+    val fSpec: FormalSpecificationType = createFormalSpec(spec)
+    val fImpl: List[FormalImplementationType] = createFormalImpls(fSpec)
+    val impls = fImpl.map(myIFunction)
 
     if (AppConfig.getIsRandom == 0) {
       val fAbsMF: FormalAbstractMeasurementFunctionSet = myLFunction(fSpec)
       val fConMF: List[FormalConcreteMeasurementFunctionSet] = myTFunction(fAbsMF)(impls)
-      val mfs = myBFunctionHelper(fConMF)
-      val zipped = combine(impls)(mfs)
+      val mfs = fConMF.map(myBFunction)
+      val zipped = impls.zip(mfs)
       return zipped
     } else if (AppConfig.getIsRandom == 1) {
       // get concrete measurement function by random generator
       val mfs = genRandomConcreteMF(impls)
-      // Chong: copy self-defined list to Scala list while reversed
-      val defaultValue = Nil[MeasurementFunctionSetType]()
-      var head = hd[MeasurementFunctionSetType](defaultValue)(mfs)
-      var tail = tl[MeasurementFunctionSetType](mfs)
-
-      var reversedMfs: List[MeasurementFunctionSetType] = Nil[MeasurementFunctionSetType]()
-      while (head != defaultValue) {
-        reversedMfs = Cons[MeasurementFunctionSetType](head, reversedMfs)
-        head = hd[MeasurementFunctionSetType](defaultValue)(tail)
-        tail = tl[MeasurementFunctionSetType](tail)
-      }
-
       // iterate to create list of pairs, call "combine" will result in StackOverFlowError
-      val zipped = combine(impls)(reversedMfs)
+      val zipped = impls.zip(mfs)
       return zipped
     }
     null
   }
 
   private def genRandomConcreteMF(impls: List[ImplementationType]): List[MeasurementFunctionSetType] = {
-    if (isDebugOn) {
-      println("genRandomConcreteMF starts")
-    }
-
-    // create DBConcreteMeasurementFunctionSet for each of DBImplementation in impls
     /**
      * convert List[ImplementationType] to ArrayList[DBImplementation]
      * iterate all implementations and create DBMeasurementFunction
      */
-    var mfSets: List[MeasurementFunctionSetType] = Nil()
+    var mfSets: List[MeasurementFunctionSetType] = Nil
 
-    val dbImpls: util.ArrayList[DBImplementation] = new util.ArrayList
-    val defaultValue: ImplementationType = null
-    var head = hd[ImplementationType](defaultValue)(impls)
-    var tail = tl[ImplementationType](impls)
-    while (head != defaultValue) {
-      dbImpls.add(head.asInstanceOf[DBImplementation])
-      head = hd[ImplementationType](defaultValue)(tail)
-      tail = tl[ImplementationType](tail)
-    }
-
+    val dbImpls = impls.map(e => new DBImplementation(e.getImPath))
     val range = AppConfig.getRandomRange
-    //    for (i <- 0 to range by subRange) {
-    //      var lowRange = i + 1
-    //      var highRange = -1
-    //      if (i + subRange > range) {
-    //        highRange = range
-    //      } else {
-    //        highRange = i + subRange
-    //      }
+    val allInstances = generateRandomInstances(dbImpls.head.getSigs, dbImpls.head.getTypeMap, 1, range)
 
-    val allInstances = generateRandomInstances(dbImpls.get(0).getSigs, dbImpls.get(0).getTypeMap, 1, range)
-    val implIt = dbImpls.iterator()
-    var i = 0
-    while (implIt.hasNext) {
-      i = i + 1
-      val singleImpl = implIt.next()
-      // create abstract loads for impl
-      // call getRandomAbsMeasurementFunctionSet for each impl
-      // call getConcreteMeasurementFunctionSets for each abstract load
-      //      var timeLoads: ArrayList[ConcreteLoad] = new ArrayList[ConcreteLoad](2)
-      //      var spaceLoads: ArrayList[ConcreteLoad] = new ArrayList[ConcreteLoad](1)
-
-      // generate statements sub range by sub range and appending to files
-      //      var insertLoad: ConcreteLoad = generateRandomInsertStatements(singleImpl, allInstances)
-      //      var selectLoad: ConcreteLoad = generateRandomSelectStatements(singleImpl, allInstances)
-
-      // create measurement functions after generating the last segment of test cases
-      //        if (highRange == range) {
-      //          timeLoads.add(insertLoad)
-      //          timeLoads.add(selectLoad)
-      //          
-      //          spaceLoads.add(insertLoad)
-
-      //          var ctmf: DBConcreteTimeMeasurementFunction = new DBConcreteTimeMeasurementFunction(timeLoads)
+    for (singleImpl <- dbImpls) {
       val ctmf: DBConcreteTimeMeasurementFunction = new DBConcreteTimeMeasurementFunction()
       ctmf.setInstances(allInstances)
       ctmf.setImpl(singleImpl)
-      // create select statements      
-      //          var csmf: DBConcreteSpaceMeasurementFunction = new DBConcreteSpaceMeasurementFunction(spaceLoads)
+
       val csmf: DBConcreteSpaceMeasurementFunction = new DBConcreteSpaceMeasurementFunction()
       csmf.setInstances(allInstances)
       csmf.setImpl(singleImpl)
 
       val mfs: DBConcreteMeasurementFunctionSet = new DBConcreteMeasurementFunctionSet(ctmf, csmf)
-      mfSets = Cons[MeasurementFunctionSetType](mfs, mfSets)
-      //println("add all instances to impl " + i)
-      //        }
+      mfSets = mfs :: mfSets
     }
-    //    }
-    if (isDebugOn) {
-      println("genRandomConcreteMF ends")
-    }
-
     mfSets
   }
 
-  // get the random instances, and return insertFilePath
-  private def generateRandomInsertStatements(impl: DBImplementation, instances: util.HashMap[String, util.HashMap[String, util.ArrayList[CodeNamePair]]]): ConcreteLoad = {
-    val insertSpecializedQuery: SpecializedQuery = specializeInsertQuery(null, impl, instances)
-    val cq = new ConcreteQuery()
-    cq.setAction(Action.INSERT)
-    cq.setSq(insertSpecializedQuery)
-    val cqs = new util.ArrayList[ConcreteQuery](1)
-    cqs.add(cq)
-    /**
-     * print out insert scripts
-     */
-    val insCL = new ConcreteLoad()
-    insCL.setQuerySet(cqs)
-
-    val implPath = impl.getImPath
-    var pathBase = implPath.substring(0, implPath.lastIndexOf(File.separator))
-    val implFileName = implPath.substring(implPath.lastIndexOf(File.separator) + 1, implPath.lastIndexOf("."))
-    pathBase += File.separator + "TestCases"
-    if (!new File(pathBase).exists()) {
-      new File(pathBase).mkdirs()
-    }
-    val insertPath = pathBase + File.separator + implFileName + "_insert.sql"
-    //    var compressedInsertPath = pathBase + File.separator + implFileName + "_insert.sql.tar.gz"
-    //    var tmpInsertPath = pathBase + File.separator + implFileName + "_insert_tmp.sql"
-    insCL.setInsertPath(insertPath)
-    insCL.setSelectPath("")
-    val insertFile: File = new File(insertPath)
-    if (!insertFile.exists()) {
-      insertFile.createNewFile()
-    }
-
-    val insertPw: PrintWriter = new PrintWriter(new FileWriter(insertPath, true))
-    if (AppConfig.getTestDB.equalsIgnoreCase("mysql")) {
-      insertPw.println("USE " + implFileName + ";")
-    } else if (AppConfig.getTestDB.equalsIgnoreCase("postgres")) {
-      insertPw.println("BEGIN;")
-    }
-    val allInsertStmts = new util.ArrayList[util.HashMap[String, util.HashMap[Integer, String]]]().asScala
-    for (elem <- insCL.getQuerySet.asScala) {
-      val sq = elem.getSq
-      val sqInOneObject = sq.getInsertStmtsInOneObject
-      allInsertStmts.asJava.add(sqInOneObject)
-    }
-
-    val printOrder = PrintOrder.getOutPutOrders(pathBase).asScala
-    for (s <- printOrder) {
-      for (insertS <- allInsertStmts) {
-        val mapIt = insertS.asScala.iterator
-        while (mapIt.hasNext) {
-          val table = mapIt.next // (String, HashMap[Integer, String]) = (tableName, HashMap[ID, Statements])
-          if (table._1.equalsIgnoreCase(s)) { // check table name
-            val stmt = table._2
-            val stmtIt = stmt.asScala.iterator
-            while (stmtIt.hasNext) {
-              val idStmt = stmtIt.next
-              val stmtStr: String = String.valueOf(idStmt._2.toCharArray)
-              insertPw.println(stmtStr)
-            }
-            insertPw.flush()
-          }
-        }
-      }
-    }
-
-    insCL.setInsertPath(insertPath)
-    if (AppConfig.getTestDB.equalsIgnoreCase("postgres")) {
-      insertPw.println("COMMIT;")
-    }
-    insertPw.flush()
-    insertPw.close()
-
-    insCL.getQuerySet.clear()
-    insertSpecializedQuery.getInsertStmtsInOneObject.clear()
-    insertSpecializedQuery.getSelectStmtsInOneObject.clear()
-
-    insCL
-  }
-
-  // get the random instances, and return insertFilePath
-  private def generateRandomSelectStatements(impl: DBImplementation, instances: util.HashMap[String, util.HashMap[String, util.ArrayList[CodeNamePair]]]): ConcreteLoad = {
-    val selectSpecializedQuery: SpecializedQuery = specializeSelectQuery(null, impl, instances)
-
-    val cq = new ConcreteQuery()
-    cq.setAction(Action.SELECT)
-    cq.setSq(selectSpecializedQuery)
-    val cqs = new util.ArrayList[ConcreteQuery]()
-    cqs.add(cq)
-    val selCL = new ConcreteLoad()
-    selCL.setQuerySet(cqs)
-
-    // convert select statements
-
-    val implPath = impl.getImPath
-    var pathBase = implPath.substring(0, implPath.lastIndexOf(File.separator))
-    val implFileName = implPath.substring(implPath.lastIndexOf(File.separator) + 1, implPath.lastIndexOf("."))
-    pathBase += File.separator + "TestCases"
-    if (!new File(pathBase).exists()) {
-      new File(pathBase).mkdirs()
-    }
-    val printOrder = PrintOrder.getOutPutOrders(pathBase).asScala
-
-    val selectPath = pathBase + File.separator + implFileName + "_select.sql"
-    //    val compressedSelectPath = pathBase + File.separator + implFileName + "_select.sql.tar.gz"
-    //    var tmpSelectPath = pathBase + File.separator + implFileName + "_select_tmp.sql"
-    selCL.setSelectPath(selectPath)
-    selCL.setInsertPath("")
-    val selectFile: File = new File(selectPath)
-    //    var tmpSelectFile: File = new File(tmpSelectPath)
-    if (!selectFile.exists()) {
-      selectFile.createNewFile()
-    }
-
-    val selectPw: PrintWriter = new PrintWriter(new FileWriter(selectPath, true))
-    if (AppConfig.getTestDB.equalsIgnoreCase("mysql")) {
-      selectPw.println("USE " + implFileName + ";")
-    }
-    val allSelectStmts = new util.ArrayList[util.HashMap[String, util.HashMap[Integer, String]]]().asScala
-
-    for (elem <- selCL.getQuerySet.asScala) {
-      val sq = elem.getSq
-      val sqInOneObject = sq.getSelectStmtsInOneObject
-      allSelectStmts.asJava.add(sqInOneObject)
-    }
-
-    for (s: String <- printOrder) {
-      for (selectS <- allSelectStmts) {
-        val mapIt = selectS.asScala.iterator
-        while (mapIt.hasNext) {
-          val elem = mapIt.next // (String, HashMap[Integer, String]) = (tableName, HashMap[ID, Statements])
-          if (elem._1.equalsIgnoreCase(s)) {
-            val tmp = elem._2
-            val tmpIt = tmp.asScala.iterator
-            while (tmpIt.hasNext) {
-              val stmt = tmpIt.next
-              val stmtStr = String.valueOf(stmt._2.toCharArray)
-              selectPw.println(stmtStr)
-            }
-            selectPw.flush()
-          }
-        }
-      }
-    }
-
-    selCL.setSelectPath(selectPath)
-    selectPw.flush()
-    selectPw.close()
-
-    /**
-     * // compress test cases and delete sql file
-     * Process(Seq("tar", "czf", compressedSelectPath, "-C", pathBase, implFileName + "_select.sql")).!
-     * Process(Seq("rm", selectPath)).!
-     */
-    selCL.getQuerySet.clear()
-    selectSpecializedQuery.getInsertStmtsInOneObject.clear()
-    selectSpecializedQuery.getSelectStmtsInOneObject.clear()
-
-    selCL
-  }
-
   //noinspection SameParameterValue
-  private def generateRandomInstances(sigs: util.ArrayList[Sig], types: util.HashMap[String, String], low: Integer, high: Integer): util.HashMap[String, util.HashMap[String, util.ArrayList[CodeNamePair]]] = {
-    if (isDebugOn) {
-      println("Random Instance generator starts....")
-    }
-
-    val instances = new util.HashMap[String, util.HashMap[String, util.ArrayList[CodeNamePair]]](5)
+  private def generateRandomInstances(sigs: util.List[Sig], types: util.Map[String, String], low: Integer, high: Integer): util.Map[String, util.Map[String, util.List[CodeNamePair]]] = {
+    val instances = new util.HashMap[String, util.Map[String, util.List[CodeNamePair]]](5)
 
     val lowValue = low.intValue()
     val highValue = high.intValue()
@@ -381,7 +182,7 @@ class DBTrademaker extends AstronautFramework {
         val sigName = sig.getSigName
         val instanceName = sigName + i
         if (!instances.containsKey(sigName)) {
-          instances.put(sigName, new util.HashMap[String, util.ArrayList[CodeNamePair]](3))
+          instances.put(sigName, new util.HashMap[String, util.List[CodeNamePair]](3))
         }
         if (!instances.get(sigName).containsKey(instanceName)) {
           instances.get(sigName).put(instanceName, new util.ArrayList[CodeNamePair](3))
@@ -418,32 +219,58 @@ class DBTrademaker extends AstronautFramework {
         }
       }
     }
-    if (isDebugOn) {
-      println("Random Instance generator ends....")
-    }
     instances
   }
 
-  private def myRunBenchmark(prod: Prod[ImplementationType, MeasurementFunctionSetType]): Prod[ImplementationType, MeasurementResultSetType] = {
-    if (isDebugOn) {
-      println("============================================================================")
-      println("==================This is myRunBenchmark function===========================")
-      println("============================================================================")
-    }
+  // here we get the tradespace function and analyze function
+  private def tradespaceFunction = tradespace(myTradespace) // fun: (SpecificationType => List[Prod[ImplementationType, BenchmarkResultType]])
 
-    //    var myPair: Pair[ImplementationType, MeasurementResultSetType] =
-    //      Pair[ImplementationType, MeasurementResultSetType](new DBImplementation(""),
-    //        new DBConcreteMeasurementFunctionSet(new DBConcreteTimeMeasurementFunction(), new DBConcreteSpaceMeasurementFunction()))
+  /**
+   * Use Spark to evaluate solutions
+   *
+   * @return list of implementation and measurement result
+   */
+  private def myMapReduce(list: List[(ImplementationType, MeasurementFunctionSetType)]): List[(ImplementationType, MeasurementResultSetType)] = {
+    /**
+     * map run benchmark function to the list of measurement functions
+     * 1. create Spark context
+     * 2. create RDD based on the list
+     * 3. call Spark's map to execute
+     */
+    val conf = new SparkConf().setAppName("Astronaut")
+      .set("spark.akka.frameSize", "200")
+      .set("spark.default.parallelism", "16")
+      .set("spark.storage.blockManagerSlaveTimeoutMs", "600000")
+      .set("spark.worker.timeout", "600000")
+      .set("spark.akka.timeout", "600000")
+      .set("spark.rpc.askTimeout", "600000")
+      .set("spark.rpc.retry.wait", "600000")
+      .set("spark.rpc.message.maxSize", "300")
+      .set("spark.storage.memoryFraction", "0.9")
 
-    val impl = fst(prod).asInstanceOf[DBImplementation]
-    val mfs = snd(prod).asInstanceOf[DBConcreteMeasurementFunctionSet]
+    val sc = new SparkContext(conf)
+    val rdd = sc.parallelize(list)
+    val evaluationResult = rdd.map(e => {
+      val result = myRunBenchmark(e._1, e._2)
+      result
+    })
+
+    val collectedResult = evaluationResult.collect()
+    endTime = System.currentTimeMillis
+    timeInterval = endTime - startTime
+
+    sc.stop()
+    collectedResult.toList
+  }
+
+  private def myRunBenchmark(impl: ImplementationType, mfs: MeasurementFunctionSetType): (ImplementationType, MeasurementResultSetType) = {
     mfs.setImpl(impl)
 
     // If benchmark is random test loads, need to create concrete load first and then run them
     if (AppConfig.getIsRandom == 1) {
       // call concrete loads creator here
-      val timeLoads: util.ArrayList[ConcreteLoad] = new util.ArrayList[ConcreteLoad](2)
-      val spaceLoads: util.ArrayList[ConcreteLoad] = new util.ArrayList[ConcreteLoad](1)
+      val timeLoads: util.List[ConcreteLoad] = new util.ArrayList[ConcreteLoad](2)
+      val spaceLoads: util.List[ConcreteLoad] = new util.ArrayList[ConcreteLoad](1)
       val insertLoad: ConcreteLoad = generateRandomInsertStatements(impl, mfs.getCtmf.getInstances)
       val selectLoad: ConcreteLoad = generateRandomSelectStatements(impl, mfs.getCtmf.getInstances)
       timeLoads.add(insertLoad)
@@ -518,323 +345,23 @@ class DBTrademaker extends AstronautFramework {
     // we can write the results into hadoop file system
     // /trademaker/modelName/solutionName
 
-    Pair[ImplementationType, MeasurementResultSetType](new DBImplementation(impl.getImPath), dbmr)
-
-    //    return myPair
+    (new DBImplementation(impl.getImPath), dbmr)
   }
 
-  // analyze and tradespace are already defined in Tradespace specification
-  // we can call "tradespace" function to synthesize implementation and benchmark
-  private val myTradespace: Tradespace = Build_Tradespace(mySynthesizer, myRunBenchmark, myMapReduce)
-
-  // here we get the tradespace function and analyze function
-  private def tradespaceFunction = tradespace(myTradespace) // fun: (SpecificationType => List[Prod[ImplementationType, BenchmarkResultType]])
-
-  /**
-   * Use Spark to evaluate solutions
-   *
-   * @return list of implementation and measurement result
-   */
-  private def myMapReduce(list: List[Prod[ImplementationType, MeasurementFunctionSetType]]): List[Prod[ImplementationType, MeasurementResultSetType]] = {
-    if (isDebugOn) {
-      println("This is myMapReduce function")
-    }
-
-    /**
-     * map run benchmark function to the list of measurement functions
-     * 1. create Spark context
-     * 2. create RDD based on the list
-     * 3. call Spark's map to execute
-     */
-    val conf = new SparkConf().setAppName("Astronaut")
-      .set("spark.akka.frameSize", "200")
-      .set("spark.default.parallelism", "16")
-      .set("spark.storage.blockManagerSlaveTimeoutMs", "600000")
-      .set("spark.worker.timeout", "600000")
-      .set("spark.akka.timeout", "600000")
-      .set("spark.rpc.askTimeout", "600000")
-      .set("spark.rpc.retry.wait", "600000")
-      .set("spark.rpc.message.maxSize", "300")
-      .set("spark.storage.memoryFraction", "0.9")
-
-    //      .setMaster("spark://centurion002.cs.virginia.edu:7077")
-    //      .set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
-    //      .set("spark.kryo.registrator", "edu.virginia.cs.MyRegistrator")
-    //      .set("spark.kryoserializer.buffer.mb", "512")
-
-    val sc = new SparkContext(conf)
-    /**
-     * need to convert List and Prod to scala Array and Tuple2
-     * 1. iterate List to create Array, while convert Prod to Tuple2
-     */
-    var newList: Array[(DBImplementation, DBConcreteMeasurementFunctionSet)] =
-      Array[(DBImplementation, DBConcreteMeasurementFunctionSet)]()
-    val defaultValue = Pair[ImplementationType, MeasurementFunctionSetType](new DBImplementation(""),
-      new DBConcreteMeasurementFunctionSet(new DBConcreteTimeMeasurementFunction(), new DBConcreteSpaceMeasurementFunction()))
-    var head = hd[Prod[ImplementationType, MeasurementFunctionSetType]](defaultValue)(list)
-    var tail = tl[Prod[ImplementationType, MeasurementFunctionSetType]](list)
-    while (head != defaultValue) {
-      val tmpTuple = (fst[ImplementationType, MeasurementFunctionSetType](head).asInstanceOf[DBImplementation],
-        snd[ImplementationType, MeasurementFunctionSetType](head).asInstanceOf[DBConcreteMeasurementFunctionSet])
-      newList = newList :+ tmpTuple
-      head = hd[Prod[ImplementationType, MeasurementFunctionSetType]](defaultValue)(tail)
-      tail = tl[Prod[ImplementationType, MeasurementFunctionSetType]](tail)
-    }
-    val rdd = sc.parallelize(newList)
-    //    println("newList_RDD count: "+rdd.count())
-    val evaluationResult = rdd.map(e => {
-      // construct Prod from e
-      val prod = Pair[ImplementationType, MeasurementFunctionSetType](e._1, e._2)
-      val result = myRunBenchmark(prod)
-      result
-    })
-
-    //    evaluationResult.foreach()
-    if (isDebugOn) {
-      println("Finish execute! Go to collect()")
-    }
-
-    val collectedResult = evaluationResult.collect()
-
-    if (isDebugOn) {
-      println("Finish collect()")
-    }
-
-    endTime = System.currentTimeMillis
-    timeInterval = endTime - startTime
-
-    if (isDebugOn) {
-      println("Spend time: " + TimeUnit.MILLISECONDS.toSeconds(timeInterval))
-    }
-
-    var resultList: List[Prod[ImplementationType, MeasurementResultSetType]] = Nil[Prod[ImplementationType, MeasurementResultSetType]]()
-    collectedResult.foreach(e => {
-      resultList = Cons[Prod[ImplementationType, MeasurementResultSetType]](e, resultList)
-    })
-
-    //    val result = evaluationResult.toLocalIterator
-    //
-    //    var resultList:List[Prod[ImplementationType, MeasurementResultSetType]] = Nil[Prod[ImplementationType, MeasurementResultSetType]]()
-    //
-    //    result.foreach(e => {
-    //      resultList = Cons[Prod[ImplementationType, MeasurementResultSetType]](e, resultList)
-    //    })
-
-    //    for(r <- result){
-    //      resultList = Cons[Prod[ImplementationType, MeasurementResultSetType]](r, resultList)
-    //    }
-    if (isDebugOn) {
-      println("====================================================")
-      println("====================================================")
-    }
-
-    sc.stop()
-    resultList
-  }
-
-  /**
-   * Define functions for Trademaker in specification
-   */
-  private def myCFunction(fSpec: FormalSpecificationType): List[FormalImplementationType] = {
-    if (isDebugOn) {
-      println("This is myCFunction function")
-    }
-    var solFolder: String = AppConfig.getSolutionFolder
-    if (solFolder == null || solFolder.trim.isEmpty) {
-      startTime = System.currentTimeMillis()
-      /*
-       * get specification file path
-       * calculate solution folder based on specification file path
-       * call smartbridge() function to synthesize formal implementations
-       * scan solution folder to get implementations
-       */
-      val specPath: String = fSpec.asInstanceOf[DBFormalSpecification].getSpec
-      solFolder = specPath.substring(0, specPath.lastIndexOf(File.separator))
-      val alloyOMName = specPath.substring(specPath.lastIndexOf(File.separator) + 1, specPath.lastIndexOf("."))
-      solFolder = solFolder + File.separator + alloyOMName + File.separator + "ImplSolution"
-      recursiveDelete(new File(solFolder))
-      if (!new File(solFolder).exists()) {
-        val fileFP = new File(solFolder)
-        val rtn = fileFP.mkdirs()
-        if (rtn) {
-          println("Solution folder created!:::" + solFolder)
-        } else {
-          if (isDebugOn) {
-            println("Create solution folder failed!")
-          }
-        }
-      }
-
-      // get mapping run file
-      val mappingRun: String = FileOperation.getMappingRun(specPath)
-      // call smartBridge
-      new SmartBridge(solFolder, mappingRun, AppConfig.getMaxSolForImpl.intValue())
-
-      // delete duplicate solutions
-      DeleteUniq.del(solFolder)
-
-      // log the time taken to synthesize all the results
-      val synthTime = System.currentTimeMillis() - startTime
-      println(s"[ICSE2022] synthesis complete: time=$synthTime, spec=$specPath")
-    } else {
-      println(s"[ICSE2020] reading results from folder: $solFolder")
-    }
-
-    getDatabaseImplsForFolder(fSpec, solFolder)
-  }
-
-  private def getDatabaseImplsForFolder(fSpec: FormalSpecificationType, solFolder: String): List[FormalImplementationType] = {
-    // scan solution folder, and get all the solutions
-    val solFiles: Array[File] = new java.io.File(solFolder).listFiles.filter(_.getName.endsWith(".xml"))
-    var implList: List[FormalImplementationType] = Nil[FormalImplementationType]()
-
-    for (file <- solFiles) {
-      val dbImpl: DBFormalImplementation = new DBFormalImplementation()
-      dbImpl.setImp(file.getAbsolutePath)
-      dbImpl.setSigs(fSpec.asInstanceOf[DBFormalSpecification].getSigs)
-      dbImpl.setAssociationsForCreateSchemas(fSpec.asInstanceOf[DBFormalSpecification].getAssociations)
-      dbImpl.setTypeMap(fSpec.asInstanceOf[DBFormalSpecification].getTypeMap)
-      dbImpl.setIds(fSpec.asInstanceOf[DBFormalSpecification].getIds)
-      implList = new Cons[FormalImplementationType](dbImpl, implList)
-    }
-    implList
-  }
-
-  private def myLFunction(fSpec: FormalSpecificationType): FormalAbstractMeasurementFunctionSet = {
-    // generate two abstract load objects:  insert and select
-    // create two measurement functions, one for time, one for space
-    // wrap them in a FormalAbstractMeasurementFunctionSet
-
-    var absLoads: FormalAbstractLoadSet = null
-
-    absLoads = generateFormalAbstractLoadSet(fSpec)
-
-    val absTimeMeasurementFunction = new DBFormalAbstractTimeMeasurementFunction(absLoads.getInsLoad, absLoads.getSelLoad)
-    val absSpaceMeasurementFunction = new DBFormalAbstractSpaceMeasurementFunction(absLoads.getInsLoad)
-    new DBFormalAbstractMeasurementFunctionSet(absTimeMeasurementFunction, absSpaceMeasurementFunction)
-  }
-
-  def getIDBySigName(sigs: util.ArrayList[Sig], sigName: String): String = {
-    val pk: String = ""
-    for (s <- sigs.asScala) {
-      if (s.getSigName.equalsIgnoreCase(sigName)) {
-        return s.getId
-      }
-    }
-    pk
-  }
-
-  private def recursiveDelete(f: File): Boolean = {
-    if (f.isDirectory) {
-      for (c <- f.listFiles())
-        recursiveDelete(c)
-    }
-    if (!f.delete()) {
-      //      throw new FileNotFoundException("Failed to delete file: " + f)
-    }
-    true
-  }
-
-  private def generateFormalAbstractLoadSet(fSpec: FormalSpecificationType): FormalAbstractLoadSet = {
-
-    // initialize two empty abstract loads objects, to contain insert and select queries
-    // for each object solution to fSpec
-    //     - generate abstract insert and select queries,
-    //			and add them to the corresponding abstract load objects
-    // package up the two abstract load objects in a FormalAbstractLoadSet object and return the result
-
-    // initialize two empty abstract loads objects, to contain insert and select queries
-    val insAbsLoad = new AbstractLoad()
-    val selAbsLoad = new AbstractLoad()
-
-    // use Alloy analyzer
-    // for each object solution to fSpec
-    val objSpec = genObjSpec(fSpec)
-
-    // construct path to solution folder
-    val specPath = objSpec.getSpecPath
-    val lenOfExtension = "_dm.als".length()
-    var objectSolFolder = specPath.substring(0, specPath.length() - lenOfExtension)
-
-    objectSolFolder = objectSolFolder + File.separator + "TestSolutions"
-    recursiveDelete(new File(objectSolFolder))
-    new File(objectSolFolder).mkdirs()
-
-    // call objects generator
-    val loadSynthesizer = new LoadSynthesizer()
-    loadSynthesizer.genObjsHelper(specPath, objectSolFolder, fSpec.asInstanceOf[DBFormalSpecification].getIds) // parse ID for negation
-
-    /*
-     * get solutions to alloy spec (stored as XML files)
-     *
-     * for each such solution ("object")
-     *    * generate two abstract queries
-     *    * add queries to relevant abstract load objects
-     */
-
-    // iterate all objects
-    val objectFiles: Array[File] = new java.io.File(objectSolFolder).listFiles.filter(_.getName.endsWith(".xml"))
-
-    val insQuerySet: util.ArrayList[AbstractQuery] = new util.ArrayList()
-    val selQuerySet: util.ArrayList[AbstractQuery] = new util.ArrayList()
-
-    for (file <- objectFiles) {
-      val singleObject = new ObjectOfDM(file.getAbsolutePath)
-
-      val insQuery: AbstractQuery = new AbstractQuery(AbstractQuery.Action.INSERT, singleObject)
-      val selQuery: AbstractQuery = new AbstractQuery(AbstractQuery.Action.SELECT, singleObject)
-
-      insQuerySet.add(insQuery)
-      selQuerySet.add(selQuery)
-    }
-    insAbsLoad.setQuerySet(insQuerySet)
-    selAbsLoad.setQuerySet(selQuerySet)
-
-    if (isDebugOn) {
-      var spec = objSpec.getSpecPath
-      spec = spec.substring(spec.lastIndexOf(File.separator), spec.indexOf("."))
-      println("generate objects for: " + spec)
-    }
-
-    val fAbsLoadSet: FormalAbstractLoadSet = new FormalAbstractLoadSet(insAbsLoad, selAbsLoad)
-    fAbsLoadSet
-  }
-
-  /*
-   *  purpose is to convert a given abstract measurement function (set of insert or select abstract queries) into a concrete measurement
-   *  function, specialized to a particular implementation.
-  */
-
-  private def getConcreteMeasurementFunctionSets(absMF: DBFormalAbstractMeasurementFunctionSet, impls: util.ArrayList[DBImplementation]): util.ArrayList[DBFormalConcreteMeasurementFunctionSet] = {
-    // iterate over all abstract measurement functions and convert them all to concrete measurement functions
-    val returnValue: util.ArrayList[DBFormalConcreteMeasurementFunctionSet] = new util.ArrayList()
-    val it = impls.iterator()
-    while (it.hasNext) {
-      val nextImpl = it.next()
-
-      returnValue.add(getConcreteMeasurementFunctionSet(absMF, nextImpl))
-      if (isDebugOn) {
-        var solName = nextImpl.getImPath
-        solName = solName.substring(solName.lastIndexOf(File.separator) + 1, solName.indexOf("."))
-        println("generate concrete MF for solution: " + solName)
-        //        println("took time: " + df.format(endTime - startTime) + "s")
-      }
-    }
-    returnValue
-  }
-
-  private def getConcreteMeasurementFunctionSet(absMF: DBFormalAbstractMeasurementFunctionSet, impl: DBImplementation): DBFormalConcreteMeasurementFunctionSet = {
-    val concMFSet: DBFormalConcreteMeasurementFunctionSet = new DBFormalConcreteMeasurementFunctionSet()
-
-    // for time
-    val tmf: DBFormalAbstractMeasurementFunction = absMF.getTmf
-    val tmfALoads: util.ArrayList[AbstractLoad] = tmf.getLoads
-    val insAL: AbstractLoad = tmfALoads.get(0)
-    val selAL: AbstractLoad = tmfALoads.get(1)
-    val insCL = convert(insAL, impl)
+  // get the random instances, and return insertFilePath
+  private def generateRandomInsertStatements(impl: DBImplementation, instances: util.Map[String, util.Map[String, util.List[CodeNamePair]]]): ConcreteLoad = {
+    val insertSpecializedQuery: SpecializedQuery = specializeInsertQuery(null, impl, instances)
+    val cq = new ConcreteQuery()
+    cq.setAction(Action.INSERT)
+    cq.setSq(insertSpecializedQuery)
+    val cqs = new util.ArrayList[ConcreteQuery](1)
+    cqs.add(cq)
     /**
      * print out insert scripts
      */
+    val insCL = new ConcreteLoad()
+    insCL.setQuerySet(cqs)
+
     val implPath = impl.getImPath
     var pathBase = implPath.substring(0, implPath.lastIndexOf(File.separator))
     val implFileName = implPath.substring(implPath.lastIndexOf(File.separator) + 1, implPath.lastIndexOf("."))
@@ -844,173 +371,65 @@ class DBTrademaker extends AstronautFramework {
     }
     val insertPath = pathBase + File.separator + implFileName + "_insert.sql"
     insCL.setInsertPath(insertPath)
+    insCL.setSelectPath("")
     val insertFile: File = new File(insertPath)
-    if (insertFile.exists()) {
-      insertFile.delete()
-      insertFile.createNewFile()
-    } else {
+    if (!insertFile.exists()) {
       insertFile.createNewFile()
     }
-    val insertPw: PrintWriter = new PrintWriter(insertFile)
+
+    val insertPw: PrintWriter = new PrintWriter(new FileWriter(insertPath, true))
     if (AppConfig.getTestDB.equalsIgnoreCase("mysql")) {
       insertPw.println("USE " + implFileName + ";")
+    } else if (AppConfig.getTestDB.equalsIgnoreCase("postgres")) {
+      insertPw.println("BEGIN;")
     }
-    val allInsertStmts = new util.ArrayList[util.HashMap[String, util.HashMap[Integer, String]]]()
-    val printOrder = PrintOrder.getOutPutOrders(pathBase)
+    val allInsertStmts = new util.ArrayList[util.Map[String, util.Map[Integer, String]]]().asScala
     for (elem <- insCL.getQuerySet.asScala) {
       val sq = elem.getSq
       val sqInOneObject = sq.getInsertStmtsInOneObject
-      allInsertStmts.add(sqInOneObject)
+      allInsertStmts.asJava.add(sqInOneObject)
     }
-    for (s <- printOrder.asScala) {
-      for (insertS <- allInsertStmts.asScala) {
+
+    val printOrder = PrintOrder.getOutPutOrders(pathBase).asScala
+    for (s <- printOrder) {
+      for (insertS <- allInsertStmts) {
         val mapIt = insertS.asScala.iterator
         while (mapIt.hasNext) {
-          val elem = mapIt.next // (String, HashMap[Integer, String]) = (tableName, HashMap[ID, Statements])
-          if (elem._1.equalsIgnoreCase(s)) {
-            val tmp = elem._2
-            val tmpIt = tmp.asScala.iterator
-            while (tmpIt.hasNext) {
-              val stmt = tmpIt.next
-              insertPw.println(stmt._2)
+          val table = mapIt.next // (String, HashMap[Integer, String]) = (tableName, HashMap[ID, Statements])
+          if (table._1.equalsIgnoreCase(s)) { // check table name
+            val stmt = table._2
+            val stmtIt = stmt.asScala.iterator
+            while (stmtIt.hasNext) {
+              val idStmt = stmtIt.next
+              val stmtStr: String = String.valueOf(idStmt._2.toCharArray)
+              insertPw.println(stmtStr)
             }
+            insertPw.flush()
           }
         }
       }
     }
+
     insCL.setInsertPath(insertPath)
+    if (AppConfig.getTestDB.equalsIgnoreCase("postgres")) {
+      insertPw.println("COMMIT;")
+    }
     insertPw.flush()
     insertPw.close()
-    // call shell command to remove duplicated lines,
-    // and write results back to tmp.sql file
-    //    var tmpFiles = pathBase + File.separator + "tmp.sql"
-    //    var strCmd = "awk '!x[$0]++' " + insertPath
-    //    (Process(strCmd) #> new File(tmpFiles)).!
-    // remove duplicate lines
-    // (Process(Seq("awk", "!x[$0]++", insertPath)) #> new File(tmpFiles)).!
-    //    var tmpFiles1 = tmpFiles + "1"
-    //    // add "FLUSH TABLES;" after each line
-    //    (Process(Seq("awk", "1;!(NR%1){print \"FLUSH TABLES;\";}", tmpFiles)) #> new File(tmpFiles1)).!
-    // mv tmp file to insert file
-    //    Process(Seq("mv", tmpFiles1, insertPath)).!
-    // Process(Seq("mv", tmpFiles, insertPath)).!
-    //    Process(Seq("rm", tmpFiles)).!
-    allInsertStmts.clear()
 
-    // convert select statements
-    val selCL = convert(selAL, impl)
-    val selectPath = pathBase + File.separator + implFileName + "_select.sql"
-    selCL.setSelectPath(selectPath)
-    val selectFile: File = new File(selectPath)
-    if (selectFile.exists()) {
-      selectFile.delete()
-      selectFile.createNewFile()
-    } else {
-      selectFile.createNewFile()
-    }
-    val selectPw: PrintWriter = new PrintWriter(selectFile)
-    if (AppConfig.getTestDB.equalsIgnoreCase("mysql")) {
-      selectPw.println("USE " + implFileName + ";")
-    }
-    val allSelectStmts = new util.ArrayList[util.HashMap[String, util.HashMap[Integer, String]]]()
-    for (elem <- selCL.getQuerySet.asScala) {
-      val sq = elem.getSq
-      val sqInOneObject = sq.getSelectStmtsInOneObject
-      allSelectStmts.add(sqInOneObject)
-    }
-    for (_ <- printOrder.asScala) {
-      for (selectS <- allSelectStmts.asScala) {
-        val mapIt = selectS.asScala.iterator
-        while (mapIt.hasNext) {
-          val elem = mapIt.next
-          val stmts = elem._2.values().asScala
-          for (e <- stmts) {
-            selectPw.println(e)
-          }
-        }
-      }
-    }
-    selCL.setSelectPath(selectPath)
-    selectPw.flush()
-    selectPw.close()
+    insCL.getQuerySet.clear()
+    insertSpecializedQuery.getInsertStmtsInOneObject.clear()
+    insertSpecializedQuery.getSelectStmtsInOneObject.clear()
 
-    // call shell command to remove duplicated lines,
-    // and write results back to tmp.sql file
-    //    tmpFiles = pathBase + File.separator + "tmp.sql"
-    //    strCmd = "awk '!x[$0]++' " + selectPath
-    //    (Process(strCmd) #> new File(tmpFiles)).!
-    //    remove duplicate lines
-    //    var tmpFiles2 = tmpFiles + "2"
-    //    (Process(Seq("awk", "!x[$0]++", selectPath)) #> new File(tmpFiles)).!
-    //    add "RESET QUERY CACHE;" after each line
-    //    (Process(Seq("awk", "1;!(NR%1){print \"RESET QUERY CACHE;\";}", tmpFiles)) #> new File(tmpFiles2)).!
-    // mv tmp file to insert file
-    //    Process(Seq("mv", tmpFiles2, selectPath)).!
-    //    Process(Seq("mv", tmpFiles, selectPath)).!
-    //    Process(Seq("rm", tmpFiles)).!
-    allSelectStmts.clear()
-
-    val ctmf: DBFormalConcreteTimeMeasurementFunction = new DBFormalConcreteTimeMeasurementFunction(insCL, selCL)
-    concMFSet.setCtmf(ctmf)
-
-    // chong: duplicated code here
-    // for space
-    //    var smf: DBFormalAbstractMeasurementFunction = absMF.getSmf()
-    //    var smfALoads: ArrayList[AbstractLoad] = smf.getLoads()
-    //    insAL = smfALoads.get(0)
-    //    insCL = convert(insAL, impl)
-    val csmf: DBFormalConcreteSpaceMeasurementFunction = new DBFormalConcreteSpaceMeasurementFunction(insCL)
-    concMFSet.setCsmf(csmf)
-    concMFSet.setImpl(impl)
-
-    // return concMFSet
-    concMFSet
+    insCL
   }
 
-  private def convert(absl: AbstractLoad, impl: DBImplementation): ConcreteLoad = {
-    // iterate absl
-    // get abstract queries in absl
-    // convert abstract queries to concrete queryies
-    // add concrete queries to concrete loads
-    // return it
-
-    val cl: ConcreteLoad = new ConcreteLoad()
-
-    val absqs = absl.getQuerySet
-    val it = absqs.iterator()
-    while (it.hasNext) {
-      val absq = it.next()
-      val cq = convertQuery(absq, impl)
-      cl.getQuerySet.add(cq)
-    }
-    cl
-  }
-
-  private def convertQuery(absq: AbstractQuery, impl: DBImplementation): ConcreteQuery = {
-    // get the action of absq ; a = absq.getAction()
-    /*
-     *  if a==Insert
-     *  	* generateInsert()
-     *   else generateSelect()
-     */
-    val cq = new ConcreteQuery()
-    val a = absq.getAction
-    if (a == Action.INSERT) {
-      cq.setAction(Action.INSERT)
-      cq.setSq(specializeInsertQuery(absq, impl, null))
-    } else {
-      cq.setAction(Action.SELECT)
-      cq.setSq(specializeSelectQuery(absq, impl, null))
-    }
-    cq
-  }
-
-  private def specializeInsertQuery(absq: AbstractQuery, impl: DBImplementation, ins: util.HashMap[String, util.HashMap[String, util.ArrayList[CodeNamePair]]]): SpecializedQuery = {
+  private def specializeInsertQuery(absq: AbstractQuery, impl: DBImplementation, ins: util.Map[String, util.Map[String, util.List[CodeNamePair]]]): SpecializedQuery = {
     // allInstances here contains all instances in a single object file, which is got by parse the object file
     // some fields may have more than one instance
     // allInstances is a hashmap: HashMap[String, HashMap[String, ArrayList[CodeNamePair[String>>>>
     // HashMap[tableName, HashMap[instanceName, fields_value_pairs]]
-    var allInstances = new util.HashMap[String, util.HashMap[String, util.ArrayList[CodeNamePair]]](1)
+    var allInstances: util.Map[String, util.Map[String, util.List[CodeNamePair]]] = new util.HashMap[String, util.Map[String, util.List[CodeNamePair]]](1)
 
     if (absq != null) {
       allInstances = absq.getOodm.parseDocument()
@@ -1023,7 +442,7 @@ class DBTrademaker extends AstronautFramework {
     var field_part: String = ""
     var value_part: String = ""
 
-    val allInsertStmts: util.HashMap[String, util.HashMap[Integer, String]] = new util.HashMap[String, util.HashMap[Integer, String]]()
+    val allInsertStmts: util.Map[String, util.Map[Integer, String]] = new util.HashMap[String, util.Map[Integer, String]]()
     /**
      * Prepare output file by implPath
      */
@@ -1060,7 +479,7 @@ class DBTrademaker extends AstronautFramework {
           field_part = ""
           value_part = ""
 
-          val allAboutSchema: util.ArrayList[CodeNamePair] = dbScheme.get(goToTable)
+          val allAboutSchema: util.List[CodeNamePair] = dbScheme.get(goToTable)
           if (!isClassAssociate(impl, className)) {
             for (pair <- allAboutSchema.asScala if pair.getFirst.equalsIgnoreCase("fields")) {
               /**
@@ -1074,10 +493,7 @@ class DBTrademaker extends AstronautFramework {
               val fieldInAttr = isFieldInAttr(impl, goToTable, fieldName)
               val fieldIsID = fieldName.equalsIgnoreCase(id)
               val isFKey = isForeignKey(dbScheme, goToTable, fieldName)
-              //              if (!fieldInAttr && fieldIsID) { // like: customerID is primary key of PreferredCustomer, but not in attr
-              //                // need to find the value of cutsomerID from Cutsomer Table
-              //              }
-              //              if (fieldInAttr || fieldIsID) {
+
               /**
                * Another situation is that,
                * discount is an attribute of PreferredCustomer, however, in schema, it is a field of Customer,
@@ -1151,7 +567,7 @@ class DBTrademaker extends AstronautFramework {
     sQueries
   }
 
-  private def getForeignValue(instances: util.HashMap[String, util.HashMap[String, util.ArrayList[CodeNamePair]]], fClass: String, attr: String, types: util.HashMap[String, String]): String = {
+  private def getForeignValue(instances: util.Map[String, util.Map[String, util.List[CodeNamePair]]], fClass: String, attr: String, types: util.Map[String, String]): String = {
     var value: String = ""
     val instancesIt = instances.entrySet().iterator()
     while (instancesIt.hasNext) {
@@ -1202,6 +618,11 @@ class DBTrademaker extends AstronautFramework {
     null
   }
 
+  /*
+   *  purpose is to convert a given abstract measurement function (set of insert or select abstract queries) into a concrete measurement
+   *  function, specialized to a particular implementation.
+  */
+
   private def isClassAssociate(impl: DBImplementation, primaryClass: String): Boolean = {
     impl.getDataProvider.isClassAssociate(primaryClass)
   }
@@ -1232,7 +653,7 @@ class DBTrademaker extends AstronautFramework {
     false
   }
 
-  def addInsertStmtIntoDataSchema(allInserts: util.HashMap[String, util.HashMap[Integer, String]],
+  def addInsertStmtIntoDataSchema(allInserts: util.Map[String, util.Map[Integer, String]],
                                   goToTable: String, stmt: String, idValue: Integer): String = {
     val contains: Boolean = allInserts.containsKey(goToTable)
     if (!contains) {
@@ -1241,7 +662,7 @@ class DBTrademaker extends AstronautFramework {
     allInserts.get(goToTable).put(idValue, stmt)
   }
 
-  def dataSchemaHasInsertStatement(allInserts: util.HashMap[String, util.HashMap[Integer, String]],
+  def dataSchemaHasInsertStatement(allInserts: util.Map[String, util.Map[Integer, String]],
                                    goToTable: String, idValue: Integer): Boolean = {
     if (allInserts.containsKey(goToTable)) {
       if (allInserts.get(goToTable).containsKey(idValue)) {
@@ -1251,58 +672,7 @@ class DBTrademaker extends AstronautFramework {
     false
   }
 
-  def getAssByKey(scheme: util.HashMap[String, util.ArrayList[CodeNamePair]],
-                  pTable: String, fTable: String): util.HashMap[String, CodeNamePair] = {
-    val ass_map: util.HashMap[String, CodeNamePair] = new util.HashMap[String, CodeNamePair]()
-    var src: String = ""
-    var dst: String = ""
-    var ass: String = ""
-
-    val schemeIt = scheme.asScala.iterator
-    while (schemeIt.hasNext) {
-      val table = schemeIt.next
-      val fields = table._2
-      for (pair <- fields.asScala) {
-        if (pair.getFirst.equalsIgnoreCase("src")) {
-          if (pair.getSecond.equalsIgnoreCase(pTable)) {
-            src = pTable
-          }
-          if (pair.getSecond.equalsIgnoreCase(fTable)) {
-            src = fTable
-          }
-        }
-        if (pair.getFirst.equalsIgnoreCase("dst")) {
-          if (pair.getSecond.equalsIgnoreCase(pTable)) {
-            dst = pTable
-          }
-          if (pair.getSecond.equalsIgnoreCase(fTable)) {
-            dst = fTable
-          }
-        }
-      }
-      if (src.nonEmpty && dst.nonEmpty) {
-        ass = table._1
-        val pair: CodeNamePair = new CodeNamePair(src, dst)
-        ass_map.put(ass, pair)
-        return ass_map
-      }
-    }
-    null
-  }
-
-  // get table name by the primary key
-  // we need to filter out the association table by check if the primary key is foreign key at the same time
-  def getTablesByPrimaryKey(pKeys: util.ArrayList[CodeNamePair], primaryKey: String): util.ArrayList[String] = {
-    val tables: util.ArrayList[String] = new util.ArrayList[String]()
-    for (pair <- pKeys.asScala) {
-      if (pair.getSecond.equalsIgnoreCase(primaryKey)) {
-        tables.add(pair.getFirst)
-      }
-    }
-    tables
-  }
-
-  def getForeignKeyValue(instances: util.HashMap[String, util.HashMap[String, util.ArrayList[CodeNamePair]]], primaryClass: String, pKey: String): String = {
+  def getForeignKeyValue(instances: util.Map[String, util.Map[String, util.List[CodeNamePair]]], primaryClass: String, pKey: String): String = {
     val instancesIt = instances.entrySet().iterator()
     while (instancesIt.hasNext) {
       val entry = instancesIt.next()
@@ -1324,7 +694,7 @@ class DBTrademaker extends AstronautFramework {
     null
   }
 
-  def isForeignKey(scheme: util.HashMap[String, util.ArrayList[CodeNamePair]], table: String, field: String): Boolean = {
+  def isForeignKey(scheme: util.Map[String, util.List[CodeNamePair]], table: String, field: String): Boolean = {
     for (pair <- scheme.get(table).asScala) {
       if (pair.getFirst.equalsIgnoreCase("foreignKey")) {
         if (pair.getSecond.equalsIgnoreCase(field)) {
@@ -1335,7 +705,7 @@ class DBTrademaker extends AstronautFramework {
     false
   }
 
-  def getFieldValue(fieldValues: util.ArrayList[CodeNamePair], field: String, types: util.HashMap[String, String]): String = {
+  def getFieldValue(fieldValues: util.List[CodeNamePair], field: String, types: util.Map[String, String]): String = {
     var value: String = null
     for (pair <- fieldValues.asScala) {
       if (pair.getFirst.split("_")(1).equalsIgnoreCase(field)) {
@@ -1356,39 +726,17 @@ class DBTrademaker extends AstronautFramework {
             String.valueOf(intValue)
           //case "Real" =>
           case "Bool" => "0"
-          //var tmpValue = -1
-          //                         if(tmp.equalsIgnoreCase("True"))
-          //                            tmpValue = 1
-          //                         else tmpValue = 0
-          //                         String.valueOf(tmpValue)
           case "string" => "'" + tmp + "'"
           case _ => tmp
         }
         return value
-        //        if (isNumeric(tmp)) {
-        //          var intValue = Integer.valueOf(tmp).intValue()
-        //          var power = scala.math.pow(2, (AppConfig.getIntScopeForTestCases - 1))
-        //          intValue = intValue + power.intValue() + 1
-        //          value = String.valueOf(intValue)
-        //          return value
-        //        } else {
-        //          value = "'" + tmp + "'"
-        //          return value
-        //        }
       }
     }
     value
   }
 
-  def isNumeric(str: String): Boolean = {
-    val formatter: NumberFormat = NumberFormat.getInstance()
-    val pos: ParsePosition = new ParsePosition(0)
-    formatter.parse(str, pos)
-    str.length() == pos.getIndex
-  }
-
-  def getPrimaryKeyByTableName(dbScheme: util.HashMap[String, util.ArrayList[CodeNamePair]], tableName: String): String = {
-    val table: util.ArrayList[CodeNamePair] = dbScheme.get(tableName)
+  def getPrimaryKeyByTableName(dbScheme: util.Map[String, util.List[CodeNamePair]], tableName: String): String = {
+    val table: util.List[CodeNamePair] = dbScheme.get(tableName)
     //    var pair: CodeNamePair = null
     for (pair <- table.asScala) {
       if (pair.getFirst.equalsIgnoreCase("primaryKey")) {
@@ -1399,7 +747,7 @@ class DBTrademaker extends AstronautFramework {
   }
 
   // looks up reverse t_associate data structure to find a target table for each object element, e.g. a class instance or an association
-  private def getTableNameByClassName(reverseTAss: util.ArrayList[CodeNamePair], className: String): String = {
+  private def getTableNameByClassName(reverseTAss: util.List[CodeNamePair], className: String): String = {
     for (elem <- reverseTAss.asScala) {
       if (elem.getFirst.equalsIgnoreCase(className)) {
         return elem.getSecond
@@ -1408,42 +756,94 @@ class DBTrademaker extends AstronautFramework {
     null
   }
 
-  def isAssociation(sigs: util.ArrayList[Sig], element: String): Boolean = {
-    for (sig <- sigs.asScala) {
-      if (sig.getCategory == 1 && sig.getSigName.equalsIgnoreCase(element)) {
-        return true
-      }
-    }
-    false
-  }
+  // get the random instances, and return insertFilePath
+  private def generateRandomSelectStatements(impl: DBImplementation, instances: util.Map[String, util.Map[String, util.List[CodeNamePair]]]): ConcreteLoad = {
+    val selectSpecializedQuery: SpecializedQuery = specializeSelectQuery(null, impl, instances)
 
-  def getParent(sigs: util.ArrayList[Sig]): String = {
-    for (sig <- sigs.asScala) {
-      if (sig.getCategory == 0) {
-        if (sig.isHasParent) {
-          return sig.getParent
+    val cq = new ConcreteQuery()
+    cq.setAction(Action.SELECT)
+    cq.setSq(selectSpecializedQuery)
+    val cqs = new util.ArrayList[ConcreteQuery]()
+    cqs.add(cq)
+    val selCL = new ConcreteLoad()
+    selCL.setQuerySet(cqs)
+
+    // convert select statements
+
+    val implPath = impl.getImPath
+    var pathBase = implPath.substring(0, implPath.lastIndexOf(File.separator))
+    val implFileName = implPath.substring(implPath.lastIndexOf(File.separator) + 1, implPath.lastIndexOf("."))
+    pathBase += File.separator + "TestCases"
+    if (!new File(pathBase).exists()) {
+      new File(pathBase).mkdirs()
+    }
+    val printOrder = PrintOrder.getOutPutOrders(pathBase).asScala
+
+    val selectPath = pathBase + File.separator + implFileName + "_select.sql"
+    //    val compressedSelectPath = pathBase + File.separator + implFileName + "_select.sql.tar.gz"
+    //    var tmpSelectPath = pathBase + File.separator + implFileName + "_select_tmp.sql"
+    selCL.setSelectPath(selectPath)
+    selCL.setInsertPath("")
+    val selectFile: File = new File(selectPath)
+    //    var tmpSelectFile: File = new File(tmpSelectPath)
+    if (!selectFile.exists()) {
+      selectFile.createNewFile()
+    }
+
+    val selectPw: PrintWriter = new PrintWriter(new FileWriter(selectPath, true))
+    if (AppConfig.getTestDB.equalsIgnoreCase("mysql")) {
+      selectPw.println("USE " + implFileName + ";")
+    }
+    val allSelectStmts = new util.ArrayList[util.Map[String, util.Map[Integer, String]]]().asScala
+
+    for (elem <- selCL.getQuerySet.asScala) {
+      val sq = elem.getSq
+      val sqInOneObject = sq.getSelectStmtsInOneObject
+      allSelectStmts.asJava.add(sqInOneObject)
+    }
+
+    for (s: String <- printOrder) {
+      for (selectS <- allSelectStmts) {
+        val mapIt = selectS.asScala.iterator
+        while (mapIt.hasNext) {
+          val elem = mapIt.next // (String, HashMap[Integer, String]) = (tableName, HashMap[ID, Statements])
+          if (elem._1.equalsIgnoreCase(s)) {
+            val tmp = elem._2
+            val tmpIt = tmp.asScala.iterator
+            while (tmpIt.hasNext) {
+              val stmt = tmpIt.next
+              val stmtStr = String.valueOf(stmt._2.toCharArray)
+              selectPw.println(stmtStr)
+            }
+            selectPw.flush()
+          }
         }
       }
     }
-    null
+
+    selCL.setSelectPath(selectPath)
+    selectPw.flush()
+    selectPw.close()
+
+    /**
+     * // compress test cases and delete sql file
+     * Process(Seq("tar", "czf", compressedSelectPath, "-C", pathBase, implFileName + "_select.sql")).!
+     * Process(Seq("rm", selectPath)).!
+     */
+    selCL.getQuerySet.clear()
+    selectSpecializedQuery.getInsertStmtsInOneObject.clear()
+    selectSpecializedQuery.getSelectStmtsInOneObject.clear()
+
+    selCL
   }
 
-  def isPrimaryKeys(pKeys: util.ArrayList[CodeNamePair], table: String, field: String): Boolean = {
-    for (s <- pKeys.asScala) {
-      if (s.getFirst.equalsIgnoreCase(table) && s.getSecond.equalsIgnoreCase(field)) {
-        return true
-      }
-    }
-    false
-  }
-
-  private def specializeSelectQuery(absq: AbstractQuery, impl: DBImplementation, ins: util.HashMap[String, util.HashMap[String, util.ArrayList[CodeNamePair]]]): SpecializedQuery = {
+  private def specializeSelectQuery(absq: AbstractQuery, impl: DBImplementation, ins: util.Map[String, util.Map[String, util.List[CodeNamePair]]]): SpecializedQuery = {
     var selectPart = ""
     var fromPart = ""
     var wherePart = ""
-    val allSelectStmts: util.HashMap[String, util.HashMap[Integer, String]] = new util.HashMap[String, util.HashMap[Integer, String]](1)
+    val allSelectStmts: util.Map[String, util.Map[Integer, String]] = new util.HashMap[String, util.Map[Integer, String]](1)
 
-    var instance = new util.HashMap[String, util.HashMap[String, util.ArrayList[CodeNamePair]]](1)
+    var instance: util.Map[String, util.Map[String, util.List[CodeNamePair]]] = new util.HashMap[String, util.Map[String, util.List[CodeNamePair]]](1)
 
     if (absq != null) {
       instance = absq.getOodm.parseDocument()
@@ -1475,7 +875,7 @@ class DBTrademaker extends AstronautFramework {
 
           val parent = getParent(impl.getSigs)
           if (parent == null) { // element is a root class
-            val allAboutOMClass: util.ArrayList[CodeNamePair] = dbScheme.get(goToTable)
+            val allAboutOMClass: util.List[CodeNamePair] = dbScheme.get(goToTable)
             //            fromPart += "`" + element + "`"
             fromPart += element
             for (pair <- allAboutOMClass.asScala if pair.getFirst.equalsIgnoreCase("fields")) {
@@ -1493,7 +893,7 @@ class DBTrademaker extends AstronautFramework {
           } else if (goToTable.equalsIgnoreCase(element)) { // class C is mapped to its own table
             //            fromPart += "`" + goToTable + "`";
             fromPart += goToTable
-            val allAboutOMClass: util.ArrayList[CodeNamePair] = dbScheme.get(goToTable)
+            val allAboutOMClass: util.List[CodeNamePair] = dbScheme.get(goToTable)
             for (pair <- allAboutOMClass.asScala if pair.getFirst.equalsIgnoreCase("fields")) {
               val fieldName = pair.getSecond
               //              selectPart += "`" + element + "`.`" + fieldName + "`,";
@@ -1522,7 +922,36 @@ class DBTrademaker extends AstronautFramework {
     sq
   }
 
-  def dataSchemaHasSelectStatement(stmts: util.HashMap[String, util.HashMap[Integer, String]], tableName: String, idValue: Integer): Boolean = {
+  def isAssociation(sigs: util.List[Sig], element: String): Boolean = {
+    for (sig <- sigs.asScala) {
+      if (sig.getCategory == 1 && sig.getSigName.equalsIgnoreCase(element)) {
+        return true
+      }
+    }
+    false
+  }
+
+  def getParent(sigs: util.List[Sig]): String = {
+    for (sig <- sigs.asScala) {
+      if (sig.getCategory == 0) {
+        if (sig.isHasParent) {
+          return sig.getParent
+        }
+      }
+    }
+    null
+  }
+
+  def isPrimaryKeys(pKeys: util.List[CodeNamePair], table: String, field: String): Boolean = {
+    for (s <- pKeys.asScala) {
+      if (s.getFirst.equalsIgnoreCase(table) && s.getSecond.equalsIgnoreCase(field)) {
+        return true
+      }
+    }
+    false
+  }
+
+  def dataSchemaHasSelectStatement(stmts: util.Map[String, util.Map[Integer, String]], tableName: String, idValue: Integer): Boolean = {
     if (stmts.containsKey(tableName)) {
       if (stmts.get(tableName).containsKey(idValue)) {
         return true
@@ -1531,7 +960,7 @@ class DBTrademaker extends AstronautFramework {
     false
   }
 
-  def addSelectStmtIntoDataSchema(allStmts: util.HashMap[String, util.HashMap[Integer, String]],
+  def addSelectStmtIntoDataSchema(allStmts: util.Map[String, util.Map[Integer, String]],
                                   tableName: String, idValue: Integer, stmt: String): String = {
     if (!allStmts.containsKey(tableName)) {
       allStmts.put(tableName, new util.HashMap[Integer, String]())
@@ -1539,26 +968,291 @@ class DBTrademaker extends AstronautFramework {
     allStmts.get(tableName).put(idValue, stmt)
   }
 
-  private def genObjSpec(fSpec: FormalSpecificationType): ObjectSpec = {
-    if (isDebugOn) {
-      println("This is myLFunction function")
+  private def createFormalImpls(fSpec: FormalSpecificationType): List[FormalImplementationType] = {
+    var solFolder: String = AppConfig.getSolutionFolder
+    if (solFolder == null || solFolder.trim.isEmpty) {
+      startTime = System.currentTimeMillis()
+      /*
+       * get specification file path
+       * calculate solution folder based on specification file path
+       * call smartbridge() function to synthesize formal implementations
+       * scan solution folder to get implementations
+       */
+      val specPath: String = fSpec.getSpec
+      solFolder = specPath.substring(0, specPath.lastIndexOf(File.separator))
+      val alloyOMName = specPath.substring(specPath.lastIndexOf(File.separator) + 1, specPath.lastIndexOf("."))
+      solFolder = solFolder + File.separator + alloyOMName + File.separator + "ImplSolution"
+      recursiveDelete(new File(solFolder))
+      if (!new File(solFolder).exists()) {
+        val fileFP = new File(solFolder)
+        val rtn = fileFP.mkdirs()
+        if (rtn) {
+          println("Solution folder created!:::" + solFolder)
+        } else {
+          if (isDebugOn) {
+            println("Create solution folder failed!")
+          }
+        }
+      }
+
+      // get mapping run file
+      val mappingRun: String = FileOperation.getMappingRun(specPath)
+      // call smartBridge
+      new SmartBridge(solFolder, mappingRun, AppConfig.getMaxSolForImpl.intValue())
+
+      // delete duplicate solutions
+      DeleteUniq.del(solFolder)
+
+      // log the time taken to synthesize all the results
+      val synthTime = System.currentTimeMillis() - startTime
+      println(s"[ICSE2022] synthesis complete: time=$synthTime, spec=$specPath")
+    } else {
+      println(s"[ICSE2020] reading results from folder: $solFolder")
     }
-    /**
-     * construct object specification name from FormalSpecification
-     * manually set intScopt as 6 (task)
-     * new AlloyOMToAllotDM to get sigs
-     * new ORMParser to get
+
+    getDatabaseImplsForFolder(fSpec, solFolder)
+  }
+
+  private def getDatabaseImplsForFolder(fSpec: FormalSpecificationType, solFolder: String): List[FormalImplementationType] = {
+    // scan solution folder, and get all the solutions
+    val solFiles: Array[File] = new java.io.File(solFolder).listFiles.filter(_.getName.endsWith(".xml"))
+    var implList: List[FormalImplementationType] = Nil
+
+    for (file <- solFiles) {
+      val dbImpl: DBFormalImplementation = new DBFormalImplementation()
+      dbImpl.setImp(file.getAbsolutePath)
+      dbImpl.setSigs(fSpec.getSigs)
+      dbImpl.setAssociationsForCreateSchemas(fSpec.getAssociations)
+      dbImpl.setTypeMap(fSpec.getTypeMap)
+      dbImpl.setIds(fSpec.getIds)
+      implList = dbImpl :: implList
+    }
+    implList
+  }
+
+  private def myLFunction(fSpec: FormalSpecificationType): FormalAbstractMeasurementFunctionSet = {
+    // generate two abstract load objects:  insert and select
+    // create two measurement functions, one for time, one for space
+    // wrap them in a FormalAbstractMeasurementFunctionSet
+    val absLoads: FormalAbstractLoadSet = generateFormalAbstractLoadSet(fSpec)
+    val absTimeMeasurementFunction = new DBFormalAbstractTimeMeasurementFunction(absLoads.getInsLoad, absLoads.getSelLoad)
+    val absSpaceMeasurementFunction = new DBFormalAbstractSpaceMeasurementFunction(absLoads.getInsLoad)
+    new DBFormalAbstractMeasurementFunctionSet(absTimeMeasurementFunction, absSpaceMeasurementFunction)
+  }
+
+  private def recursiveDelete(f: File): Boolean = {
+    if (f.isDirectory) {
+      for (c <- f.listFiles())
+        recursiveDelete(c)
+    }
+    if (!f.delete()) {
+      //      throw new FileNotFoundException("Failed to delete file: " + f)
+    }
+    true
+  }
+
+  private def generateFormalAbstractLoadSet(fSpec: FormalSpecificationType): FormalAbstractLoadSet = {
+
+    // initialize two empty abstract loads objects, to contain insert and select queries
+    // for each object solution to fSpec
+    //     - generate abstract insert and select queries,
+    //			and add them to the corresponding abstract load objects
+    // package up the two abstract load objects in a FormalAbstractLoadSet object and return the result
+
+    // initialize two empty abstract loads objects, to contain insert and select queries
+    val insAbsLoad = new AbstractLoad()
+    val selAbsLoad = new AbstractLoad()
+
+    // use Alloy analyzer
+    // for each object solution to fSpec
+    val objSpec = genObjSpec(fSpec)
+
+    // construct path to solution folder
+    val specPath = objSpec.getSpecPath
+    val lenOfExtension = "_dm.als".length()
+    var objectSolFolder = specPath.substring(0, specPath.length() - lenOfExtension)
+
+    objectSolFolder = objectSolFolder + File.separator + "TestSolutions"
+    recursiveDelete(new File(objectSolFolder))
+    new File(objectSolFolder).mkdirs()
+
+    // call objects generator
+    val loadSynthesizer = new LoadSynthesizer()
+    loadSynthesizer.genObjsHelper(specPath, objectSolFolder, fSpec.getIds) // parse ID for negation
+
+    /*
+     * get solutions to alloy spec (stored as XML files)
+     *
+     * for each such solution ("object")
+     *    * generate two abstract queries
+     *    * add queries to relevant abstract load objects
      */
-    val fSpecPath = fSpec.asInstanceOf[DBFormalSpecification].getSpec
+
+    // iterate all objects
+    val objectFiles: Array[File] = new java.io.File(objectSolFolder).listFiles.filter(_.getName.endsWith(".xml"))
+
+    val insQuerySet: util.List[AbstractQuery] = new util.ArrayList()
+    val selQuerySet: util.List[AbstractQuery] = new util.ArrayList()
+
+    for (file <- objectFiles) {
+      val singleObject = new ObjectOfDM(file.getAbsolutePath)
+
+      val insQuery: AbstractQuery = new AbstractQuery(AbstractQuery.Action.INSERT, singleObject)
+      val selQuery: AbstractQuery = new AbstractQuery(AbstractQuery.Action.SELECT, singleObject)
+
+      insQuerySet.add(insQuery)
+      selQuerySet.add(selQuery)
+    }
+    insAbsLoad.setQuerySet(insQuerySet)
+    selAbsLoad.setQuerySet(selQuerySet)
+
+    new FormalAbstractLoadSet(insAbsLoad, selAbsLoad)
+  }
+
+  private def getConcreteMeasurementFunctionSet(absMF: DBFormalAbstractMeasurementFunctionSet, impl: DBImplementation): DBFormalConcreteMeasurementFunctionSet = {
+    val concMFSet: DBFormalConcreteMeasurementFunctionSet = new DBFormalConcreteMeasurementFunctionSet()
+
+    // for time
+    val tmf: DBFormalAbstractMeasurementFunction = absMF.getTmf
+    val tmfALoads: util.List[AbstractLoad] = tmf.getLoads
+    val insAL: AbstractLoad = tmfALoads.get(0)
+    val selAL: AbstractLoad = tmfALoads.get(1)
+    val insCL = convert(insAL, impl)
+    /**
+     * print out insert scripts
+     */
+    val implPath = impl.getImPath
+    var pathBase = implPath.substring(0, implPath.lastIndexOf(File.separator))
+    val implFileName = implPath.substring(implPath.lastIndexOf(File.separator) + 1, implPath.lastIndexOf("."))
+    pathBase += File.separator + "TestCases"
+    if (!new File(pathBase).exists()) {
+      new File(pathBase).mkdirs()
+    }
+    val insertPath = pathBase + File.separator + implFileName + "_insert.sql"
+    insCL.setInsertPath(insertPath)
+    val insertFile: File = new File(insertPath)
+    if (insertFile.exists()) {
+      insertFile.delete()
+      insertFile.createNewFile()
+    } else {
+      insertFile.createNewFile()
+    }
+    val insertPw: PrintWriter = new PrintWriter(insertFile)
+    if (AppConfig.getTestDB.equalsIgnoreCase("mysql")) {
+      insertPw.println("USE " + implFileName + ";")
+    }
+    val allInsertStmts = new util.ArrayList[util.Map[String, util.Map[Integer, String]]]()
+    val printOrder = PrintOrder.getOutPutOrders(pathBase)
+    for (elem <- insCL.getQuerySet.asScala) {
+      val sq = elem.getSq
+      val sqInOneObject = sq.getInsertStmtsInOneObject
+      allInsertStmts.add(sqInOneObject)
+    }
+    for (s <- printOrder.asScala) {
+      for (insertS <- allInsertStmts.asScala) {
+        val mapIt = insertS.asScala.iterator
+        while (mapIt.hasNext) {
+          val elem = mapIt.next
+          if (elem._1.equalsIgnoreCase(s)) {
+            val tmp = elem._2
+            val tmpIt = tmp.asScala.iterator
+            while (tmpIt.hasNext) {
+              val stmt = tmpIt.next
+              insertPw.println(stmt._2)
+            }
+          }
+        }
+      }
+    }
+    insCL.setInsertPath(insertPath)
+    insertPw.flush()
+    insertPw.close()
+    allInsertStmts.clear()
+
+    // convert select statements
+    val selCL = convert(selAL, impl)
+    val selectPath = pathBase + File.separator + implFileName + "_select.sql"
+    selCL.setSelectPath(selectPath)
+    val selectFile: File = new File(selectPath)
+    if (selectFile.exists()) {
+      selectFile.delete()
+      selectFile.createNewFile()
+    } else {
+      selectFile.createNewFile()
+    }
+    val selectPw: PrintWriter = new PrintWriter(selectFile)
+    if (AppConfig.getTestDB.equalsIgnoreCase("mysql")) {
+      selectPw.println("USE " + implFileName + ";")
+    }
+    val allSelectStmts = new util.ArrayList[util.Map[String, util.Map[Integer, String]]]()
+    for (elem <- selCL.getQuerySet.asScala) {
+      val sq = elem.getSq
+      val sqInOneObject = sq.getSelectStmtsInOneObject
+      allSelectStmts.add(sqInOneObject)
+    }
+    for (_ <- printOrder.asScala) {
+      for (selectS <- allSelectStmts.asScala) {
+        val mapIt = selectS.asScala.iterator
+        while (mapIt.hasNext) {
+          val elem = mapIt.next
+          val stmts = elem._2.values().asScala
+          for (e <- stmts) {
+            selectPw.println(e)
+          }
+        }
+      }
+    }
+    selCL.setSelectPath(selectPath)
+    selectPw.flush()
+    selectPw.close()
+    allSelectStmts.clear()
+
+    val ctmf: DBFormalConcreteTimeMeasurementFunction = new DBFormalConcreteTimeMeasurementFunction(insCL, selCL)
+    concMFSet.setCtmf(ctmf)
+
+    val csmf: DBFormalConcreteSpaceMeasurementFunction = new DBFormalConcreteSpaceMeasurementFunction(insCL)
+    concMFSet.setCsmf(csmf)
+    concMFSet.setImpl(impl)
+    concMFSet
+  }
+
+  private def convert(absl: AbstractLoad, impl: DBImplementation): ConcreteLoad = {
+    val cl: ConcreteLoad = new ConcreteLoad()
+
+    val absqs = absl.getQuerySet
+    val it = absqs.iterator()
+    while (it.hasNext) {
+      val absq = it.next()
+      val cq = convertQuery(absq, impl)
+      cl.getQuerySet.add(cq)
+    }
+    cl
+  }
+
+  private def convertQuery(absq: AbstractQuery, impl: DBImplementation): ConcreteQuery = {
+    // get the action of absq ; a = absq.getAction()
+    val cq = new ConcreteQuery()
+    val a = absq.getAction
+    if (a == Action.INSERT) {
+      cq.setAction(Action.INSERT)
+      cq.setSq(specializeInsertQuery(absq, impl, null))
+    } else {
+      cq.setAction(Action.SELECT)
+      cq.setSq(specializeSelectQuery(absq, impl, null))
+    }
+    cq
+  }
+
+  private def genObjSpec(fSpec: FormalSpecificationType): ObjectSpec = {
+    val fSpecPath = fSpec.getSpec
     val objSpecPath = fSpecPath.substring(0, fSpecPath.length() - 4) + "_dm.als"
 
     val aotad: AlloyOMToAlloyDM = new AlloyOMToAlloyDM()
-    // by calling run, (legacy) Object Specification will be created
     aotad.run(fSpecPath, objSpecPath, AppConfig.getIntScopeForTestCases)
 
     val objSpec = new ObjectSpec()
 
-    val dbDSpec = fSpec.asInstanceOf[DBFormalSpecification]
+    val dbDSpec = fSpec
     objSpec.setIds(dbDSpec.getIds)
     objSpec.setAssociations(dbDSpec.getAssociations)
     objSpec.setTypeList(dbDSpec.getTypeMap)
@@ -1569,93 +1263,29 @@ class DBTrademaker extends AstronautFramework {
   }
 
   private def myTFunction(fAB: FormalAbstractMeasurementFunctionSet): List[ImplementationType] => List[FormalConcreteMeasurementFunctionSet] = {
-    if (isDebugOn) {
-      println("This is myTFunction function")
-    }
-
-    def returnFunction(implList: List[ImplementationType]): List[FormalConcreteMeasurementFunctionSet] = {
-      // convert between List in extracted code and ArrayList in Java
-      val impls: util.ArrayList[DBImplementation] = new util.ArrayList[DBImplementation]()
-
-      val defaultValue: ImplementationType = null //= new ImplementationType
-      var implHd: ImplementationType = hd[ImplementationType](defaultValue)(implList)
-      var implTl = tl[ImplementationType](implList)
-
-      while (implHd != defaultValue) {
-        impls.add(implHd.asInstanceOf[DBImplementation])
-        val tmp = hd[ImplementationType](defaultValue)(implTl)
-        if (tmp != Nil[ImplementationType]()) {
-          implHd = tmp.asInstanceOf[DBImplementation]
-          implTl = tl[ImplementationType](implTl)
-        }
-        implHd = tmp
-      }
-
-      // for each implementation, get concrete MF from abstract MD
-      // return ArrayList
-      val concreteMFSet = getConcreteMeasurementFunctionSets(fAB.asInstanceOf[DBFormalAbstractMeasurementFunctionSet], impls)
-
-      // new empty list
-      var returnValue: List[FormalConcreteMeasurementFunctionSet] = Nil[FormalConcreteMeasurementFunctionSet]()
-      val cMFSIt = concreteMFSet.iterator()
-      while (cMFSIt.hasNext) {
-        val tmp = cMFSIt.next()
-        returnValue = Cons[FormalConcreteMeasurementFunctionSet](tmp.asInstanceOf[FormalConcreteMeasurementFunctionSet], returnValue)
-      }
-      // return from inner function
-      returnValue
-    }
-    // return outter function
-    returnFunction
+    (_: List[ImplementationType]).map(impl => getConcreteMeasurementFunctionSet(fAB, impl))
   }
 
-  private def mySFunction(spec: SpecificationType): FormalSpecificationType = {
-    if (isDebugOn) {
-      println("This is mySFunction function")
-    }
-    val dbfs = new DBFormalSpecification(spec.asInstanceOf[DBSpecification].getSpecFile)
-    // parse spec file and fill in all members
-    // Chong: check how to define constructor in Scala, and call parseSepc() in consctructor
+  private def createFormalSpec(spec: SpecificationType): FormalSpecificationType = {
+    val dbfs = new DBFormalSpecification(spec.getSpecFile)
     dbfs.parseSpec()
     dbfs
   }
 
-  private def myIFunctionHelper(fciList: List[FormalImplementationType]): List[ImplementationType] = {
-    var implList: List[ImplementationType] = Nil[ImplementationType]()
-
-    val defaultValue = new DBFormalImplementation()
-
-    var tmp = hd[FormalImplementationType](defaultValue)(fciList)
-    var tail = tl[FormalImplementationType](fciList)
-    while (tmp != defaultValue) {
-      val dbi: ImplementationType = myIFunction(tmp)
-      implList = Cons[ImplementationType](dbi.asInstanceOf[DBImplementation], implList)
-      tmp = hd[FormalImplementationType](defaultValue)(tail)
-      tail = tl[FormalImplementationType](tail)
-    }
-    implList
-  }
-
   private def myIFunction(fImp: FormalImplementationType): ImplementationType = {
-    if (isDebugOn) {
-      //      println("This is myIFunction function")
-    }
     /**
      * compute FormalImplementation schema name
      * sigs here is all signatures in FormalSpecification (alloyOM), which already be set by lFunction
      * set all needed information for test cases generation here, initialize the global variable SolveAlloyDM
      */
-    val fImpFileName = fImp.asInstanceOf[DBFormalImplementation].getImplementation
+    val fImpFileName = fImp.getImplementation
     val impFileName = fImpFileName.substring(0, fImpFileName.length() - 4) + ".sql"
 
-    val parser = new ORMParser(fImpFileName, impFileName, fImp.asInstanceOf[DBFormalImplementation].getSigs)
+    val parser = new ORMParser(fImpFileName, impFileName, fImp.getSigs)
     parser.createSchemas()
     /**
      * Need to set all needed information for test cases generation here
      */
-
-    val dbFImpl: DBFormalImplementation = fImp.asInstanceOf[DBFormalImplementation]
-
     val impl = new DBImplementation(impFileName)
     impl.setAllFields(parser.getallFields())
     impl.setPrimaryKeys(parser.getPrimaryKeys)
@@ -1667,43 +1297,24 @@ class DBTrademaker extends AstronautFramework {
     impl.setAssociations(parser.getAssociations)
     impl.setReverseIDs(parser.getReverseIds)
 
-    impl.setSigs(dbFImpl.getSigs)
-    impl.setIds(dbFImpl.getIds)
-    impl.setAssociationsForCreateSchemas(dbFImpl.getAssociationsForCreateSchemas)
-    impl.setTypeMap(dbFImpl.getTypeMap)
+    impl.setSigs(fImp.getSigs)
+    impl.setIds(fImp.getIds)
+    impl.setAssociationsForCreateSchemas(fImp.getAssociationsForCreateSchemas)
+    impl.setTypeMap(fImp.getTypeMap)
 
     impl
   }
 
-  private def myBFunctionHelper(fcbList: List[FormalConcreteMeasurementFunctionSet]): List[MeasurementFunctionSetType] = {
-    // iterate whole list Concrete Measurement Function
-    // define a default value to call hd()
-    var mfSetList: List[MeasurementFunctionSetType] = Nil[MeasurementFunctionSetType]()
-    val defaultValue = Nil[FormalConcreteMeasurementFunctionSet]()
-    var fcfHead = hd[FormalConcreteMeasurementFunctionSet](defaultValue)(fcbList)
-    var fcfTail = tl[FormalConcreteMeasurementFunctionSet](fcbList)
-
-    while (fcfHead != defaultValue) {
-      val result = myBFunction(fcfHead)
-      mfSetList = Cons[MeasurementFunctionSetType](result, mfSetList)
-      fcfHead = hd[FormalConcreteMeasurementFunctionSet](defaultValue)(fcfTail)
-      fcfTail = tl[FormalConcreteMeasurementFunctionSet](fcfTail)
-    }
-    mfSetList
-  }
-
   // BFunction here is an identity function
   private def myBFunction(fCB: FormalConcreteMeasurementFunctionSet): MeasurementFunctionSetType = {
-    val castedfCB = fCB.asInstanceOf[DBFormalConcreteMeasurementFunctionSet]
-    val tLoads = castedfCB.getCtmf.getLoads
-    val sLoads = castedfCB.getCsmf.getLoads
+    val tLoads = fCB.getCtmf.getLoads
+    val sLoads = fCB.getCsmf.getLoads
 
     val dbConTMF = new DBConcreteTimeMeasurementFunction(tLoads)
     val dbConSMF = new DBConcreteSpaceMeasurementFunction(sLoads)
 
     val dbConMF = new DBConcreteMeasurementFunctionSet(dbConTMF, dbConSMF)
-    dbConMF.setImpl(castedfCB.getImpl)
-
+    dbConMF.setImpl(fCB.getImpl)
     dbConMF
   }
 }

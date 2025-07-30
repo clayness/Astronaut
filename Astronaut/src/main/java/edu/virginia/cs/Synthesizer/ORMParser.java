@@ -10,6 +10,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -24,78 +25,78 @@ public class ORMParser {
     private String input;
     private String output;
     private DataProvider dataProvider;
-	private ArrayList<CodeNamePair> reverseTAssociate;
-    private ArrayList<CodeNamePair> foreignKeys;
+    private List<CodeNamePair> reverseTAssociate;
+    private List<CodeNamePair> foreignKeys;
     // HashMap<Association Name, pair<src, dst>, src and dst are class name
-    private HashMap<String, CodeNamePair> associations;
-    private ArrayList<CodeNamePair> primaryKeys;
-    private ArrayList<CodeNamePair> fields;
-    private ArrayList<String> allFields;
-    private ArrayList<CodeNamePair> fieldsTable;
-    private ArrayList<CodeNamePair> reverseIds;
-    private ArrayList<Sig> sigs;
-    
-    
-    public ArrayList<CodeNamePair> getReverseIds() {
-    	return this.dataProvider.getReverseIds();
+    private Map<String, CodeNamePair> associations;
+    private List<CodeNamePair> primaryKeys;
+    private List<CodeNamePair> fields;
+    private List<String> allFields;
+    private List<CodeNamePair> fieldsTable;
+    private List<CodeNamePair> reverseIds;
+    private List<Sig> sigs;
+
+
+    public List<CodeNamePair> getReverseIds() {
+        return this.dataProvider.getReverseIds();
     }
-    
-    public void setReverseIds(ArrayList<CodeNamePair> ids) {
-    	this.reverseIds = ids;
+
+    public void setReverseIds(List<CodeNamePair> ids) {
+        this.reverseIds = ids;
     }
-    
+
     public DataProvider getDataProvider() {
-		return dataProvider;
-	}
+        return dataProvider;
+    }
 
-	public void setDataProvider(DataProvider dataProvider) {
-		this.dataProvider = dataProvider;
-	}
+    public void setDataProvider(DataProvider dataProvider) {
+        this.dataProvider = dataProvider;
+    }
 
-	public HashMap<String, CodeNamePair> getAssociations() {
-		return associations;
-	}
+    public Map<String, CodeNamePair> getAssociations() {
+        return associations;
+    }
 
-	public void setAssociations(HashMap<String, CodeNamePair> associations) {
-		this.associations = associations;
-	}
+    public void setAssociations(HashMap<String, CodeNamePair> associations) {
+        this.associations = associations;
+    }
 
-	public ArrayList<String> getAllFields() {
-		return allFields;
-	}
+    public List<String> getAllFields() {
+        return allFields;
+    }
 
-	public void setAllFields(ArrayList<String> allFields) {
-		this.allFields = allFields;
-	}
+    public void setAllFields(List<String> allFields) {
+        this.allFields = allFields;
+    }
 
     public ORMParser() {
     }
 
-    public ArrayList<CodeNamePair> getReverseTAssociate() {
+    public List<CodeNamePair> getReverseTAssociate() {
         return this.reverseTAssociate;
     }
 
-    public HashMap<String, CodeNamePair> getAssociation() {
+    public Map<String, CodeNamePair> getAssociation() {
         return this.associations;
     }
 
-    public ORMParser(String input, String output, ArrayList<Sig> sigs) {
+    public ORMParser(String input, String output, List<Sig> sigs) {
         this.input = input;
         this.output = output;
-        this.reverseTAssociate = new ArrayList<CodeNamePair>();
-        this.foreignKeys = new ArrayList<CodeNamePair>();
-        this.associations = new HashMap<String, CodeNamePair>();
-        this.primaryKeys = new ArrayList<CodeNamePair>();
-        this.fields = new ArrayList<CodeNamePair>();
-        this.allFields = new ArrayList<String>();
-        this.fieldsTable = new ArrayList<CodeNamePair>();
-        this.reverseIds = new ArrayList<CodeNamePair>();
+        this.reverseTAssociate = new ArrayList<>();
+        this.foreignKeys = new ArrayList<>();
+        this.associations = new HashMap<>();
+        this.primaryKeys = new ArrayList<>();
+        this.fields = new ArrayList<>();
+        this.allFields = new ArrayList<>();
+        this.fieldsTable = new ArrayList<>();
+        this.reverseIds = new ArrayList<>();
         this.sigs = sigs;
         this.dataProvider = new DataProvider(this.sigs);
-        
+
     }
 
-    public ArrayList<CodeNamePair> getFields() {
+    public List<CodeNamePair> getFields() {
         for (CodeNamePair field : this.fields) {
             field.setFirst(this.dataProvider.getSecondByFirst(field.getFirst()));
             field.setSecond(this.dataProvider.getSecondByFirst(field.getSecond()));
@@ -103,20 +104,20 @@ public class ORMParser {
         return fields;
     }
 
-    public ArrayList<CodeNamePair> getFieldType() {
+    public List<CodeNamePair> getFieldType() {
         return this.dataProvider.getTypes();
     }
 
     // this function will change the value of schemas and return it
-    public HashMap<String, ArrayList<CodeNamePair>> getDataSchemas() {
+    public Map<String, List<CodeNamePair>> getDataSchemas() {
         return this.dataProvider.getTables();
     }
 
-    public ArrayList<CodeNamePair> getParents() {
+    public List<CodeNamePair> getParents() {
         return this.dataProvider.getParents();
     }
 
-    public ArrayList<CodeNamePair> getForeignKey() {
+    public List<CodeNamePair> getForeignKey() {
         // refine the the foreign key list first
         for (CodeNamePair fKey : this.foreignKeys) {
             fKey.setFirst(this.dataProvider.getSecondByFirst(fKey.getFirst()));
@@ -125,7 +126,7 @@ public class ORMParser {
         return this.foreignKeys;
     }
 
-    public ArrayList<CodeNamePair> getFieldsTable() {
+    public List<CodeNamePair> getFieldsTable() {
         // refine the the foreign key list first
         for (CodeNamePair fKey : this.fieldsTable) {
             fKey.setFirst(this.dataProvider.getSecondByFirst(fKey.getFirst()));
@@ -134,9 +135,9 @@ public class ORMParser {
         return fieldsTable;
     }
 
-    public ArrayList<String> getallFields() {
+    public List<String> getallFields() {
         // refine the the foreign key list first
-        ArrayList<String> result = new ArrayList<String>();
+        List<String> result = new ArrayList<>();
         for (String fKey : this.allFields) {
             //to not add DType$0
             String fieldName = this.dataProvider.getSecondByFirst(fKey);
@@ -147,7 +148,7 @@ public class ORMParser {
 
     }
 
-    public ArrayList<CodeNamePair> getPrimaryKeys() {
+    public List<CodeNamePair> getPrimaryKeys() {
         for (CodeNamePair pair : this.primaryKeys) {
             pair.setFirst(this.dataProvider.getSecondByFirst(pair.getFirst()));
             pair.setSecond(this.dataProvider.getSecondByFirst(pair.getSecond()));
