@@ -1,7 +1,6 @@
 package edu.virginia.cs.Synthesizer;
 
 public class MetricValue {
-    private Integer solutionNo = 0;
     private Integer TATI = 0;
     private Integer NCT = 0;
     private Integer NCRF = 0;
@@ -13,16 +12,6 @@ public class MetricValue {
     private String NCT_detail = "";
     private String NCRF_detail = "";
     private String ANV_detail = "";
-//    private String NIC_detail = "";
-
-//    ArrayList<Integer> similarSolutions = new ArrayList<Integer>();
-
-    public MetricValue(){
-    }
-
-    public MetricValue(int solutionNo){
-        this.solutionNo = solutionNo;
-    }
 
     public Integer getTATI() {
         return TATI;
@@ -56,39 +45,9 @@ public class MetricValue {
         this.ANV = ANV;
     }
 
-    public boolean shallowEquals(MetricValue m) {
-        if (TATI.equals(m.getTATI()) &&
-                NCT.equals(m.getNCT()) &&
-                NCRF.equals(m.getNCRF()) &&
-                ANV.equals(m.getANV()) &&
-//                NIC.equals(m.getNIC()) &&
-                NFK.equals(m.getNFK()) )
-            return true;
-        return false;
-    }
-
     public boolean equals(MetricValue m) {
-        if (TATI.equals(m.getTATI()) &&
-                NCT.equals(m.getNCT()) &&
-                NCRF.equals(m.getNCRF()) &&
-                ANV.equals(m.getANV()) &&
-//                NIC.equals(m.getNIC()) &&
-                NFK.equals(m.getNFK()) &&
-                TATI_detail.equals(m.TATI_detail) &&
-                NCT_detail.equals(m.NCT_detail) &&
-                NCRF_detail.equals(m.NCRF_detail) &&
-                ANV_detail.equals(m.ANV_detail))
-//                NIC_detail.equals(m.NIC_detail) )
-            return true;
-        return false;
-    }
-
-    public Integer getSolutionNo() {
-        return solutionNo;
-    }
-
-    public void setSolutionNo(Integer solutionNo) {
-        this.solutionNo = solutionNo;
+        return TATI.equals(m.getTATI()) && NCT.equals(m.getNCT()) && NCRF.equals(m.getNCRF()) && ANV.equals(m.getANV()) &&
+                NFK.equals(m.getNFK()) && TATI_detail.equals(m.TATI_detail) && NCT_detail.equals(m.NCT_detail) && NCRF_detail.equals(m.NCRF_detail) && ANV_detail.equals(m.ANV_detail);
     }
 
     public String getTATI_detail() {
@@ -130,14 +89,6 @@ public class MetricValue {
     public void setNIC(Integer NIC) {
         this.NIC = NIC;
     }
-
-//    public String getNIC_detail() {
-//        return NIC_detail;
-//    }
-//
-//    public void setNIC_detail(String NIC_detail) {
-//        this.NIC_detail = NIC_detail;
-//    }
 
     public Integer getNFK() {
         return NFK;

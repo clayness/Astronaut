@@ -12,11 +12,7 @@ import edu.mit.csail.sdg.translator.A4Options;
 import edu.mit.csail.sdg.translator.A4Solution;
 import edu.mit.csail.sdg.translator.TranslateAlloyToKodkod;
 import edu.virginia.cs.AppConfig;
-import edu.virginia.cs.Framework.Types.AbstractLoad;
-import edu.virginia.cs.Framework.Types.AbstractQuery;
-import edu.virginia.cs.Framework.Types.AbstractQuery.Action;
 import edu.virginia.cs.Framework.Types.ObjectOfDM;
-import edu.virginia.cs.Framework.Types.ObjectSet;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -26,9 +22,9 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 public class LoadSynthesizer {
-    private Boolean isDebugOn = AppConfig.getDebug();
+    private final Boolean isDebugOn = AppConfig.getDebug();
 
-    public Map<String, String> globalNegation = new HashMap<>();
+    public final Map<String, String> globalNegation = new HashMap<>();
     public List<String> ids = new ArrayList<>();
     public Map<String, Map<String, List<CodeNamePair>>> allInstances = new HashMap<>();
     boolean isFinished = false;
@@ -44,8 +40,8 @@ public class LoadSynthesizer {
             System.out.println("Generate objects starts....");
         }
         this.ids = ids;
-        String negation = "";
-        String factName = "";
+        StringBuilder negation;
+        String factName;
         int factNum = 1;
         while (true) {
             try {
@@ -58,25 +54,24 @@ public class LoadSynthesizer {
                 ObjectOfDM oodm = new ObjectOfDM(object);
                 allInstances = oodm.parseDocument();
                 // add negation to data model
-                getNegation(object);
-                PrintStream ps = new PrintStream(new FileOutputStream(new File(
-                        model), true));
+                getNegation();
+                PrintStream ps = new PrintStream(new FileOutputStream(model, true));
                 factName = "fact_" + factNum;
                 factNum++;
-                negation = System.getProperty("line.separator") + "fact "
+                negation = new StringBuilder(System.lineSeparator() + "fact "
                         + factName + " {"
-                        + System.getProperty("line.separator");
+                        + System.lineSeparator());
                 for (Entry<String, String> s_negation : this.globalNegation
                         .entrySet()) {
-                    negation += s_negation.getKey()
-                            + System.getProperty("line.separator");
+                    negation.append(s_negation.getKey()).append(System.lineSeparator());
                 }
-                negation += "}";
+                negation.append("}");
                 ps.print(negation);
                 ps.flush();
                 ps.close();
                 this.globalNegation.clear();
             } catch (FileNotFoundException e) {
+                //noinspection CallToPrintStackTrace
                 e.printStackTrace();
             }
         }
@@ -87,16 +82,15 @@ public class LoadSynthesizer {
 
     /**
      * Call legacy code
-     *
-     * @param model
-     * @param solutions
      */
     public String genObjects(String model, String solutions) {
         String logFile = solutions + File.separator + "log.txt";
         if (!new File(logFile).exists()) {
             try {
+                //noinspection ResultOfMethodCallIgnored
                 new File(logFile).createNewFile();
             } catch (IOException e) {
+                //noinspection CallToPrintStackTrace
                 e.printStackTrace();
             }
         }
@@ -118,16 +112,17 @@ public class LoadSynthesizer {
         try {
             root = CompUtil.parseEverything_fromFile(rep, null, model);
         } catch (Err e1) {
+            //noinspection CallToPrintStackTrace
             e1.printStackTrace();
         }
 
         // Choose some default options for how you want to execute the commands
         A4Options options = new A4Options();
-        options.solver = A4Options.SatSolver.SAT4J; // .KK;//.MiniSatJNI;
-        // //.MiniSatProverJNI;//.SAT4J;
+        options.solver = A4Options.SatSolver.SAT4J;
         options.symmetry = AppConfig.getA4ReportSymmetry();
         options.skolemDepth = AppConfig.getA4ReportSkolemDepth();
 
+        assert root != null;
         ConstList<Command> cmds = root.getAllCommands();
         try {
             for (Command command : cmds) {
@@ -157,82 +152,37 @@ public class LoadSynthesizer {
                 }
             }
         } catch (Err e) {
+            //noinspection CallToPrintStackTrace
             e.printStackTrace();
         }
         return null;
     }
 
-    public ArrayList<AbstractLoad> genAbsLoads(ObjectSet objSet) {
-        ArrayList<AbstractLoad> loads = new ArrayList<>();
-        loads.add(genInsertLoad(objSet));
-        loads.add(genSelectLoad(objSet));
-        return loads;
-    }
-
-    private AbstractLoad genInsertLoad(ObjectSet objSet) {
-        AbstractLoad insertLoads = new AbstractLoad();
-        // iterate objects
-        for (ObjectOfDM object : objSet.getObjSet()) {
-            AbstractQuery aq = new AbstractQuery();
-            aq.setAction(Action.INSERT);
-            aq.setOodm(object);
-            insertLoads.getQuerySet().add(aq);
-        }
-        return insertLoads;
-    }
-
-    private AbstractLoad genSelectLoad(ObjectSet objSet) {
-        AbstractLoad selectLoads = new AbstractLoad();
-        // iterate objects
-        for (ObjectOfDM object : objSet.getObjSet()) {
-            AbstractQuery aq = new AbstractQuery();
-            aq.setAction(Action.SELECT);
-            aq.setOodm(object);
-            selectLoads.getQuerySet().add(aq);
-        }
-        return selectLoads;
-    }
-
-    public String getNegation(String xmlFile) {
-        String negation = "";
-        String forGlobalNegation = "";
+    public void getNegation() {
+        StringBuilder negation = new StringBuilder();
+        StringBuilder forGlobalNegation;
         for (var entry : this.allInstances.entrySet()) {
             String element = entry.getKey();
             for (var instance : entry.getValue().entrySet()) {
-                forGlobalNegation = "";
-                forGlobalNegation = "no o:" + element + " | ";
-                negation += "no o:" + element + " | ";
+                forGlobalNegation = new StringBuilder("no o:" + element + " | ");
+                negation.append("no o:").append(element).append(" | ");
                 List<CodeNamePair> allFields = instance.getValue();
                 for (CodeNamePair fields : allFields) {
                     String field = fields.getFirst();
                     // check if field is ID or not
-                    if (isID(field.split("_")[1])) {
+                    if (this.ids.contains(field.split("_")[1])) {
                         String value = fields.getSecond();
-                        negation += "o." + field + "=" + value + " && ";
-                        forGlobalNegation += "o." + field + "=" + value
-                                + " && ";
+                        negation.append("o.").append(field).append("=").append(value).append(" && ");
+                        forGlobalNegation.append("o.").append(field).append("=").append(value).append(" && ");
                     }
                 }
-                forGlobalNegation = forGlobalNegation.substring(0,
-                        forGlobalNegation.length() - 4);// +
-                // System.getProperty("line.separator");
-                globalNegation.put(forGlobalNegation, "");
-                negation = negation.substring(0, negation.length() - 4)
-                        + System.getProperty("line.separator");
+                forGlobalNegation = new StringBuilder(forGlobalNegation.substring(0,
+                        forGlobalNegation.length() - 4));
+                globalNegation.put(forGlobalNegation.toString(), "");
+                negation = new StringBuilder(negation.substring(0, negation.length() - 4)
+                        + System.lineSeparator());
             }
-            // String goToTable = getTableNameByElement()
         }
-        // negation += "}";
-
-        return negation;
-    }
-
-    public boolean isID(String field) {
-        for (String s : this.ids) {
-            if (s.equals(field))
-                return true;
-        }
-        return false;
     }
 
 }

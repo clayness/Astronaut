@@ -17,30 +17,12 @@ import java.util.Map;
  * @author tang object is a single solution
  */
 public class ObjectOfDM {
-    private String objPath = "";
-
-    // public HashMap<String, HashMap<String, ArrayList<CodeNamePair>>>
-    // allInstances = new HashMap<String, HashMap<String,
-    // ArrayList<CodeNamePair>>>();
-
-    public ObjectOfDM() {
-    }
+    private final String objPath;
 
     public ObjectOfDM(String path) {
         this.objPath = path;
     }
 
-    public void setObjectPath(String path) {
-        this.objPath = path;
-    }
-
-    public String getObjectPath() {
-        return this.objPath;
-    }
-
-    // HashMap<String, HashMap<String, ArrayList<CodeNamePair>>>
-    // HashMap<tableName, HashMap<instanceName,
-    // ArrayList<CodeNamePair>>>
     public Map<String, Map<String, List<CodeNamePair>>> parseDocument() {
 
         Map<String, Map<String, List<CodeNamePair>>> allInstances = new HashMap<>();
@@ -52,7 +34,6 @@ public class ObjectOfDM {
             // get the root element
             Element docEle = dom.getDocumentElement();
             // get instance
-            Node instance = docEle.getFirstChild();
             // get a nodelist of elements
             NodeList signodes = docEle.getElementsByTagName("sig");
 
@@ -65,12 +46,10 @@ public class ObjectOfDM {
                 if (node.hasAttributes()) {
                     // Element element = (Element) node;
                     String table_name = tmpElement.getAttribute("label");
-                    if (table_name.equalsIgnoreCase("univ")
-                            || table_name.equalsIgnoreCase("int")
-                            || table_name.equalsIgnoreCase("string")
-                            || table_name.contains("/")) {
-                        continue;
-                    } else {
+                    if (!table_name.equalsIgnoreCase("univ")
+                            && !table_name.equalsIgnoreCase("int")
+                            && !table_name.equalsIgnoreCase("string")
+                            && !table_name.contains("/")) {
                         Map<String, List<CodeNamePair>> instances = new HashMap<>();
                         NodeList multiple_instances = tmpElement
                                 .getElementsByTagName("atom");
@@ -78,7 +57,7 @@ public class ObjectOfDM {
                         for (int j = 0; j < instances_num; j++) {
                             Element single_instance = (Element) multiple_instances.item(j);
                             String s_instance_name = single_instance.getAttribute("label");
-                            ArrayList<CodeNamePair> single_table = new ArrayList<CodeNamePair>();
+                            List<CodeNamePair> single_table = new ArrayList<>();
                             instances.put(s_instance_name, single_table);
                         }
                         allInstances.put(table_name, instances);
@@ -94,36 +73,34 @@ public class ObjectOfDM {
                 if (node.hasAttributes()) {
                     Element element = (Element) node;
                     String field = element.getAttribute("label");
-                    if (node.hasAttributes()) {
-                        // Element element = (Element) node;
-                        NodeList children = element
-                                .getElementsByTagName("tuple");
-                        for (int j = 0; j < children.getLength(); j++) {
-                            Node child = children.item(j);
-                            if (child.hasChildNodes()) { // for every
-                                // <tuple> tag
-                                Element singleTuple = (Element) child;
-                                String instanceName = getSingleAtom(
-                                        singleTuple, 0); // Get the first
-                                // part
-                                String value = getSingleAtom(singleTuple, 1); // Get
-                                // the
-                                // second
-                                // part
-                                // get table name
-                                String[] subs = instanceName.split("\\$");
-                                String table_name = subs[0];
-                                allInstances
-                                        .get(table_name)
-                                        .get(instanceName)
-                                        .add(new CodeNamePair(field,
-                                                value));
-                            }
+                    NodeList children = element
+                            .getElementsByTagName("tuple");
+                    for (int j = 0; j < children.getLength(); j++) {
+                        Node child = children.item(j);
+                        if (child.hasChildNodes()) { // for every
+                            // <tuple> tag
+                            Element singleTuple = (Element) child;
+                            String instanceName = getSingleAtom(
+                                    singleTuple, 0); // Get the first
+                            // part
+                            String value = getSingleAtom(singleTuple, 1); // Get
+                            // the
+                            // second
+                            // part
+                            // get table name
+                            String[] subs = instanceName.split("\\$");
+                            String table_name = subs[0];
+                            allInstances
+                                    .get(table_name)
+                                    .get(instanceName)
+                                    .add(new CodeNamePair(field,
+                                            value));
                         }
                     }
                 }
             }
         } catch (Exception ex) {
+            //noinspection CallToPrintStackTrace
             ex.printStackTrace();
         }
         // } else if (AppConfig.getIsRandom() == 1) {

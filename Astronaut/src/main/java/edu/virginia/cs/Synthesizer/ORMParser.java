@@ -13,72 +13,19 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Created by IntelliJ IDEA.
- * User: ct4ew
- * Date: 7/23/13
- * Time: 3:35 PM
- * To change this template use File | Settings | File Templates.
- */
 public class ORMParser {
-    private Document dom;
-    private String input;
-    private String output;
-    private DataProvider dataProvider;
-    private List<CodeNamePair> reverseTAssociate;
-    private List<CodeNamePair> foreignKeys;
-    // HashMap<Association Name, pair<src, dst>, src and dst are class name
-    private Map<String, CodeNamePair> associations;
-    private List<CodeNamePair> primaryKeys;
-    private List<CodeNamePair> fields;
-    private List<String> allFields;
-    private List<CodeNamePair> fieldsTable;
-    private List<CodeNamePair> reverseIds;
-    private List<Sig> sigs;
+    private final String input;
+    private final String output;
+    private final DataProvider dataProvider;
+    private final List<CodeNamePair> reverseTAssociate;
+    private final List<CodeNamePair> foreignKeys;
+    private final Map<String, CodeNamePair> associations;
+    private final List<CodeNamePair> primaryKeys;
+    private final List<CodeNamePair> fields;
+    private final List<String> allFields;
+    private final List<CodeNamePair> fieldsTable;
+    private final List<Sig> sigs;
 
-
-    public List<CodeNamePair> getReverseIds() {
-        return this.dataProvider.getReverseIds();
-    }
-
-    public void setReverseIds(List<CodeNamePair> ids) {
-        this.reverseIds = ids;
-    }
-
-    public DataProvider getDataProvider() {
-        return dataProvider;
-    }
-
-    public void setDataProvider(DataProvider dataProvider) {
-        this.dataProvider = dataProvider;
-    }
-
-    public Map<String, CodeNamePair> getAssociations() {
-        return associations;
-    }
-
-    public void setAssociations(HashMap<String, CodeNamePair> associations) {
-        this.associations = associations;
-    }
-
-    public List<String> getAllFields() {
-        return allFields;
-    }
-
-    public void setAllFields(List<String> allFields) {
-        this.allFields = allFields;
-    }
-
-    public ORMParser() {
-    }
-
-    public List<CodeNamePair> getReverseTAssociate() {
-        return this.reverseTAssociate;
-    }
-
-    public Map<String, CodeNamePair> getAssociation() {
-        return this.associations;
-    }
 
     public ORMParser(String input, String output, List<Sig> sigs) {
         this.input = input;
@@ -90,10 +37,25 @@ public class ORMParser {
         this.fields = new ArrayList<>();
         this.allFields = new ArrayList<>();
         this.fieldsTable = new ArrayList<>();
-        this.reverseIds = new ArrayList<>();
         this.sigs = sigs;
-        this.dataProvider = new DataProvider(this.sigs);
+        this.dataProvider = new DataProvider();
 
+    }
+
+    public List<CodeNamePair> getReverseIds() {
+        return this.dataProvider.getReverseIds();
+    }
+
+    public DataProvider getDataProvider() {
+        return dataProvider;
+    }
+
+    public Map<String, CodeNamePair> getAssociations() {
+        return associations;
+    }
+
+    public List<CodeNamePair> getReverseTAssociate() {
+        return this.reverseTAssociate;
     }
 
     public List<CodeNamePair> getFields() {
@@ -102,19 +64,6 @@ public class ORMParser {
             field.setSecond(this.dataProvider.getSecondByFirst(field.getSecond()));
         }
         return fields;
-    }
-
-    public List<CodeNamePair> getFieldType() {
-        return this.dataProvider.getTypes();
-    }
-
-    // this function will change the value of schemas and return it
-    public Map<String, List<CodeNamePair>> getDataSchemas() {
-        return this.dataProvider.getTables();
-    }
-
-    public List<CodeNamePair> getParents() {
-        return this.dataProvider.getParents();
     }
 
     public List<CodeNamePair> getForeignKey() {
@@ -136,13 +85,12 @@ public class ORMParser {
     }
 
     public List<String> getallFields() {
-        // refine the the foreign key list first
+        // refine the foreign key list first
         List<String> result = new ArrayList<>();
         for (String fKey : this.allFields) {
             //to not add DType$0
             String fieldName = this.dataProvider.getSecondByFirst(fKey);
-            if (!fieldName.startsWith("DType$"))
-                result.add(fieldName);
+            if (!fieldName.startsWith("DType$")) result.add(fieldName);
         }
         return result;
 
@@ -153,35 +101,18 @@ public class ORMParser {
             pair.setFirst(this.dataProvider.getSecondByFirst(pair.getFirst()));
             pair.setSecond(this.dataProvider.getSecondByFirst(pair.getSecond()));
         }
-        // remove those tables which are associations
-//        Iterator<CodeNamePair> it = this.primaryKeys.iterator();
-//        while (it.hasNext()) {
-        // if the table is association
-//            if (isTableAAssociation(it.next().getFirst())) {
-//                it.remove();
-//            }
-//        }
         return this.primaryKeys;
-    }
-
-    public boolean isTableAAssociation(String tableName) {
-        for (Map.Entry<String, CodeNamePair> entry : this.associations.entrySet()) {
-            if (entry.getKey().equalsIgnoreCase(tableName)) {
-                return true;
-            }
-        }
-        return false;
     }
 
     public void createSchemas() {
         // the input file will be a XML solution file
         parseXML();
         try {
-            this.dataProvider.refineTable(this.sigs);
-            //this.dataProvider.outputData(this.output); //For debug
+            this.dataProvider.refineTable();
             this.dataProvider.writeIntoFile(this.output);
         } catch (IOException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            //noinspection CallToPrintStackTrace
+            e.printStackTrace();
         }
     }
 
@@ -192,7 +123,7 @@ public class ORMParser {
             //Using factory get an instance of document builder
             DocumentBuilder db = dbf.newDocumentBuilder();
             //parse using builder to get DOM representation of the XML file
-            dom = db.parse(this.input);
+            Document dom = db.parse(this.input);
 
             //get the root element
             Element docEle = dom.getDocumentElement();
@@ -256,10 +187,7 @@ public class ORMParser {
                     String labelValue = element.getAttribute("label");
                     String[] tmp = labelValue.split("/");
                     String type = tmp[tmp.length - 1];
-                    if (type.equalsIgnoreCase("Real") || type.equalsIgnoreCase("Integer")
-                            || type.equalsIgnoreCase("string") || type.equalsIgnoreCase("Class")
-                            || type.equalsIgnoreCase("DType") || type.equalsIgnoreCase("Bool")
-                            || type.equalsIgnoreCase("Longblob") || type.equalsIgnoreCase("Time")) {
+                    if (type.equalsIgnoreCase("Real") || type.equalsIgnoreCase("Integer") || type.equalsIgnoreCase("string") || type.equalsIgnoreCase("Class") || type.equalsIgnoreCase("DType") || type.equalsIgnoreCase("Bool") || type.equalsIgnoreCase("Longblob") || type.equalsIgnoreCase("Time")) {
                         NodeList atoms = element.getElementsByTagName("atom");
                         for (int j = 0; j < atoms.getLength(); j++) {
                             Node node1 = atoms.item(j);
@@ -273,6 +201,7 @@ public class ORMParser {
                 }
             }
         } catch (Exception pce) {
+            //noinspection CallToPrintStackTrace
             pce.printStackTrace();
         }
     }
@@ -280,7 +209,6 @@ public class ORMParser {
     /**
      * Return the root table among a set of tables
      *
-     * @param tableName
      * @return root table or null if any error happened
      */
     public String getRootTable(String tableName) {
@@ -304,7 +232,6 @@ public class ORMParser {
      * variable "TableName"
      *
      * @param element: the input "tAssociate" tag
-     * @return true if parse success
      */
     public void parse_tAssociate(Element element) {
         NodeList children = element.getElementsByTagName("tuple");
@@ -324,23 +251,13 @@ public class ORMParser {
                 // there is one table code existed, means some table share a table code
                 // need to find the root among these table
                 if (hasCode) {
-                    String root = getRootTable(name);
-                    name = root;
+                    name = getRootTable(name);
                     this.dataProvider.removePairByCode(code);
                 }
                 this.dataProvider.addPair(code, name);
 
                 // if there is no parent table in pairs, need to remove the pair with code "code" and add this table into pair
                 // if this table is parent, replace the existed pair with this one
-//                if (hasCode) {
-//                    boolean isParent = this.dataProvider.isParent(name);
-//                    if (isParent) {
-//                        this.dataProvider.removePairByCode(code);
-//                        this.dataProvider.addPair(code, name);
-//                    }
-//                } else {
-//                    this.dataProvider.addPair(code, name);
-//                }
             }
         }
 
@@ -367,7 +284,6 @@ public class ORMParser {
      * handle primary key
      *
      * @param element: the primary key tag
-     * @return true: if parse successfully false: if parsing has failure
      */
     public void parsePK(Element element) {
         NodeList children = element.getElementsByTagName("tuple");

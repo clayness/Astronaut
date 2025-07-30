@@ -1,22 +1,23 @@
 package edu.virginia.cs.Framework.Types;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class ConcreteLoad {
     private String insertPath = "";
     private String selectPath = "";
 
-    private ArrayList<ConcreteQuery> querySet;
+    private List<ConcreteQuery> querySet;
 
     public ConcreteLoad() {
         this.querySet = new ArrayList<>();
     }
 
-    public ArrayList<ConcreteQuery> getQuerySet() {
+    public List<ConcreteQuery> getQuerySet() {
         return this.querySet;
     }
 
-    public void setQuerySet(ArrayList<ConcreteQuery> querySet) {
+    public void setQuerySet(List<ConcreteQuery> querySet) {
         this.querySet = querySet;
     }
 

@@ -9,7 +9,6 @@ import org.apache.spark.{SparkConf, SparkContext}
 
 import java.io.{File, FileWriter, PrintWriter}
 import java.nio.file.Path
-import java.text.{NumberFormat, ParsePosition}
 import java.util
 import java.util.{Random, UUID}
 import scala.jdk.CollectionConverters._
@@ -55,71 +54,10 @@ class DBTrademaker extends AstronautFramework {
     }
   }
 
-  def getIDBySigName(sigs: util.List[Sig], sigName: String): String = {
-    for (s <- sigs.asScala) {
-      if (s.getSigName.equalsIgnoreCase(sigName)) {
-        return s.getId
-      }
-    }
-    ""
-  }
-
-  def getAssByKey(scheme: util.Map[String, util.List[CodeNamePair]],
-                  pTable: String, fTable: String): util.Map[String, CodeNamePair] = {
-    val ass_map: util.Map[String, CodeNamePair] = new util.HashMap[String, CodeNamePair]()
-    var src: String = ""
-    var dst: String = ""
-    var ass: String = ""
-
-    val schemeIt = scheme.asScala.iterator
-    while (schemeIt.hasNext) {
-      val table = schemeIt.next
-      val fields = table._2
-      for (pair <- fields.asScala) {
-        if (pair.getFirst.equalsIgnoreCase("src")) {
-          if (pair.getSecond.equalsIgnoreCase(pTable)) {
-            src = pTable
-          }
-          if (pair.getSecond.equalsIgnoreCase(fTable)) {
-            src = fTable
-          }
-        }
-        if (pair.getFirst.equalsIgnoreCase("dst")) {
-          if (pair.getSecond.equalsIgnoreCase(pTable)) {
-            dst = pTable
-          }
-          if (pair.getSecond.equalsIgnoreCase(fTable)) {
-            dst = fTable
-          }
-        }
-      }
-      if (src.nonEmpty && dst.nonEmpty) {
-        ass = table._1
-        val pair: CodeNamePair = new CodeNamePair(src, dst)
-        ass_map.put(ass, pair)
-        return ass_map
-      }
-    }
-    null
-  }
-
-  // get table name by the primary key
-  // we need to filter out the association table by check if the primary key is foreign key at the same time
-  def getTablesByPrimaryKey(pKeys: util.List[CodeNamePair], primaryKey: String): util.List[String] = {
-    val tables: util.List[String] = new util.ArrayList[String]()
-    for (pair <- pKeys.asScala) {
-      if (pair.getSecond.equalsIgnoreCase(primaryKey)) {
-        tables.add(pair.getFirst)
-      }
-    }
-    tables
-  }
-
-  def isNumeric(str: String): Boolean = {
-    val formatter: NumberFormat = NumberFormat.getInstance()
-    val pos: ParsePosition = new ParsePosition(0)
-    formatter.parse(str, pos)
-    str.length() == pos.getIndex
+  private def getIDBySigName(sigs: util.List[Sig], sigName: String): String = {
+    sigs.asScala.collectFirst {
+      case s if s.getSigName.equalsIgnoreCase(sigName) => s.getId
+    }.getOrElse("")
   }
 
   private def synthesizeImplAndFuncFromSpec(spec: SpecificationType)
@@ -225,18 +163,7 @@ class DBTrademaker extends AstronautFramework {
   // here we get the tradespace function and analyze function
   private def tradespaceFunction = tradespace(myTradespace) // fun: (SpecificationType => List[Prod[ImplementationType, BenchmarkResultType]])
 
-  /**
-   * Use Spark to evaluate solutions
-   *
-   * @return list of implementation and measurement result
-   */
   private def myMapReduce(list: List[(ImplementationType, MeasurementFunctionSetType)]): List[(ImplementationType, MeasurementResultSetType)] = {
-    /**
-     * map run benchmark function to the list of measurement functions
-     * 1. create Spark context
-     * 2. create RDD based on the list
-     * 3. call Spark's map to execute
-     */
     val conf = new SparkConf().setAppName("Astronaut")
       .set("spark.akka.frameSize", "200")
       .set("spark.default.parallelism", "16")
@@ -250,11 +177,7 @@ class DBTrademaker extends AstronautFramework {
 
     val sc = new SparkContext(conf)
     val rdd = sc.parallelize(list)
-    val evaluationResult = rdd.map(e => {
-      val result = myRunBenchmark(e._1, e._2)
-      result
-    })
-
+    val evaluationResult = rdd.map(e => myRunBenchmark(e._1, e._2))
     val collectedResult = evaluationResult.collect()
     endTime = System.currentTimeMillis
     timeInterval = endTime - startTime
@@ -264,7 +187,6 @@ class DBTrademaker extends AstronautFramework {
   }
 
   private def myRunBenchmark(impl: ImplementationType, mfs: MeasurementFunctionSetType): (ImplementationType, MeasurementResultSetType) = {
-    mfs.setImpl(impl)
 
     // If benchmark is random test loads, need to create concrete load first and then run them
     if (AppConfig.getIsRandom == 1) {
@@ -281,44 +203,15 @@ class DBTrademaker extends AstronautFramework {
       mfs.getCsmf.setLoads(spaceLoads)
     }
 
-    // wait for a while to collect since test suite transfer might require sometime
-
-
-    /**
-     * iterate all measurement function set to get insert and select script file
-     * check if there are available nodes
-     * if Yes, start a Worker to continue work
-     * if No, sleep 3 seconds and then try to get an available nodes
-     */
-    //    if (AppConfig.getIsRandom() == 1) {
-    //      var mr: DBMeasurementResult = Evaluator.Evaluator.evaluate(impl, mfs)
-    //      mr.setImpl(impl)
-    //      myPair = Pair[ImplementationType, MeasurementResultSetType](impl, mr)
-    //    } else {
     val tmf = mfs.getCtmf
     tmf.setImpl(impl)
     val smf = mfs.getCsmf
     smf.setImpl(impl)
-    if (isDebugOn) {
-      println("=======================")
-      println("TimeMeasurementFunction")
-      println("=======================")
-    }
     val tmr = tmf.run()
     println("Insert time: " + tmr.getInsertTime + "s. Select time: " + tmr.getSelectTime + "s.")
-    if (isDebugOn) {
-      println("=======================")
-      println("SpaceMeasurementFunction")
-      println("=======================")
-    }
     val smr = smf.run()
-    if (isDebugOn) {
-      println("DB space: " + smr.getDbSpace + "kb")
-    }
-
     val dbmr = new DBMeasurementResult(tmr, smr)
     dbmr.setImpl(impl)
-    //    }
 
     // delete insert and select files
     val loads = mfs.getCtmf.getLoads.asScala
@@ -328,23 +221,13 @@ class DBTrademaker extends AstronautFramework {
 
       val inFile = new File(inPath)
       if (inFile.exists()) {
-        //        Chong:
         inFile.delete()
       }
       val slFile = new File(slPath)
       if (slFile.exists()) {
-        //        Chong:
         slFile.delete()
       }
     }
-
-    if (isDebugOn) {
-      println("finish implementation: " + impl.getImPath + ":" + dbmr.getTmr.getInsertTime + "," + dbmr.getTmr.getSelectTime + "," + dbmr.getSmr.getDbSpace)
-    }
-
-    // we can write the results into hadoop file system
-    // /trademaker/modelName/solutionName
-
     (new DBImplementation(impl.getImPath), dbmr)
   }
 
@@ -352,14 +235,11 @@ class DBTrademaker extends AstronautFramework {
   private def generateRandomInsertStatements(impl: DBImplementation, instances: util.Map[String, util.Map[String, util.List[CodeNamePair]]]): ConcreteLoad = {
     val insertSpecializedQuery: SpecializedQuery = specializeInsertQuery(null, impl, instances)
     val cq = new ConcreteQuery()
-    cq.setAction(Action.INSERT)
     cq.setSq(insertSpecializedQuery)
     val cqs = new util.ArrayList[ConcreteQuery](1)
     cqs.add(cq)
-    /**
-     * print out insert scripts
-     */
-    val insCL = new ConcreteLoad()
+    val
+    insCL = new ConcreteLoad()
     insCL.setQuerySet(cqs)
 
     val implPath = impl.getImPath
@@ -393,14 +273,10 @@ class DBTrademaker extends AstronautFramework {
     val printOrder = PrintOrder.getOutPutOrders(pathBase).asScala
     for (s <- printOrder) {
       for (insertS <- allInsertStmts) {
-        val mapIt = insertS.asScala.iterator
-        while (mapIt.hasNext) {
-          val table = mapIt.next // (String, HashMap[Integer, String]) = (tableName, HashMap[ID, Statements])
+        for (table <- insertS.asScala) {
           if (table._1.equalsIgnoreCase(s)) { // check table name
             val stmt = table._2
-            val stmtIt = stmt.asScala.iterator
-            while (stmtIt.hasNext) {
-              val idStmt = stmtIt.next
+            for (idStmt <- stmt.asScala) {
               val stmtStr: String = String.valueOf(idStmt._2.toCharArray)
               insertPw.println(stmtStr)
             }
@@ -458,9 +334,7 @@ class DBTrademaker extends AstronautFramework {
     while (allInstancesIt.hasNext) { // iterate all instances in an object
       val instances = allInstancesIt.next
       val className: String = instances.getKey // get key. tableName
-      val instancesIt = instances.getValue.asScala.iterator
-      while (instancesIt.hasNext) { // iterate all instances for one class
-        val singleInstance = instancesIt.next
+      for (singleInstance <- instances.getValue.asScala) {
         val fieldValuePairs = singleInstance._2
         // key is tableName, and value is fields in the table
         val dbScheme = impl.getDataSchemas
@@ -653,8 +527,8 @@ class DBTrademaker extends AstronautFramework {
     false
   }
 
-  def addInsertStmtIntoDataSchema(allInserts: util.Map[String, util.Map[Integer, String]],
-                                  goToTable: String, stmt: String, idValue: Integer): String = {
+  private def addInsertStmtIntoDataSchema(allInserts: util.Map[String, util.Map[Integer, String]],
+                                          goToTable: String, stmt: String, idValue: Integer): String = {
     val contains: Boolean = allInserts.containsKey(goToTable)
     if (!contains) {
       allInserts.put(goToTable, new util.HashMap[Integer, String])
@@ -662,8 +536,8 @@ class DBTrademaker extends AstronautFramework {
     allInserts.get(goToTable).put(idValue, stmt)
   }
 
-  def dataSchemaHasInsertStatement(allInserts: util.Map[String, util.Map[Integer, String]],
-                                   goToTable: String, idValue: Integer): Boolean = {
+  private def dataSchemaHasInsertStatement(allInserts: util.Map[String, util.Map[Integer, String]],
+                                           goToTable: String, idValue: Integer): Boolean = {
     if (allInserts.containsKey(goToTable)) {
       if (allInserts.get(goToTable).containsKey(idValue)) {
         return true
@@ -672,7 +546,7 @@ class DBTrademaker extends AstronautFramework {
     false
   }
 
-  def getForeignKeyValue(instances: util.Map[String, util.Map[String, util.List[CodeNamePair]]], primaryClass: String, pKey: String): String = {
+  private def getForeignKeyValue(instances: util.Map[String, util.Map[String, util.List[CodeNamePair]]], primaryClass: String, pKey: String): String = {
     val instancesIt = instances.entrySet().iterator()
     while (instancesIt.hasNext) {
       val entry = instancesIt.next()
@@ -694,7 +568,7 @@ class DBTrademaker extends AstronautFramework {
     null
   }
 
-  def isForeignKey(scheme: util.Map[String, util.List[CodeNamePair]], table: String, field: String): Boolean = {
+  private def isForeignKey(scheme: util.Map[String, util.List[CodeNamePair]], table: String, field: String): Boolean = {
     for (pair <- scheme.get(table).asScala) {
       if (pair.getFirst.equalsIgnoreCase("foreignKey")) {
         if (pair.getSecond.equalsIgnoreCase(field)) {
@@ -705,63 +579,11 @@ class DBTrademaker extends AstronautFramework {
     false
   }
 
-  def getFieldValue(fieldValues: util.List[CodeNamePair], field: String, types: util.Map[String, String]): String = {
-    var value: String = null
-    for (pair <- fieldValues.asScala) {
-      if (pair.getFirst.split("_")(1).equalsIgnoreCase(field)) {
-        val tmp: String = pair.getSecond
-        // get the type of field, then handle the value of it
-        val fieldType = types.get(field)
-
-        value = fieldType match {
-          case "Int" =>
-            var intValue = Integer.valueOf(tmp).intValue()
-            val power = scala.math.pow(2, AppConfig.getIntScopeForTestCases - 1)
-            intValue = intValue + power.intValue() + 1
-            String.valueOf(intValue)
-          case "Real" =>
-            var intValue = Integer.valueOf(tmp).intValue()
-            val power = scala.math.pow(2, AppConfig.getIntScopeForTestCases - 1)
-            intValue = intValue + power.intValue() + 1
-            String.valueOf(intValue)
-          //case "Real" =>
-          case "Bool" => "0"
-          case "string" => "'" + tmp + "'"
-          case _ => tmp
-        }
-        return value
-      }
-    }
-    value
-  }
-
-  def getPrimaryKeyByTableName(dbScheme: util.Map[String, util.List[CodeNamePair]], tableName: String): String = {
-    val table: util.List[CodeNamePair] = dbScheme.get(tableName)
-    //    var pair: CodeNamePair = null
-    for (pair <- table.asScala) {
-      if (pair.getFirst.equalsIgnoreCase("primaryKey")) {
-        return pair.getSecond
-      }
-    }
-    null
-  }
-
-  // looks up reverse t_associate data structure to find a target table for each object element, e.g. a class instance or an association
-  private def getTableNameByClassName(reverseTAss: util.List[CodeNamePair], className: String): String = {
-    for (elem <- reverseTAss.asScala) {
-      if (elem.getFirst.equalsIgnoreCase(className)) {
-        return elem.getSecond
-      }
-    }
-    null
-  }
-
   // get the random instances, and return insertFilePath
   private def generateRandomSelectStatements(impl: DBImplementation, instances: util.Map[String, util.Map[String, util.List[CodeNamePair]]]): ConcreteLoad = {
     val selectSpecializedQuery: SpecializedQuery = specializeSelectQuery(null, impl, instances)
 
     val cq = new ConcreteQuery()
-    cq.setAction(Action.SELECT)
     cq.setSq(selectSpecializedQuery)
     val cqs = new util.ArrayList[ConcreteQuery]()
     cqs.add(cq)
@@ -804,14 +626,10 @@ class DBTrademaker extends AstronautFramework {
 
     for (s: String <- printOrder) {
       for (selectS <- allSelectStmts) {
-        val mapIt = selectS.asScala.iterator
-        while (mapIt.hasNext) {
-          val elem = mapIt.next // (String, HashMap[Integer, String]) = (tableName, HashMap[ID, Statements])
+        for (elem <- selectS.asScala) {
           if (elem._1.equalsIgnoreCase(s)) {
             val tmp = elem._2
-            val tmpIt = tmp.asScala.iterator
-            while (tmpIt.hasNext) {
-              val stmt = tmpIt.next
+            for (stmt <- tmp.asScala) {
               val stmtStr = String.valueOf(stmt._2.toCharArray)
               selectPw.println(stmtStr)
             }
@@ -851,16 +669,12 @@ class DBTrademaker extends AstronautFramework {
       instance = ins
     }
 
-    val instanceIt = instance.asScala.iterator
-    while (instanceIt.hasNext) {
-      val instanceEntry = instanceIt.next
+    for (instanceEntry <- instance.asScala) {
       var element = instanceEntry._1
       val instance = instanceEntry._2
       val isAss = isAssociation(impl.getSigs, element)
       if (!isAss) {
-        val instanceIt = instance.asScala.iterator
-        while (instanceIt.hasNext) {
-          val singleInstance = instanceIt.next
+        for (singleInstance <- instance.asScala) {
           val fieldValuePairs = singleInstance._2
 
           selectPart = "SELECT "
@@ -922,7 +736,58 @@ class DBTrademaker extends AstronautFramework {
     sq
   }
 
-  def isAssociation(sigs: util.List[Sig], element: String): Boolean = {
+  private def getFieldValue(fieldValues: util.List[CodeNamePair], field: String, types: util.Map[String, String]): String = {
+    var value: String = null
+    for (pair <- fieldValues.asScala) {
+      if (pair.getFirst.split("_")(1).equalsIgnoreCase(field)) {
+        val tmp: String = pair.getSecond
+        // get the type of field, then handle the value of it
+        val fieldType = types.get(field)
+
+        value = fieldType match {
+          case "Int" =>
+            var intValue = Integer.valueOf(tmp).intValue()
+            val power = scala.math.pow(2, AppConfig.getIntScopeForTestCases - 1)
+            intValue = intValue + power.intValue() + 1
+            String.valueOf(intValue)
+          case "Real" =>
+            var intValue = Integer.valueOf(tmp).intValue()
+            val power = scala.math.pow(2, AppConfig.getIntScopeForTestCases - 1)
+            intValue = intValue + power.intValue() + 1
+            String.valueOf(intValue)
+          //case "Real" =>
+          case "Bool" => "0"
+          case "string" => "'" + tmp + "'"
+          case _ => tmp
+        }
+        return value
+      }
+    }
+    value
+  }
+
+  private def getPrimaryKeyByTableName(dbScheme: util.Map[String, util.List[CodeNamePair]], tableName: String): String = {
+    val table: util.List[CodeNamePair] = dbScheme.get(tableName)
+    //    var pair: CodeNamePair = null
+    for (pair <- table.asScala) {
+      if (pair.getFirst.equalsIgnoreCase("primaryKey")) {
+        return pair.getSecond
+      }
+    }
+    null
+  }
+
+  // looks up reverse t_associate data structure to find a target table for each object element, e.g. a class instance or an association
+  private def getTableNameByClassName(reverseTAss: util.List[CodeNamePair], className: String): String = {
+    for (elem <- reverseTAss.asScala) {
+      if (elem.getFirst.equalsIgnoreCase(className)) {
+        return elem.getSecond
+      }
+    }
+    null
+  }
+
+  private def isAssociation(sigs: util.List[Sig], element: String): Boolean = {
     for (sig <- sigs.asScala) {
       if (sig.getCategory == 1 && sig.getSigName.equalsIgnoreCase(element)) {
         return true
@@ -942,16 +807,11 @@ class DBTrademaker extends AstronautFramework {
     null
   }
 
-  def isPrimaryKeys(pKeys: util.List[CodeNamePair], table: String, field: String): Boolean = {
-    for (s <- pKeys.asScala) {
-      if (s.getFirst.equalsIgnoreCase(table) && s.getSecond.equalsIgnoreCase(field)) {
-        return true
-      }
-    }
-    false
+  private def isPrimaryKeys(pKeys: util.List[CodeNamePair], table: String, field: String): Boolean = {
+    pKeys.asScala.exists(pair => pair.getFirst.equalsIgnoreCase(table) && pair.getSecond.equalsIgnoreCase(field))
   }
 
-  def dataSchemaHasSelectStatement(stmts: util.Map[String, util.Map[Integer, String]], tableName: String, idValue: Integer): Boolean = {
+  private def dataSchemaHasSelectStatement(stmts: util.Map[String, util.Map[Integer, String]], tableName: String, idValue: Integer): Boolean = {
     if (stmts.containsKey(tableName)) {
       if (stmts.get(tableName).containsKey(idValue)) {
         return true
@@ -960,8 +820,8 @@ class DBTrademaker extends AstronautFramework {
     false
   }
 
-  def addSelectStmtIntoDataSchema(allStmts: util.Map[String, util.Map[Integer, String]],
-                                  tableName: String, idValue: Integer, stmt: String): String = {
+  private def addSelectStmtIntoDataSchema(allStmts: util.Map[String, util.Map[Integer, String]],
+                                          tableName: String, idValue: Integer, stmt: String): String = {
     if (!allStmts.containsKey(tableName)) {
       allStmts.put(tableName, new util.HashMap[Integer, String]())
     }
@@ -996,7 +856,7 @@ class DBTrademaker extends AstronautFramework {
       }
 
       // get mapping run file
-      val mappingRun: String = FileOperation.getMappingRun(specPath)
+      val mappingRun: String = new FrontParser(specPath).createMappingRun
       // call smartBridge
       new SmartBridge(solFolder, mappingRun, AppConfig.getMaxSolForImpl.intValue())
 
@@ -1031,13 +891,12 @@ class DBTrademaker extends AstronautFramework {
   }
 
   private def myLFunction(fSpec: FormalSpecificationType): FormalAbstractMeasurementFunctionSet = {
-    // generate two abstract load objects:  insert and select
+    // generate two abstract load objects: insert and select
     // create two measurement functions, one for time, one for space
     // wrap them in a FormalAbstractMeasurementFunctionSet
     val absLoads: FormalAbstractLoadSet = generateFormalAbstractLoadSet(fSpec)
     val absTimeMeasurementFunction = new DBFormalAbstractTimeMeasurementFunction(absLoads.getInsLoad, absLoads.getSelLoad)
-    val absSpaceMeasurementFunction = new DBFormalAbstractSpaceMeasurementFunction(absLoads.getInsLoad)
-    new DBFormalAbstractMeasurementFunctionSet(absTimeMeasurementFunction, absSpaceMeasurementFunction)
+    new DBFormalAbstractMeasurementFunctionSet(absTimeMeasurementFunction)
   }
 
   private def recursiveDelete(f: File): Boolean = {
@@ -1150,14 +1009,10 @@ class DBTrademaker extends AstronautFramework {
     }
     for (s <- printOrder.asScala) {
       for (insertS <- allInsertStmts.asScala) {
-        val mapIt = insertS.asScala.iterator
-        while (mapIt.hasNext) {
-          val elem = mapIt.next
+        for (elem <- insertS.asScala) {
           if (elem._1.equalsIgnoreCase(s)) {
             val tmp = elem._2
-            val tmpIt = tmp.asScala.iterator
-            while (tmpIt.hasNext) {
-              val stmt = tmpIt.next
+            for (stmt <- tmp.asScala) {
               insertPw.println(stmt._2)
             }
           }
@@ -1192,9 +1047,7 @@ class DBTrademaker extends AstronautFramework {
     }
     for (_ <- printOrder.asScala) {
       for (selectS <- allSelectStmts.asScala) {
-        val mapIt = selectS.asScala.iterator
-        while (mapIt.hasNext) {
-          val elem = mapIt.next
+        for (elem <- selectS.asScala) {
           val stmts = elem._2.values().asScala
           for (e <- stmts) {
             selectPw.println(e)
@@ -1212,7 +1065,6 @@ class DBTrademaker extends AstronautFramework {
 
     val csmf: DBFormalConcreteSpaceMeasurementFunction = new DBFormalConcreteSpaceMeasurementFunction(insCL)
     concMFSet.setCsmf(csmf)
-    concMFSet.setImpl(impl)
     concMFSet
   }
 
@@ -1230,14 +1082,11 @@ class DBTrademaker extends AstronautFramework {
   }
 
   private def convertQuery(absq: AbstractQuery, impl: DBImplementation): ConcreteQuery = {
-    // get the action of absq ; a = absq.getAction()
     val cq = new ConcreteQuery()
     val a = absq.getAction
     if (a == Action.INSERT) {
-      cq.setAction(Action.INSERT)
       cq.setSq(specializeInsertQuery(absq, impl, null))
     } else {
-      cq.setAction(Action.SELECT)
       cq.setSq(specializeSelectQuery(absq, impl, null))
     }
     cq
@@ -1251,12 +1100,6 @@ class DBTrademaker extends AstronautFramework {
     aotad.run(fSpecPath, objSpecPath, AppConfig.getIntScopeForTestCases)
 
     val objSpec = new ObjectSpec()
-
-    val dbDSpec = fSpec
-    objSpec.setIds(dbDSpec.getIds)
-    objSpec.setAssociations(dbDSpec.getAssociations)
-    objSpec.setTypeList(dbDSpec.getTypeMap)
-    objSpec.setSigs(dbDSpec.getSigs)
 
     objSpec.setSpecPath(objSpecPath)
     objSpec
@@ -1273,19 +1116,12 @@ class DBTrademaker extends AstronautFramework {
   }
 
   private def myIFunction(fImp: FormalImplementationType): ImplementationType = {
-    /**
-     * compute FormalImplementation schema name
-     * sigs here is all signatures in FormalSpecification (alloyOM), which already be set by lFunction
-     * set all needed information for test cases generation here, initialize the global variable SolveAlloyDM
-     */
     val fImpFileName = fImp.getImplementation
     val impFileName = fImpFileName.substring(0, fImpFileName.length() - 4) + ".sql"
 
     val parser = new ORMParser(fImpFileName, impFileName, fImp.getSigs)
     parser.createSchemas()
-    /**
-     * Need to set all needed information for test cases generation here
-     */
+
     val impl = new DBImplementation(impFileName)
     impl.setAllFields(parser.getallFields())
     impl.setPrimaryKeys(parser.getPrimaryKeys)
@@ -1313,8 +1149,6 @@ class DBTrademaker extends AstronautFramework {
     val dbConTMF = new DBConcreteTimeMeasurementFunction(tLoads)
     val dbConSMF = new DBConcreteSpaceMeasurementFunction(sLoads)
 
-    val dbConMF = new DBConcreteMeasurementFunctionSet(dbConTMF, dbConSMF)
-    dbConMF.setImpl(fCB.getImpl)
-    dbConMF
+    new DBConcreteMeasurementFunctionSet(dbConTMF, dbConSMF)
   }
 }

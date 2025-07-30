@@ -35,10 +35,6 @@ class DBImplementation(path: String) extends Serializable { //extends FrameworkT
   private var associationsForCreateSchemas: util.List[String] = _
   private var typeMap: util.Map[String, String] = _
 
-  def setSigs(sigs: util.List[Sig]): Unit = {
-    this.sigs = sigs
-  }
-
   def getIds: util.List[String] = {
     this.ids
   }
@@ -63,10 +59,10 @@ class DBImplementation(path: String) extends Serializable { //extends FrameworkT
     this.typeMap = typeMap
   }
 
+  def getImPath: String = implPath
+
   // store benchmark path to innerValue
   //makeWrapper(implementationPath)
-
-  def getImPath: String = implPath
 
   def getDataProvider: DataProvider = {
     this.dataProvider
@@ -134,6 +130,10 @@ class DBImplementation(path: String) extends Serializable { //extends FrameworkT
 
   def getSigs: util.List[Sig] = {
     this.sigs
+  }
+
+  def setSigs(sigs: util.List[Sig]): Unit = {
+    this.sigs = sigs
   }
 
   def parse_tAssociate(element: Element): Unit = {
@@ -285,6 +285,30 @@ class DBImplementation(path: String) extends Serializable { //extends FrameworkT
     }
   }
 
+  def getSingleAtom(singleTuple: Element, i: Int): String = {
+    val atoms = singleTuple.getElementsByTagName("atom")
+    val tableCode = atoms.item(i).asInstanceOf[Element]
+    var code = tableCode.getAttribute("label")
+    val tmp = code.split("/")
+    code = tmp(tmp.length - 1)
+    code
+  }
+
+  // chong: maybe elem._2.setFirst() cannot set the value to associations map
+  def setAssociation(assName: String, target: String, value: String): Unit = {
+    // iterate java hashmap
+    for {
+      entry <- associations.entrySet().asScala
+      if entry.getKey.equalsIgnoreCase(assName)
+    } {
+      if (target.equalsIgnoreCase("src")) {
+        entry.getValue.setFirst(value)
+      } else if (target.equalsIgnoreCase("dst")) {
+        entry.getValue.setSecond(value)
+      }
+    }
+  }
+
   def parseSrcMultiplicity(element: Element): Unit = {
     val children = element.getElementsByTagName("tuple")
     for (j <- 0 until children.getLength) {
@@ -320,30 +344,6 @@ class DBImplementation(path: String) extends Serializable { //extends FrameworkT
         val table = getSingleAtom(singleTuple, 0)
         val attr = getSingleAtom(singleTuple, 1)
         this.dataProvider.addItem(table, "attr", attr)
-      }
-    }
-  }
-
-  def getSingleAtom(singleTuple: Element, i: Int): String = {
-    val atoms = singleTuple.getElementsByTagName("atom")
-    val tableCode = atoms.item(i).asInstanceOf[Element]
-    var code = tableCode.getAttribute("label")
-    val tmp = code.split("/")
-    code = tmp(tmp.length - 1)
-    code
-  }
-
-  // chong: maybe elem._2.setFirst() cannot set the value to associations map
-  def setAssociation(assName: String, target: String, value: String): Unit = {
-    // iterate java hashmap
-    for {
-      entry <- associations.entrySet().asScala
-      if entry.getKey.equalsIgnoreCase(assName)
-    } {
-      if (target.equalsIgnoreCase("src")) {
-        entry.getValue.setFirst(value)
-      } else if (target.equalsIgnoreCase("dst")) {
-        entry.getValue.setSecond(value)
       }
     }
   }

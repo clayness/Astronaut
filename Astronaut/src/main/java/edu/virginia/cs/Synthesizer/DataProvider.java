@@ -8,51 +8,29 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Created by IntelliJ IDEA. User: ct4ew Date: 7/23/13 Time: 3:53 PM To change
- * this template use File | Settings | File Templates.
- */
 public class DataProvider implements Serializable {
     // pairs is used to store all code and real name
     // for example, a table pair will be <Table$0, Customer>
     // a field pair will be <field$1, customerID>
-    private List<CodeNamePair> pairs;
+    private final List<CodeNamePair> pairs;
     private Map<String, List<CodeNamePair>> tableItems;
-    private List<CodeNamePair> types;
-    private List<CodeNamePair> parents;
-    private Map<String, List<String>> allStmts = new HashMap<>();
-    private List<String> orders = new ArrayList<>();
-    private List<Sig> sigs;
-
-    public DataProvider(List<Sig> sigs) {
-        pairs = new ArrayList<>();
-        tableItems = new HashMap<>();
-        types = new ArrayList<>();
-        parents = new ArrayList<>();
-        this.sigs = sigs;
-    }
+    private final List<CodeNamePair> types;
+    private final List<CodeNamePair> parents;
 
     public DataProvider() {
         pairs = new ArrayList<>();
         tableItems = new HashMap<>();
         types = new ArrayList<>();
         parents = new ArrayList<>();
-        // assert TableName.size() == TableItem.size();
     }
 
     public Map<String, List<CodeNamePair>> getTables() {
         return this.tableItems;
     }
 
-    public List<CodeNamePair> getParents() {
-        return this.parents;
-    }
-
     public List<String> getAttrByTableName(String table) {
         List<String> attrs = new ArrayList<>();
-        var it = this.tableItems.entrySet().iterator();
-        while (it.hasNext()) {
-            var entry = it.next();
+        for (Map.Entry<String, List<CodeNamePair>> entry : this.tableItems.entrySet()) {
             String tableName = entry.getKey();
             if (tableName.equalsIgnoreCase(table)) {
                 for (CodeNamePair pair : entry.getValue()) {
@@ -67,9 +45,7 @@ public class DataProvider implements Serializable {
     }
 
     public Boolean isClassAssociate(String className) {
-        var it = this.tableItems.entrySet().iterator();
-        while (it.hasNext()) {
-            var entry = it.next();
+        for (Map.Entry<String, List<CodeNamePair>> entry : this.tableItems.entrySet()) {
             String tableName = entry.getKey();
             if (tableName.equalsIgnoreCase(className)) {
                 for (CodeNamePair pair : entry.getValue()) {
@@ -85,8 +61,7 @@ public class DataProvider implements Serializable {
     public List<CodeNamePair> getTypes() {
         List<CodeNamePair> list = new ArrayList<>();
         for (CodeNamePair pair : this.types) {
-            CodeNamePair tmp = new CodeNamePair(pair.getFirst()
-                    .toString(), pair.getSecond().toString());
+            CodeNamePair tmp = new CodeNamePair(pair.getFirst(), pair.getSecond());
             list.add(tmp);
         }
         return list;
@@ -95,9 +70,7 @@ public class DataProvider implements Serializable {
     public List<CodeNamePair> getReverseIds() {
         List<CodeNamePair> list = new ArrayList<>();
 
-        var tableItemIt = this.tableItems.entrySet().iterator();
-        while (tableItemIt.hasNext()) {
-            var entry = tableItemIt.next();
+        for (Map.Entry<String, List<CodeNamePair>> entry : this.tableItems.entrySet()) {
             String tableName = entry.getKey();
             List<CodeNamePair> pair = entry.getValue();
             for (CodeNamePair p : pair) {
@@ -111,10 +84,10 @@ public class DataProvider implements Serializable {
 
     public String addPair(String code, String name) {
         // check if same first existed
-        for (int i = 0; i < this.pairs.size(); i++) {
-            if (this.pairs.get(i).getFirst().toString().equalsIgnoreCase(code)) {
+        for (CodeNamePair pair : this.pairs) {
+            if (pair.getFirst().equalsIgnoreCase(code)) {
                 if (code.startsWith("Table")) {
-                    return this.pairs.get(i).getSecond().toString();
+                    return pair.getSecond();
                 }
             }
         }
@@ -135,14 +108,11 @@ public class DataProvider implements Serializable {
         }
     }
 
-    public boolean addType(String filed, String type) {
+    public void addType(String filed, String type) {
         CodeNamePair newPair = new CodeNamePair(filed, type);
-        if (this.types.contains(newPair)) {
-            return false;
-        } else {
+        if (!this.types.contains(newPair)) {
             this.types.add(newPair);
         }
-        return true;
     }
 
     public boolean addParent(String child, String parent) {
@@ -157,9 +127,9 @@ public class DataProvider implements Serializable {
 
     public String getSecondByFirst(String first) {
         String second = null;
-        for (int i = 0; i < this.pairs.size(); i++) {
-            if (this.pairs.get(i).getFirst().equals(first)) {
-                second = this.pairs.get(i).getSecond().toString();
+        for (CodeNamePair pair : this.pairs) {
+            if (pair.getFirst().equals(first)) {
+                second = pair.getSecond();
             }
         }
         return second;
@@ -169,7 +139,7 @@ public class DataProvider implements Serializable {
      * replace all items with $ symbol and add them to the table, then delete
      * all table items with $ symbol
      */
-    public void refineTable(List<Sig> sigs) {
+    public void refineTable() {
         Map<String, List<CodeNamePair>> tmpTableItems = new HashMap<>();
         var tableItemSet = this.tableItems.entrySet();
         // replace all items with $ symbol
@@ -184,15 +154,12 @@ public class DataProvider implements Serializable {
                             new ArrayList<>());
                 }
 
-                int arraySize = tableContents.size();
-                for (int i = 0; i < arraySize; i++) {
-                    String firstField = tableContents.get(i).getFirst()
-                            .toString();
+                for (CodeNamePair tableContent : tableContents) {
+                    String firstField = tableContent.getFirst();
                     if (firstField.contains("$")) {
                         firstField = this.getSecondByFirst(firstField);
                     }
-                    String secondField = tableContents.get(i).getSecond()
-                            .toString();
+                    String secondField = tableContent.getSecond();
                     if (secondField.contains("$")) {
                         secondField = this.getSecondByFirst(secondField);
                     }
@@ -204,8 +171,8 @@ public class DataProvider implements Serializable {
             } else {
                 if (tmpTableItems.containsKey(tableName)) {
                     // add all items in this.tableItems in to tmpTableItems
-                    for (int i = 0; i < tableContents.size(); i++) {
-                        tmpTableItems.get(tableName).add(tableContents.get(i));
+                    for (CodeNamePair tableContent : tableContents) {
+                        tmpTableItems.get(tableName).add(tableContent);
                     }
                 } else {
                     tmpTableItems.put(tableName, tableContents);
@@ -222,24 +189,22 @@ public class DataProvider implements Serializable {
         // }
         // }
         // handle type here
-        for (int i = 0; i < this.types.size(); i++) {
-            String typeName = this.types.get(i).getFirst().toString();
+        for (CodeNamePair type : this.types) {
+            String typeName = type.getFirst();
             if (typeName.contains("$")) {
-                this.types.get(i).setFirst(typeName.split("\\$")[0]);
+                type.setFirst(typeName.split("\\$")[0]);
             }
         }
 
         // remove pairs from parents which the child is an independent table
-        for (int i = 0; i < this.pairs.size(); i++) {
-            if (this.pairs.get(i).getFirst().toString().startsWith("Table")) {
-                int j = 0;
+        for (CodeNamePair pair : this.pairs) {
+            if (pair.getFirst().startsWith("Table")) {
+                int j;
                 for (j = 0; j < this.parents.size(); j++) {
-                    if (this.pairs
-                            .get(i)
+                    if (pair
                             .getSecond()
-                            .toString()
                             .equalsIgnoreCase(
-                                    this.parents.get(j).getFirst().toString())) {
+                                    this.parents.get(j).getFirst())) {
                         break;
                     }
                 }
@@ -249,36 +214,36 @@ public class DataProvider implements Serializable {
             }
         }
 
-        for (int i = 0; i < this.parents.size(); i++) {
+        for (CodeNamePair parent : this.parents) {
             // change DType$0 in parent to DType
             List<CodeNamePair> tmpList1 = tmpTableItems
-                    .get(this.parents.get(i).getSecond().toString());
+                    .get(parent.getSecond());
             if (tmpList1 == null) {
                 continue;
             }
             for (int j = 0; j < tmpList1.size(); j++) {
-                String tmp = tmpList1.get(j).getSecond().toString();
+                String tmp = tmpList1.get(j).getSecond();
                 if (tmp.contains("$")) {
                     String tmp1 = tmp.split("\\$")[0];
                     tmpTableItems
-                            .get(this.parents.get(i).getSecond().toString())
+                            .get(parent.getSecond())
                             .get(j).setSecond(tmp1);
                     // tmpList1.get(i).setSecond(tmp1);
                 }
             }
 
             List<CodeNamePair> tmpList = tmpTableItems
-                    .get(this.parents.get(i).getFirst());
-            for (int j = 0; j < tmpList.size(); j++) {
+                    .get(parent.getFirst());
+            for (CodeNamePair codeNamePair : tmpList) {
                 if (!hasItemInArray(
-                        tmpTableItems.get(this.parents.get(i).getSecond()),
-                        tmpList.get(j))) {
+                        tmpTableItems.get(parent.getSecond()),
+                        codeNamePair)) {
 
-                    tmpTableItems.get(this.parents.get(i).getSecond()).add(
-                            tmpList.get(j));
+                    tmpTableItems.get(parent.getSecond()).add(
+                            codeNamePair);
                 }
             }
-            tmpTableItems.remove(this.parents.get(i).getFirst());
+            tmpTableItems.remove(parent.getFirst());
         }
 
         this.tableItems.clear();
@@ -288,90 +253,27 @@ public class DataProvider implements Serializable {
     public boolean hasItemInArray(List<CodeNamePair> list,
                                   CodeNamePair pair) {
         boolean has = false;
-        for (int i = 0; i < list.size(); i++) {
-            if (list.get(i).getFirst().toString()
-                    .equalsIgnoreCase(pair.getFirst().toString())
-                    && list.get(i).getSecond().toString()
-                    .equalsIgnoreCase(pair.getSecond().toString())) {
+        for (CodeNamePair codeNamePair : list) {
+            if (codeNamePair.getFirst()
+                    .equalsIgnoreCase(pair.getFirst())
+                    && codeNamePair.getSecond()
+                    .equalsIgnoreCase(pair.getSecond())) {
                 return true;
             }
         }
         return has;
     }
 
-    public CodeNamePair hasSrcDst(String tableName) {
-        CodeNamePair srcdst = new CodeNamePair("", "");
-        List<CodeNamePair> items = this.tableItems.get(tableName);
-        for (CodeNamePair pair : items) {
-            String tmp = pair.getFirst().toString();
-            if (tmp.equalsIgnoreCase("src")) {
-                srcdst.setFirst(pair.getSecond().toString());
-            }
-            if (tmp.equalsIgnoreCase("dst")) {
-                srcdst.setSecond(pair.getSecond().toString());
-            }
-            if (srcdst.getFirst().length() > 0
-                    && srcdst.getSecond().length() > 0) {
-                return srcdst;
-            }
-        }
-        return srcdst;
-    }
-
-    public CodeNamePair getMultiplicity(String tableName) {
-        CodeNamePair srcdst_mul = new CodeNamePair("", "");
-        List<CodeNamePair> items = this.tableItems.get(tableName);
-        for (CodeNamePair pair : items) {
-            String tmp = pair.getFirst().toString();
-            if (tmp.equalsIgnoreCase("srcMul")) {
-                srcdst_mul.setFirst(pair.getSecond().toString());
-            }
-            if (tmp.equalsIgnoreCase("dstMul")) {
-                srcdst_mul.setSecond(pair.getSecond().toString());
-            }
-            if (srcdst_mul.getFirst().length() > 0
-                    && srcdst_mul.getSecond().length() > 0) {
-                return srcdst_mul;
-            }
-        }
-        return srcdst_mul;
-    }
-
     public List<String> getPrimaryKey(String tableName) {
         List<String> keys = new ArrayList<>();
         List<CodeNamePair> items = this.tableItems.get(tableName);
         for (CodeNamePair pair : items) {
-            String tmp = pair.getFirst().toString();
+            String tmp = pair.getFirst();
             if (tmp.equalsIgnoreCase("primaryKey")) {
-                keys.add(pair.getSecond().toString());
+                keys.add(pair.getSecond());
             }
         }
         return keys;
-    }
-
-    public boolean isForeignKey(String table, String field) {
-        boolean isForeignKey = false;
-        List<CodeNamePair> table1 = this.tableItems.get(table);
-
-        for (int i = 0; i < table1.size(); i++) {
-            if (table1.get(i).getFirst().toString()
-                    .equalsIgnoreCase("foreignKey")) {
-                if (table1.get(i).getSecond().toString()
-                        .equalsIgnoreCase(field)) {
-                    return true;
-                }
-            }
-        }
-        return isForeignKey;
-    }
-
-    public String getParent(String tableName) {
-        for (CodeNamePair pair : this.parents) {
-            if (pair.getFirst().toString().equalsIgnoreCase(tableName)) {
-                return pair.getSecond().toString();
-            }
-        }
-        return null;
     }
 
     /**
@@ -392,17 +294,17 @@ public class DataProvider implements Serializable {
                 // if
                 // (tmpArray.get(i).getFirst().toString().equalsIgnoreCase("attr"))
                 // {
-                if (tmpArray.get(i).getFirst().toString()
+                if (tmpArray.get(i).getFirst()
                         .equalsIgnoreCase("ID")) {
-                    if (tmpArray.get(i).getSecond().toString()
+                    if (tmpArray.get(i).getSecond()
                             .equalsIgnoreCase(ID)) {
                         // tableName = entry.getKey();
                         // System.out.println("Find Table: "+ tableName);
                         // check the ID is also in attr
-                        for (int j = 0; j < arraySize; j++) {
-                            if (tmpArray.get(j).getFirst()
+                        for (CodeNamePair codeNamePair : tmpArray) {
+                            if (codeNamePair.getFirst()
                                     .equalsIgnoreCase("attr")) {
-                                if (tmpArray.get(j).getSecond()
+                                if (codeNamePair.getSecond()
                                         .equalsIgnoreCase(ID)) {
                                     return entry.getKey();
                                 }
@@ -416,24 +318,12 @@ public class DataProvider implements Serializable {
         return tableName;
     }
 
-    public String hasParent(String child) {
-        String parent = null;
-        for (int i = 0; i < this.parents.size(); i++) {
-            System.out.println(this.pairs.get(i).getFirst().toString() + "   "
-                    + child);
-            if (this.pairs.get(i).getFirst().toString().equals(child)) {
-                parent = this.parents.get(i).getSecond().toString();
-            }
-        }
-        return parent;
-    }
-
     public int hasMultipleItem(String tableName, String item) {
         int key = 0;
         List<CodeNamePair> table1 = this.tableItems.get(tableName);
 
-        for (int i = 0; i < table1.size(); i++) {
-            if (table1.get(i).getFirst().toString().equalsIgnoreCase(item)) {
+        for (CodeNamePair codeNamePair : table1) {
+            if (codeNamePair.getFirst().equalsIgnoreCase(item)) {
                 key++;
             }
         }
@@ -445,11 +335,11 @@ public class DataProvider implements Serializable {
         boolean isID = false;
         List<CodeNamePair> table1 = this.tableItems.get(table);
 
-        for (int i = 0; i < table1.size(); i++) {
+        for (CodeNamePair codeNamePair : table1) {
             // if (table1.get(i).getFirst().toString().equalsIgnoreCase("Id")) {
-            if (table1.get(i).getFirst().toString()
+            if (codeNamePair.getFirst()
                     .equalsIgnoreCase("primaryKey")) {
-                if (table1.get(i).getSecond().toString()
+                if (codeNamePair.getSecond()
                         .equalsIgnoreCase(field)) {
                     isID = true;
                     break;
@@ -461,30 +351,19 @@ public class DataProvider implements Serializable {
 
     public String getTypesByName(String name) {
         String second = null;
-        int size = this.types.size();
-        for (int i = 0; i < size; i++) {
-            if (this.types.get(i).getFirst().toString().equalsIgnoreCase(name)) {
-                second = this.types.get(i).getSecond().toString();
+        for (CodeNamePair type : this.types) {
+            if (type.getFirst().equalsIgnoreCase(name)) {
+                second = type.getSecond();
             }
         }
         return second;
     }
 
-    public boolean isParent(String code) {
-        for (int i = 0; i < this.parents.size(); i++) {
-            if (this.parents.get(i).getSecond().toString()
-                    .equalsIgnoreCase(code)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     public boolean hasPairCode(String code) {
-        int i = 0;
+        int i;
         for (i = 0; i < this.pairs.size(); i++) {
             CodeNamePair tmp = this.pairs.get(i);
-            if (tmp.getFirst().toString().equalsIgnoreCase(code)) {
+            if (tmp.getFirst().equalsIgnoreCase(code)) {
                 return true;
             }
         }
@@ -492,10 +371,10 @@ public class DataProvider implements Serializable {
     }
 
     public void removePairByCode(String code) {
-        int i = 0;
+        int i;
         for (i = 0; i < this.pairs.size(); i++) {
             CodeNamePair tmp = this.pairs.get(i);
-            if (tmp.getFirst().toString().equalsIgnoreCase(code)) {
+            if (tmp.getFirst().equalsIgnoreCase(code)) {
                 break;
             }
         }
@@ -505,67 +384,39 @@ public class DataProvider implements Serializable {
 
     }
 
-    public void outputData(String output) {
-        System.out.println("====================" + output
-                + "=============================");
-
-        var tableItemSet = this.tableItems.entrySet();
-        for (var entry : tableItemSet) {
-            System.out.println(entry.getKey() + ":");
-            List<CodeNamePair> tmpArray = entry.getValue();
-            int arraySize = tmpArray.size();
-            for (int i = 0; i < arraySize; i++) {
-                System.out.printf("    %s", tmpArray.get(i).getFirst());
-                System.out.println("    " + tmpArray.get(i).getSecond());
-            }
-        }
-        System.out.println("=================================================");
-
-        int listSize = this.types.size();
-        for (int j = 0; j < listSize; j++) {
-            System.out.println(this.types.get(j).getFirst() + ": \t"
-                    + this.types.get(j).getSecond());
-        }
-        System.out
-                .println("=================================================\n\n");
-    }
-
-    public boolean writeIntoFile(String filename) throws IOException {
+    public void writeIntoFile(String filename) throws IOException {
         String testDB = AppConfig.getTestDB().trim();
         if (testDB.equalsIgnoreCase("mysql")) {
-            return writeIntoFileMySQL(filename);
+            writeIntoFileMySQL(filename);
         } else if (testDB.equalsIgnoreCase("postgres")) {
-            return writeIntoFilePostgreSQL(filename);
+            writeIntoFilePostgreSQL(filename);
         }
-        return false;
     }
 
-    public boolean writeIntoFilePostgreSQL(String filename) throws IOException {
-        List<String> errorTable = new ArrayList<>(); // for debug
+    public void writeIntoFilePostgreSQL(String filename) throws IOException {
         File sqlFile;
         sqlFile = new File(filename);
         FileOutputStream oFile;
-        PrintStream pPRINT = null;
+        PrintStream pPRINT;
         if (!sqlFile.exists()) {
+            //noinspection ResultOfMethodCallIgnored
             sqlFile.createNewFile();
         }
         oFile = new FileOutputStream(sqlFile, false);
         pPRINT = new PrintStream(oFile);
         pPRINT.println("-- CREATE DATABASE FOR " + filename + "\n");
-        String dbName = sqlFile.getName();
-        dbName = dbName.substring(0, dbName.length() - 4);
 
-        String tableName = null;
+        String tableName;
 
-        int PKNum = 0;
-        int FKNum = 0;
+        int PKNum;
+        int FKNum;
         List<String> foreignKeyList = new ArrayList<>();
         var entrySet = this.tableItems.entrySet();
         // iterate all tables
         for (var entry : entrySet) {
             tableName = entry.getKey();
             List<String> primaryKeys = getPrimaryKey(tableName);
-            if (primaryKeys.size() == 0) {
+            if (primaryKeys.isEmpty()) {
                 continue;
             }
             // get the number of primary keys and foreign keys
@@ -578,21 +429,20 @@ public class DataProvider implements Serializable {
 
             pPRINT.println("CREATE TABLE " + tableName + " (");
             List<CodeNamePair> tableItems = entry.getValue();
-            int arraySize = tableItems.size();
             boolean firstPK = true;
 
             // primaryKeyStr will write to file at the end of every create table
             // block
-            String primaryKeyStr = new String("PRIMARY KEY (");
+            StringBuilder primaryKeyStr = new StringBuilder("PRIMARY KEY (");
             // foreignKeyStr will write to file at the end of file
-            String foreignKeyStr = new String("ALTER TABLE " + tableName
+            StringBuilder foreignKeyStr = new StringBuilder("ALTER TABLE " + tableName
                     + "\n");
             int lastFKCounter = 0;
             // iterate all items of every table
-            for (int i = 0; i < arraySize; i++) {
+            for (CodeNamePair tableItem : tableItems) {
                 // the itemName is the name of this item, like customerID,
                 // orderID
-                String itemName = tableItems.get(i).getSecond().toString();
+                String itemName = tableItem.getSecond();
                 // if(itemName.contains("$")){
                 // itemName = itemName.split("$")[0];
                 // }
@@ -601,7 +451,6 @@ public class DataProvider implements Serializable {
                 String itemType = getTypesByName(itemName);
                 if (itemType == null) {
                     itemType = "NULL";
-                    errorTable.add(tableName + itemName + itemType);
                 }
                 if (itemType.equalsIgnoreCase("Integer")) {
                     itemType = "int";
@@ -621,7 +470,7 @@ public class DataProvider implements Serializable {
                     itemType = "TIMESTAMP";
                 }
 
-                String caseName = tableItems.get(i).getFirst().toString();
+                String caseName = tableItem.getFirst();
                 if (caseName.equalsIgnoreCase("fields")) {
                     String postfix = isID(itemName, tableName) ? " NOT NULL, \n"
                             : ",\n";
@@ -629,42 +478,26 @@ public class DataProvider implements Serializable {
                 } else if (caseName.equalsIgnoreCase("primaryKey")) {
                     if (PKNum > 1) {
                         if (firstPK) {
-                            primaryKeyStr = primaryKeyStr + itemName;
+                            primaryKeyStr.append(itemName);
                             firstPK = false;
                         } else {
-                            primaryKeyStr = primaryKeyStr + "," + itemName
-                                    + ")";
+                            primaryKeyStr.append(",").append(itemName).append(")");
                         }
                     } else {
-                        primaryKeyStr = "PRIMARY KEY (" + itemName + ")";
+                        primaryKeyStr = new StringBuilder("PRIMARY KEY (" + itemName + ")");
                     }
                 } else if (caseName.equalsIgnoreCase("foreignKey")) {
                     // add constrains for ths table
                     // find the primary tablename
                     String pkTable = tableNameByID(itemName);
                     if (1 == FKNum) {
-                        foreignKeyStr = foreignKeyStr + "  ADD CONSTRAINT FK_"
-                                + tableName + "_" + itemName + " "
-                                + "FOREIGN KEY (" + itemName
-                                + ") REFERENCES " + pkTable + " ("
-                                + itemName + ") "
-                                + "ON DELETE CASCADE ON UPDATE CASCADE;\n";
+                        foreignKeyStr.append("  ADD CONSTRAINT FK_").append(tableName).append("_").append(itemName).append(" ").append("FOREIGN KEY (").append(itemName).append(") REFERENCES ").append(pkTable).append(" (").append(itemName).append(") ").append("ON DELETE CASCADE ON UPDATE CASCADE;\n");
                     } else if (FKNum > 1) {
                         lastFKCounter++;
                         if (lastFKCounter < FKNum) {
-                            foreignKeyStr = foreignKeyStr
-                                    + "  ADD CONSTRAINT FK_" + tableName + "_"
-                                    + itemName + " FOREIGN KEY ("
-                                    + itemName + ") REFERENCES " + pkTable
-                                    + " (" + itemName + ") "
-                                    + "ON DELETE CASCADE ON UPDATE CASCADE,\n";
-                        } else if (lastFKCounter >= FKNum) {
-                            foreignKeyStr = foreignKeyStr
-                                    + "  ADD CONSTRAINT FK_" + tableName + "_"
-                                    + itemName + " FOREIGN KEY ("
-                                    + itemName + ") REFERENCES" + pkTable
-                                    + " (" + itemName + ") "
-                                    + "ON DELETE CASCADE ON UPDATE CASCADE;\n";
+                            foreignKeyStr.append("  ADD CONSTRAINT FK_").append(tableName).append("_").append(itemName).append(" FOREIGN KEY (").append(itemName).append(") REFERENCES ").append(pkTable).append(" (").append(itemName).append(") ").append("ON DELETE CASCADE ON UPDATE CASCADE,\n");
+                        } else {
+                            foreignKeyStr.append("  ADD CONSTRAINT FK_").append(tableName).append("_").append(itemName).append(" FOREIGN KEY (").append(itemName).append(") REFERENCES").append(pkTable).append(" (").append(itemName).append(") ").append("ON DELETE CASCADE ON UPDATE CASCADE;\n");
                         }
                     }
                 }
@@ -672,28 +505,27 @@ public class DataProvider implements Serializable {
             pPRINT.println(primaryKeyStr);
             pPRINT.println(");" + "\n");
             if (FKNum > 0) {
-                foreignKeyList.add(foreignKeyStr);
+                foreignKeyList.add(foreignKeyStr.toString());
             }
         }
 
         // ====================
         // output foreignKeyStr here
         // ====================
-        for (int i = 0; i < foreignKeyList.size(); i++) {
-            pPRINT.println(foreignKeyList.get(i));
+        for (String s : foreignKeyList) {
+            pPRINT.println(s);
         }
 
         pPRINT.close();
-        return true;
     }
 
-    public boolean writeIntoFileMySQL(String filename) throws IOException {
-        List<String> errorTable = new ArrayList<>(); // for debug
+    public void writeIntoFileMySQL(String filename) throws IOException {
         File sqlFile;
         sqlFile = new File(filename);
         FileOutputStream oFile;
-        PrintStream pPRINT = null;
+        PrintStream pPRINT;
         if (!sqlFile.exists()) {
+            //noinspection ResultOfMethodCallIgnored
             sqlFile.createNewFile();
         }
         oFile = new FileOutputStream(sqlFile, false);
@@ -703,17 +535,17 @@ public class DataProvider implements Serializable {
         dbName = dbName.substring(0, dbName.length() - 4);
         pPRINT.println("USE " + dbName + ";");
 
-        String tableName = null;
+        String tableName;
 
-        int PKNum = 0;
-        int FKNum = 0;
+        int PKNum;
+        int FKNum;
         List<String> foreignKeyList = new ArrayList<>();
         var entrySet = this.tableItems.entrySet();
         // iterate all tables
         for (var entry : entrySet) {
             tableName = entry.getKey();
             List<String> primaryKeys = getPrimaryKey(tableName);
-            if (primaryKeys.size() == 0) {
+            if (primaryKeys.isEmpty()) {
                 continue;
             }
             // get the number of primary keys and foreign keys
@@ -727,30 +559,21 @@ public class DataProvider implements Serializable {
             // pPRINT.println("CREATE TABLE `"+filename+"`.`"+tableName +"` (");
             pPRINT.println("CREATE TABLE `" + tableName + "` (");
             List<CodeNamePair> tableItems = entry.getValue();
-            int arraySize = tableItems.size();
             boolean firstPK = true;
 
             // primaryKeyStr will write to file at the end of every create table
             // block
-            String primaryKeyStr = new String("PRIMARY KEY (`");
+            StringBuilder primaryKeyStr = new StringBuilder("PRIMARY KEY (`");
             // foreignKeyStr will write to file at the end of file
-            String foreignKeyStr = new String("ALTER TABLE `" + tableName
+            StringBuilder foreignKeyStr = new StringBuilder("ALTER TABLE `" + tableName
                     + "`\n");
             int lastFKCounter = 0;
             // iterate all items of every table
-            for (int i = 0; i < arraySize; i++) {
-                // the itemName is the name of this item, like customerID,
-                // orderID
-                String itemName = tableItems.get(i).getSecond().toString();
-                // if(itemName.contains("$")){
-                // itemName = itemName.split("$")[0];
-                // }
-                // itemType is the type of the item, for example, the type of
-                // customerID is Ineteger
+            for (CodeNamePair tableItem : tableItems) {
+                String itemName = tableItem.getSecond();
                 String itemType = getTypesByName(itemName);
                 if (itemType == null) {
                     itemType = "NULL";
-                    errorTable.add(tableName + itemName + itemType);
                 }
                 if (itemType.equalsIgnoreCase("Integer")) {
                     itemType = "int";
@@ -770,7 +593,7 @@ public class DataProvider implements Serializable {
                     itemType = "TIMESTAMP";
                 }
 
-                String caseName = tableItems.get(i).getFirst().toString();
+                String caseName = tableItem.getFirst();
                 if (caseName.equalsIgnoreCase("fields")) {
                     String postfix = isID(itemName, tableName) ? " NOT NULL, \n"
                             : ",\n";
@@ -778,14 +601,13 @@ public class DataProvider implements Serializable {
                 } else if (caseName.equalsIgnoreCase("primaryKey")) {
                     if (PKNum > 1) {
                         if (firstPK) {
-                            primaryKeyStr = primaryKeyStr + itemName + "`";
+                            primaryKeyStr.append(itemName).append("`");
                             firstPK = false;
                         } else {
-                            primaryKeyStr = primaryKeyStr + ",`" + itemName
-                                    + "`)";
+                            primaryKeyStr.append(",`").append(itemName).append("`)");
                         }
                     } else {
-                        primaryKeyStr = "PRIMARY KEY (`" + itemName + "`)";
+                        primaryKeyStr = new StringBuilder("PRIMARY KEY (`" + itemName + "`)");
                     }
                 } else if (caseName.equalsIgnoreCase("foreignKey")) {
                     pPRINT.println("KEY `FK_" + tableName + "_" + itemName
@@ -795,28 +617,13 @@ public class DataProvider implements Serializable {
                     // find the primary tablename
                     String pkTable = tableNameByID(itemName);
                     if (1 == FKNum) {
-                        foreignKeyStr = foreignKeyStr + "  ADD CONSTRAINT `FK_"
-                                + tableName + "_" + itemName + "` "
-                                + "FOREIGN KEY (`" + itemName
-                                + "`) REFERENCES `" + pkTable + "` (`"
-                                + itemName + "`) "
-                                + "ON DELETE CASCADE ON UPDATE CASCADE;\n";
+                        foreignKeyStr.append("  ADD CONSTRAINT `FK_").append(tableName).append("_").append(itemName).append("` ").append("FOREIGN KEY (`").append(itemName).append("`) REFERENCES `").append(pkTable).append("` (`").append(itemName).append("`) ").append("ON DELETE CASCADE ON UPDATE CASCADE;\n");
                     } else if (FKNum > 1) {
                         lastFKCounter++;
                         if (lastFKCounter < FKNum) {
-                            foreignKeyStr = foreignKeyStr
-                                    + "  ADD CONSTRAINT `FK_" + tableName + "_"
-                                    + itemName + "` " + "FOREIGN KEY (`"
-                                    + itemName + "`) REFERENCES `" + pkTable
-                                    + "` (`" + itemName + "`) "
-                                    + "ON DELETE CASCADE ON UPDATE CASCADE,\n";
-                        } else if (lastFKCounter >= FKNum) {
-                            foreignKeyStr = foreignKeyStr
-                                    + "  ADD CONSTRAINT `FK_" + tableName + "_"
-                                    + itemName + "` " + "FOREIGN KEY (`"
-                                    + itemName + "`) REFERENCES `" + pkTable
-                                    + "` (`" + itemName + "`) "
-                                    + "ON DELETE CASCADE ON UPDATE CASCADE;\n";
+                            foreignKeyStr.append("  ADD CONSTRAINT `FK_").append(tableName).append("_").append(itemName).append("` ").append("FOREIGN KEY (`").append(itemName).append("`) REFERENCES `").append(pkTable).append("` (`").append(itemName).append("`) ").append("ON DELETE CASCADE ON UPDATE CASCADE,\n");
+                        } else {
+                            foreignKeyStr.append("  ADD CONSTRAINT `FK_").append(tableName).append("_").append(itemName).append("` ").append("FOREIGN KEY (`").append(itemName).append("`) REFERENCES `").append(pkTable).append("` (`").append(itemName).append("`) ").append("ON DELETE CASCADE ON UPDATE CASCADE;\n");
                         }
                     }
                 }
@@ -824,18 +631,17 @@ public class DataProvider implements Serializable {
             pPRINT.println(primaryKeyStr);
             pPRINT.println(");" + "\n");
             if (FKNum > 0) {
-                foreignKeyList.add(foreignKeyStr);
+                foreignKeyList.add(foreignKeyStr.toString());
             }
         }
 
         // ====================
         // output foreignKeyStr here
         // ====================
-        for (int i = 0; i < foreignKeyList.size(); i++) {
-            pPRINT.println(foreignKeyList.get(i));
+        for (String s : foreignKeyList) {
+            pPRINT.println(s);
         }
 
         pPRINT.close();
-        return true;
     }
 }

@@ -9,22 +9,7 @@ public class DBFormalAbstractMeasurementFunction implements Serializable {
         TIME, SPACE
     }
 
-    private MeasurementType mType = null;
     private List<AbstractLoad> loads;
-
-    public DBFormalAbstractMeasurementFunction(MeasurementType m) {
-        this.setmType(m);
-    }
-
-
-    public MeasurementType getmType() {
-        return mType;
-    }
-
-
-    public void setmType(MeasurementType mType) {
-        this.mType = mType;
-    }
 
     public List<AbstractLoad> getLoads() {
         return loads;

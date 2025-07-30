@@ -119,8 +119,4 @@ object AppConfig {
   def getRandomRange: Integer = {
     this.randomRange
   }
-
-  def getSubRange: Integer = {
-    this.subRange
-  }
 }
