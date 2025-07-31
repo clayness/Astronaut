@@ -20,18 +20,17 @@ trait AstronautFramework extends Serializable {
   }
 
   private def synthesize: Tradespace => SpecificationType => List[(ImplementationType, MeasurementFunctionSetType)] = {
-    case Build_Tradespace(synthesize0, _, _) => synthesize0
+    case Build_Tradespace(synthesize0, _) => synthesize0
   }
 
   private def analyze: Tradespace => List[(ImplementationType, MeasurementFunctionSetType)] => List[(ImplementationType, MeasurementResultSetType)] = {
-    case Build_Tradespace(_, _, analyze_MyMap0) => analyze_MyMap0
+    case Build_Tradespace(_, analyze0) => analyze0
   }
 
   sealed abstract class Tradespace extends Serializable
 
   case class Build_Tradespace(x1: SpecificationType => List[(ImplementationType, MeasurementFunctionSetType)],
-                              x2: (ImplementationType, MeasurementFunctionSetType) => (ImplementationType, MeasurementResultSetType),
-                              x3: List[(ImplementationType, MeasurementFunctionSetType)] => List[(ImplementationType, MeasurementResultSetType)])
+                              x2: List[(ImplementationType, MeasurementFunctionSetType)] => List[(ImplementationType, MeasurementResultSetType)])
     extends Tradespace with Serializable
 }
 

@@ -9,57 +9,12 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="8d2d8eec-a092-4049-9d2c-98097af027f2" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Framework/Types/MeasurementFunctionByDB.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Framework/Types/MySQLMeasurementFunction.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Framework/Types/PostgresMeasurementFunction.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/modules/Astronaut/Astronaut.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/modules/Astronaut/Astronaut.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/scala_compiler.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/scala_compiler.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/scala/analysis/QueryGenerator.scala" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/scala/analysis/SparkAnalyzer.scala" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/build.sbt" beforeDir="false" afterPath="$PROJECT_DIR$/build.sbt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Evaluator/Evaluator.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Evaluator/Node.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Evaluator/ScriptRunner.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Evaluator/ScriptRunner.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Evaluator/WorkNodes.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Evaluator/Worker.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Framework/Types/AbstractLoad.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Framework/Types/AbstractLoad.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Framework/Types/AbstractQuery.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Framework/Types/AbstractQuery.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Framework/Types/ConcreteLoad.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Framework/Types/ConcreteLoad.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Framework/Types/ConcreteQuery.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Framework/Types/ConcreteQuery.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Framework/Types/DBConcreteMeasurementFunction.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Framework/Types/DBConcreteMeasurementFunction.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Framework/Types/DBConcreteMeasurementFunctionSet.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Framework/Types/DBConcreteMeasurementFunctionSet.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Framework/Types/DBConcreteSpaceMeasurementFunction.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Framework/Types/DBConcreteSpaceMeasurementFunction.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Framework/Types/DBConcreteTimeMeasurementFunction.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Framework/Types/DBConcreteTimeMeasurementFunction.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Framework/Types/DBFormalAbstractMeasurementFunction.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Framework/Types/DBFormalAbstractMeasurementFunction.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Framework/Types/DBFormalAbstractMeasurementFunctionSet.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Framework/Types/DBFormalAbstractMeasurementFunctionSet.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Framework/Types/DBFormalAbstractSpaceMeasurementFunction.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Framework/Types/DBFormalAbstractTimeMeasurementFunction.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Framework/Types/DBFormalAbstractTimeMeasurementFunction.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Framework/Types/DBFormalConcreteMeasurementFunction.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Framework/Types/DBFormalConcreteMeasurementFunction.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Framework/Types/DBFormalConcreteMeasurementFunctionSet.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Framework/Types/DBFormalConcreteMeasurementFunctionSet.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Framework/Types/DBFormalConcreteSpaceMeasurementFunction.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Framework/Types/DBFormalConcreteSpaceMeasurementFunction.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Framework/Types/DBFormalConcreteTimeMeasurementFunction.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Framework/Types/DBFormalConcreteTimeMeasurementFunction.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Framework/Types/DBMeasurementResult.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Framework/Types/DBMeasurementResult.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Framework/Types/DBSpaceMeasurementResult.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Framework/Types/DBSpaceMeasurementResult.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Framework/Types/DBTimeMeasurementResult.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Framework/Types/DBTimeMeasurementResult.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Framework/Types/ObjectOfDM.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Framework/Types/ObjectOfDM.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Framework/Types/ObjectSet.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Framework/Types/ObjectSpec.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Framework/Types/ObjectSpec.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Synthesizer/AlloyOMToAlloyDM.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Synthesizer/AlloyOMToAlloyDM.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Synthesizer/CodeNamePair.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Synthesizer/CodeNamePair.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Synthesizer/DataProvider.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Synthesizer/DataProvider.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Synthesizer/Evaluator.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Synthesizer/Evaluator.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Synthesizer/FileOperation.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Synthesizer/FrontParser.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Synthesizer/FrontParser.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Synthesizer/LoadSynthesizer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Synthesizer/LoadSynthesizer.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Synthesizer/MetricValue.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Synthesizer/MetricValue.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Synthesizer/ORMParser.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Synthesizer/ORMParser.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Synthesizer/PrintOrder.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Synthesizer/PrintOrder.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Synthesizer/Sig.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Synthesizer/Sig.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Synthesizer/SmartBridge.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Synthesizer/SmartBridge.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Synthesizer/SolveAlloyDM.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Synthesizer/Synthesizer.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/scala/edu/virginia/cs/AppConfig.scala" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/scala/edu/virginia/cs/AppConfig.scala" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/scala/edu/virginia/cs/DBTrademaker.scala" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/scala/edu/virginia/cs/DBTrademaker.scala" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/scala/edu/virginia/cs/Framework/Types/DBImplementation.scala" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/scala/edu/virginia/cs/Framework/Types/DBImplementation.scala" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/scala/edu/virginia/cs/Framework/AstronautFramework.scala" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/scala/edu/virginia/cs/Framework/AstronautFramework.scala" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -108,7 +63,7 @@
   &quot;isMigrated&quot;: true
 }</component>
   <component name="ProblemsViewState">
-    <option name="selectedTabId" value="ProjectErrors" />
+    <option name="selectedTabId" value="CurrentFile" />
   </component>
   <component name="ProjectCodeStyleSettingsMigration">
     <option name="version" value="2" />
@@ -121,26 +76,26 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
-    "git-widget-placeholder": "update-2025",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "project.structure.last.edited": "Project",
-    "project.structure.proportion": "0.15",
-    "project.structure.side.proportion": "0.2",
-    "run.code.analysis.last.selected.profile": "pProject Default",
-    "settings.editor.selected.configurable": "sbt.project.settings.configurable",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;update-2025&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;project.structure.last.edited&quot;: &quot;Project&quot;,
+    &quot;project.structure.proportion&quot;: &quot;0.15&quot;,
+    &quot;project.structure.side.proportion&quot;: &quot;0.2&quot;,
+    &quot;run.code.analysis.last.selected.profile&quot;: &quot;pProject Default&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;sbt.project.settings.configurable&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="MoveMembersDialog.RECENTS_KEY">
       <recent name="edu.virginia.cs.DBTrademaker" />
