@@ -15,7 +15,6 @@ import scala.jdk.CollectionConverters._
 import scala.util.Using
 
 class DBTrademaker extends AstronautFramework {
-
   // analyze and tradespace are already defined in Tradespace specification
   // we can call "tradespace" function to synthesize implementation and benchmark
   private val myTradespace: Tradespace = Build_Tradespace(synthesizeImplAndFuncFromSpec, analyzeWithSpark)
@@ -31,6 +30,7 @@ class DBTrademaker extends AstronautFramework {
       val leaf = Path.of(spec).getFileName.toString.replaceFirst("\\.[^.]+$", "")
       // synthesize the tradespace for the spec
       val mySpec: DBSpecification = new DBSpecification(spec)
+      // invokes the load synthesizer and the Spark analyzer (distributed, may take some time)
       val evaluatedResults = tradespaceFunction(mySpec)
 
       // if there are any results, create the output files
@@ -56,11 +56,6 @@ class DBTrademaker extends AstronautFramework {
   private def analyzeWithSpark(list: List[(ImplementationType, MeasurementFunctionSetType)]): List[(ImplementationType, MeasurementResultSetType)] =
     new SparkAnalyzer().analyze(list)
 
-  /*
-   *  purpose is to convert a given abstract measurement function (set of insert or select abstract queries) into a concrete measurement
-   *  function, specialized to a particular implementation.
-  */
-
   private def getIDBySigName(sigs: util.List[Sig], sigName: String): String = {
     sigs.asScala.collectFirst {
       case s if s.getSigName.equalsIgnoreCase(sigName) => s.getId
@@ -76,17 +71,13 @@ class DBTrademaker extends AstronautFramework {
     if (AppConfig.getIsRandom == 0) {
       val fAbsMF: FormalAbstractMeasurementFunctionSet = myLFunction(fSpec)
       val fConMF: List[FormalConcreteMeasurementFunctionSet] = myTFunction(fAbsMF)(impls)
-      val mfs = fConMF.map(myBFunction)
-      val zipped = impls.zip(mfs)
-      return zipped
+      impls.zip(fConMF.map(myBFunction))
     } else if (AppConfig.getIsRandom == 1) {
       // get concrete measurement function by random generator
-      val mfs = genRandomConcreteMF(impls)
-      // iterate to create list of pairs, call "combine" will result in StackOverFlowError
-      val zipped = impls.zip(mfs)
-      return zipped
+      impls.zip(genRandomConcreteMF(impls))
+    } else {
+      null
     }
-    null
   }
 
   private def genRandomConcreteMF(impls: List[ImplementationType]): List[MeasurementFunctionSetType] = {

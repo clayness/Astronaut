@@ -12,7 +12,7 @@ import java.util
  * @param specPath The file path to the Alloy specification file
  */
 class DBFormalSpecification(specPath: String) {
-  private var ids: util.List[String] = new util.ArrayList[String]()
+  private var ids: util.List[String] = _
   private var associations: util.List[String] = _
   private var typeMap: util.Map[String, String] = _
   private var sigs: util.List[Sig] = _

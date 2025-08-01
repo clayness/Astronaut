@@ -431,7 +431,7 @@ public class DataProvider implements Serializable {
             List<CodeNamePair> tableItems = entry.getValue();
             boolean firstPK = true;
 
-            // primaryKeyStr will write to file at the end of every create table
+            // primaryKeyStr will write to file at the  end of every create table
             // block
             StringBuilder primaryKeyStr = new StringBuilder("PRIMARY KEY (");
             // foreignKeyStr will write to file at the end of file

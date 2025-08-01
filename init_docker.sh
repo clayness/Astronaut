@@ -36,6 +36,7 @@ else
     -e SPARK_MODE=master \
     -p 8080:8080 \
     -p 7077:7077 \
+    -v "$(pwd)/Astronaut/models:/opt/models" \
     bitnami/spark:latest
 fi
 
@@ -48,6 +49,7 @@ else
     -e SPARK_MODE=worker \
     -e "SPARK_MASTER_URL=spark://$SPARK_NAME:7077" \
     -p 8081:8081 \
+    -v "$(pwd)/Astronaut/models:/opt/models" \
     bitnami/spark:latest
 fi
 

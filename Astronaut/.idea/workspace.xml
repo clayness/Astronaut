@@ -9,12 +9,15 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="8d2d8eec-a092-4049-9d2c-98097af027f2" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/src/main/scala/analysis/QueryGenerator.scala" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/scala/analysis/SparkAnalyzer.scala" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/wikalloy/AlloySolutionIterator.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/wikalloy/SchemaGenerator.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Synthesizer/AlloyOMToAlloyDM.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Synthesizer/AlloyOMToAlloyDM.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Synthesizer/DataProvider.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Synthesizer/DataProvider.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/scala/edu/virginia/cs/DBTrademaker.scala" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/scala/edu/virginia/cs/DBTrademaker.scala" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/scala/edu/virginia/cs/Framework/AstronautFramework.scala" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/scala/edu/virginia/cs/Framework/AstronautFramework.scala" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/scala/edu/virginia/cs/Framework/Types/DBFormalSpecification.scala" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/scala/edu/virginia/cs/Framework/Types/DBFormalSpecification.scala" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../init_docker.sh" beforeDir="false" afterPath="$PROJECT_DIR$/../init_docker.sh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../run_astronaut.sh" beforeDir="false" afterPath="$PROJECT_DIR$/../run_astronaut.sh" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -76,26 +79,28 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;update-2025&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;project.structure.last.edited&quot;: &quot;Project&quot;,
-    &quot;project.structure.proportion&quot;: &quot;0.15&quot;,
-    &quot;project.structure.side.proportion&quot;: &quot;0.2&quot;,
-    &quot;run.code.analysis.last.selected.profile&quot;: &quot;pProject Default&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;sbt.project.settings.configurable&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Application.AlloySolutionIterator.executor": "Debug",
+    "Application.SchemaGenerator.executor": "Run",
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "git-widget-placeholder": "update-2025",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "project.structure.last.edited": "Project",
+    "project.structure.proportion": "0.15",
+    "project.structure.side.proportion": "0.2",
+    "run.code.analysis.last.selected.profile": "pProject Default",
+    "settings.editor.selected.configurable": "sbt.project.settings.configurable",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="MoveMembersDialog.RECENTS_KEY">
       <recent name="edu.virginia.cs.DBTrademaker" />
@@ -103,6 +108,46 @@
     <key name="MoveClassesOrPackagesDialog.RECENTS_KEY">
       <recent name="edu.virginia.cs.Framework.Types" />
     </key>
+  </component>
+  <component name="RunManager" selected="Application.SchemaGenerator">
+    <configuration name="AlloySolutionIterator" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="wikalloy.AlloySolutionIterator" />
+      <module name="Astronaut" />
+      <option name="PROGRAM_PARAMETERS" value="models/decider.als" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="wikalloy.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="SchemaGenerator" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="wikalloy.SchemaGenerator" />
+      <module name="Astronaut" />
+      <option name="PROGRAM_PARAMETERS" value="models/decider.als" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="wikalloy.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <list>
+      <item itemvalue="Application.SchemaGenerator" />
+      <item itemvalue="Application.AlloySolutionIterator" />
+    </list>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Application.SchemaGenerator" />
+        <item itemvalue="Application.AlloySolutionIterator" />
+      </list>
+    </recent_temporary>
   </component>
   <component name="ScalaProjectSettings">
     <option name="migrateConfigurationsNotificationShown" value="true" />
@@ -129,5 +174,16 @@
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <default-breakpoints>
+        <breakpoint enabled="true" type="java-exception">
+          <properties>
+            <option name="NOTIFY_CAUGHT" value="false" />
+          </properties>
+        </breakpoint>
+      </default-breakpoints>
+    </breakpoint-manager>
   </component>
 </project>

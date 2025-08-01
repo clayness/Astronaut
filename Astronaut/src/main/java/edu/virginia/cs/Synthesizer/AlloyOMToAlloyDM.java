@@ -51,10 +51,9 @@ public class AlloyOMToAlloyDM {
         return ss;
     }
 
-    public void run(String AlloyOM, String AlloyDM, int intScope) {
-        // File alloyOM = new File(AlloyOM);
-        String noComment = eraseComment(AlloyOM);
-        File file = new File(AlloyDM);
+    public void run(String alloyObModelPath, String alloyDbModelPath, int intScope) {
+        String noComment = eraseComment(alloyObModelPath);
+        File file = new File(alloyDbModelPath);
         // delete alloy_dm if it existed
         if (file.delete()) {
             if (isDebugOn) {
@@ -98,11 +97,11 @@ public class AlloyOMToAlloyDM {
             br.close();
             fileReader = new FileReader(noComment);
             br = new BufferedReader(fileReader);
-            FileWriter fileWriter = new FileWriter(AlloyDM);
+            FileWriter fileWriter = new FileWriter(alloyDbModelPath);
             PrintWriter pw = new PrintWriter(fileWriter);
             // String[] alloyPaths = Alloy.split("\\\\");
             String pattern = Pattern.quote(FileSystems.getDefault().getSeparator());
-            String[] alloyPaths = AlloyDM.split(pattern);
+            String[] alloyPaths = alloyDbModelPath.split(pattern);
             String fileName = alloyPaths[alloyPaths.length - 1];
             alloyPaths = fileName.split("\\.");
 
