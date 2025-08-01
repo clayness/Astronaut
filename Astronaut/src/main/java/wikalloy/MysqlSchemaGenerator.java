@@ -10,11 +10,11 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class SchemaGenerator {
+public class MysqlSchemaGenerator {
 
     private final Instance instance;
 
-    public SchemaGenerator(A4Solution sol) {
+    public MysqlSchemaGenerator(A4Solution sol) {
         assert sol.satisfiable();
         this.instance = sol.debugExtractKInstance();
     }
@@ -23,17 +23,19 @@ public class SchemaGenerator {
         var solIter = new AlloySolutionIterator(Path.of(args[0]));
         for (int i = 0; solIter.hasNext(); i++) {
             System.out.printf("---- DDL FOR SOLUTION %05d ----%n", i);
-            var gs = new SchemaGenerator(solIter.next());
+            var gs = new MysqlSchemaGenerator(solIter.next());
             System.out.println(gs.generateSchema());
             System.out.println();
         }
     }
 
-    public String createTable(Set<Object> mapping) {
+    public String createTable(Map.Entry<Object, Set<Object>> mapping) {
         var name = new HashSet<String>();
         var cols = new HashMap<String, String>();
         var keys = new HashSet<String>();
-        for (var o : mapping) {
+        // iterate each class / association to make sure
+        // all the fields and keys are added
+        for (var o : mapping.getValue()) {
             name.add(this.getRelationName(o));
             var k = this.getKeys(o);
             var c = this.getColumns(o);
@@ -51,7 +53,7 @@ public class SchemaGenerator {
             // add the parent fields as columns
             c.putAll(p);
             // make sure the keys are all in the columns set
-            // and they are all not null
+            // and are not null
             for (var kvp : c.entrySet()) {
                 if (k.contains(kvp.getKey())) {
                     cols.put(kvp.getKey(), "%s NOT NULL".formatted(kvp.getValue()));
@@ -60,36 +62,48 @@ public class SchemaGenerator {
                 }
             }
         }
-        return "CREATE TABLE tbl_%s (%n    %s,%n    PRIMARY KEY (%s)%n  );".formatted(
-                String.join("_", name),
+        var tableName = name(mapping.getKey());
+        //noinspection StringBufferReplaceableByString
+        var retval = new StringBuilder();
+        // print the names of the classes / associations mapped to this table (for reference)
+        retval.append("-- %s <- %s%n".formatted(
+                tableName, name.stream().sorted().collect(Collectors.joining(", "))));
+        retval.append("CREATE TABLE %s (%n    %s,%n    PRIMARY KEY (%s)%n  );".formatted(
+                tableName,
                 cols.entrySet().stream()
                         .map(kvp -> "%s %s".formatted(kvp.getKey(), kvp.getValue()))
                         .collect(Collectors.joining(",\n    ")),
-                String.join(",", keys));
+                String.join(",", keys)));
+        return retval.toString();
     }
 
     public String generateSchema() {
+        //noinspection StringBufferReplaceableByString
         var ddl = new StringBuilder();
-        // the association strategies are in:
+
+        ddl.append("-- association mappings\n");
         //   - "association_strategies/AStrat.MTs"  for "Merge Table"            (src & dst in same table, union key)
+        ddl.append("--   MTs : %s%n".formatted(this.getAssociationMappings("MTs")));
         //   - "association_strategies/AStrat.FKEs" for "Foreign Key Embedding"  (src & dst in different tables, key of src in dst table)
+        ddl.append("--   FKEs: %s%n".formatted(this.getAssociationMappings("FKEs")));
         //   - "association_strategies/AStrat.OATs" for "Own Association Table"  (src & dst in different tables, table of keys only for assoc)
-        ddl.append("-- MTs : %s%n".formatted(this.getAssociationMappings("MTs")));
-        ddl.append("-- FKEs: %s%n".formatted(this.getAssociationMappings("FKEs")));
-        ddl.append("-- OATs: %s%n".formatted(this.getAssociationMappings("OATs")));
-        // the inheritance strategies are in :
+        ddl.append("--   OATs: %s%n".formatted(this.getAssociationMappings("OATs")));
+
+        ddl.append("-- inheritance mappings\n");
         //   - "inheritance_strategies/IStrat.SRIs" for "Single Relation Inheritance" (parent & child in same table, union key)
+        ddl.append("--   SRIs: %s%n".formatted(this.getInheritanceMappings("SRIs")));
         //   - "inheritance_strategies/IStrat.CRs"  for "Class Relation"              (parent & child in different tables, parent key in child)
+        ddl.append("--   CRs : %s%n".formatted(this.getInheritanceMappings("CRs")));
         //   - "inheritance_strategies/IStrat.CCRs" for "Concrete Class Relation"     (parent & child in different tables, all parent fields in child)
-        ddl.append("-- SRIs: %s%n".formatted(this.getInheritanceMappings("SRIs")));
-        ddl.append("-- CRs : %s%n".formatted(this.getInheritanceMappings("CRs")));
-        ddl.append("-- CCRs: %s%n".formatted(this.getInheritanceMappings("CCRs")));
+        ddl.append("--   CCRs: %s%n".formatted(this.getInheritanceMappings("CCRs")));
+
         // get the table creation script
         ddl.append(this.instance.tuples("orm/orm.map").stream()
                 .collect(Collectors.groupingBy(t -> t.atom(0),
                         Collectors.mapping(t -> t.atom(1), Collectors.toSet())))
-                .values().stream().map(this::createTable)
+                .entrySet().stream().map(this::createTable)
                 .collect(Collectors.joining(System.lineSeparator())));
+        // add the foreign key constraints?
         return ddl.toString();
     }
 
@@ -115,6 +129,7 @@ public class SchemaGenerator {
                         x -> this.getTypeDef(x.atom(2))));
     }
 
+    @SuppressWarnings("SameParameterValue")
     private Map<String, String> getDataTypes(Set<Object> fields, boolean keys) {
         return fields.stream()
                 .flatMap(f -> join("oodm/Class.fields", f, 1))
@@ -224,5 +239,9 @@ public class SchemaGenerator {
 
     private Stream<Tuple> join(String relationName, Object atom, int i) {
         return getTuples(relationName).filter(t -> t.atom(i) == atom);
+    }
+
+    private String name(Object atom) {
+        return atom.toString().replaceAll("[/$]", "_");
     }
 }
