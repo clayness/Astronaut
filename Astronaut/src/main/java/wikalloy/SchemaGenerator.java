@@ -4,7 +4,6 @@ import edu.mit.csail.sdg.translator.A4Solution;
 import kodkod.ast.LeafExpression;
 import kodkod.instance.Instance;
 import kodkod.instance.Tuple;
-import kodkod.instance.TupleSet;
 
 import java.nio.file.Path;
 import java.util.*;
@@ -28,32 +27,6 @@ public class SchemaGenerator {
             System.out.println(gs.generateSchema());
             System.out.println();
         }
-    }
-
-    public String generateSchema() {
-        var ddl = new StringBuilder();
-        // the association strategies are in:
-        //   - "association_strategies/AStrat.MTs"  for "Merge Table"            (src & dst in same table, union key)
-        //   - "association_strategies/AStrat.FKEs" for "Foreign Key Embedding"  (src & dst in different tables, key of src in dst table)
-        //   - "association_strategies/AStrat.OATs" for "Own Association Table"  (src & dst in different tables, table of keys only for assoc)
-        ddl.append("-- MTs : %s%n".formatted(this.getAssociationMappings("MTs")));
-        ddl.append("-- FKEs: %s%n".formatted(this.getAssociationMappings("FKEs")));
-        ddl.append("-- OATs: %s%n".formatted(this.getAssociationMappings("OATs")));
-        // the inheritance strategies are in :
-        //   - "inheritance_strategies/IStrat.SRIs" for "Single Relation Inheritance" (parent & child in same table, union key)
-        //   - "inheritance_strategies/IStrat.CRs"  for "Class Relation"              (parent & child in different tables, parent key in child)
-        //   - "inheritance_strategies/IStrat.CCRs" for "Concrete Class Relation"     (parent & child in different tables, all parent fields in child)
-        ddl.append("-- SRIs: %s%n".formatted(this.getInheritanceMappings("SRIs")));
-        ddl.append("-- CRs : %s%n".formatted(this.getInheritanceMappings("CRs")));
-        ddl.append("-- CCRs: %s%n".formatted(this.getInheritanceMappings("CCRs")));
-        // get the table creation script
-        ddl.append(this.instance.tuples("orm/orm.map").stream()
-                .collect(Collectors.groupingBy(t -> t.atom(0),
-                        Collectors.mapping(t -> t.atom(1), Collectors.toSet())))
-                .values().stream().map(this::createTable)
-                .collect(Collectors.joining(System.lineSeparator())));
-
-        return ddl.toString();
     }
 
     public String createTable(Set<Object> mapping) {
@@ -95,39 +68,106 @@ public class SchemaGenerator {
                 String.join(",", keys));
     }
 
+    public String generateSchema() {
+        var ddl = new StringBuilder();
+        // the association strategies are in:
+        //   - "association_strategies/AStrat.MTs"  for "Merge Table"            (src & dst in same table, union key)
+        //   - "association_strategies/AStrat.FKEs" for "Foreign Key Embedding"  (src & dst in different tables, key of src in dst table)
+        //   - "association_strategies/AStrat.OATs" for "Own Association Table"  (src & dst in different tables, table of keys only for assoc)
+        ddl.append("-- MTs : %s%n".formatted(this.getAssociationMappings("MTs")));
+        ddl.append("-- FKEs: %s%n".formatted(this.getAssociationMappings("FKEs")));
+        ddl.append("-- OATs: %s%n".formatted(this.getAssociationMappings("OATs")));
+        // the inheritance strategies are in :
+        //   - "inheritance_strategies/IStrat.SRIs" for "Single Relation Inheritance" (parent & child in same table, union key)
+        //   - "inheritance_strategies/IStrat.CRs"  for "Class Relation"              (parent & child in different tables, parent key in child)
+        //   - "inheritance_strategies/IStrat.CCRs" for "Concrete Class Relation"     (parent & child in different tables, all parent fields in child)
+        ddl.append("-- SRIs: %s%n".formatted(this.getInheritanceMappings("SRIs")));
+        ddl.append("-- CRs : %s%n".formatted(this.getInheritanceMappings("CRs")));
+        ddl.append("-- CCRs: %s%n".formatted(this.getInheritanceMappings("CCRs")));
+        // get the table creation script
+        ddl.append(this.instance.tuples("orm/orm.map").stream()
+                .collect(Collectors.groupingBy(t -> t.atom(0),
+                        Collectors.mapping(t -> t.atom(1), Collectors.toSet())))
+                .values().stream().map(this::createTable)
+                .collect(Collectors.joining(System.lineSeparator())));
+        return ddl.toString();
+    }
+
+    private Map<String, String> getAssociationKeys(Object association) {
+        return getDataTypes(getKeysForClasses(Stream.of("oodm/Association.src", "oodm/Association.dst")
+                .flatMap(this::getTuples)
+                .filter(x -> x.atom(0) == association)
+                .map(x -> x.atom(1))
+                .collect(Collectors.toSet())), true);
+    }
+
     private String getAssociationMappings(String t) {
-        return this.getTuples("association_strategies/AStrat.%s".formatted(t)).stream()
+        return this.getTuples("association_strategies/AStrat.%s".formatted(t))
                 .map(x -> x.atom(0))
                 .map(this::getRelationName)
                 .collect(Collectors.joining(","));
+    }
+
+    private Map<String, String> getColumns(final Object o) {
+        return this.join("oodm/Class.fields", o, 0)
+                .collect(Collectors.toMap(
+                        x -> this.getRelationName(x.atom(1)),
+                        x -> this.getTypeDef(x.atom(2))));
+    }
+
+    private Map<String, String> getDataTypes(Set<Object> fields, boolean keys) {
+        return fields.stream()
+                .flatMap(f -> join("oodm/Class.fields", f, 1))
+                .collect(Collectors.toMap(
+                        x -> this.getRelationName(x.atom(1)),
+                        x -> "%s%s".formatted(this.getTypeDef(x.atom(2)), keys ? " NOT NULL" : "")));
+    }
+
+    private Map<String, String> getForeignKeys(Object cls) {
+        // if this class is the "dst" of an FKE association, we need to
+        // add columns for all the keys of the "src" of that same association
+        return getDataTypes(getKeysForClasses(this.join("oodm/Association.dst", cls, 1)
+                .filter(dst -> this.in("association_strategies/AStrat.FKEs", this.getTuple(dst.atom(0))))
+                .map(dst -> dst.atom(0))
+                .flatMap(assoc -> this.join("oodm/Association.src", assoc, 0))
+                .map(src -> src.atom(1))
+                .collect(Collectors.toSet())), true);
     }
 
     private String getInheritanceMappings(String t) {
-        return this.getTuples("inheritance_strategies/IStrat.%s".formatted(t)).stream()
+        return this.getTuples("inheritance_strategies/IStrat.%s".formatted(t))
                 .map(x -> x.atom(0))
                 .map(this::getRelationName)
                 .collect(Collectors.joining(","));
     }
 
-
     private Set<String> getKeys(final Object o) {
-        var t = getTuple(o);
-        var ct = this.instance.tuples("oodm/Class.key");
-        return ct.stream()
-                .filter(x -> x.atom(0) == o)
+        return this.join("oodm/Class.key", o, 0)
                 .map(x -> x.atom(1))
                 .map(this::getRelationName)
                 .collect(Collectors.toSet());
     }
 
-    private Map<String, String> getColumns(final Object o) {
-        var t = getTuple(o);
-        var ct = this.instance.tuples("oodm/Class.fields");
-        return ct.stream()
-                .filter(x -> x.atom(0) == o)
-                .collect(Collectors.toMap(
-                        x -> this.getRelationName(x.atom(1)),
-                        x -> this.getTypeDef(x.atom(2))));
+    private Set<Object> getKeysForClasses(Set<Object> cls) {
+        return cls.stream()
+                .flatMap(cl -> join("oodm/Class.key", cl, 0))
+                .map(cl -> cl.atom(1))
+                .collect(Collectors.toSet());
+    }
+
+    private Map<String, String> getParentFields(Object cls) {
+        // if this class is in a "CCR" inheritance relation, we need to
+        // add all the columns from the parent to this table
+        if (this.in("inheritance_strategies/IStrat.CCRs", getTuple(cls))) {
+            // get the parent
+            return this.join("oodm/Class.parent", cls, 0)
+                    .flatMap(p -> this.join("oodm/Class.fields", p, 1))
+                    .collect(Collectors.toMap(
+                            x -> this.getRelationName(x.atom(1)),
+                            x -> this.getTypeDef(x.atom(2))));
+        } else {
+            return Map.of();
+        }
     }
 
     private String getRelationName(Object o) {
@@ -141,10 +181,15 @@ public class SchemaGenerator {
                 .getFileName().toString();
     }
 
-    private TupleSet getTuples(String relationName) {
+    private Tuple getTuple(Object atom) {
+        return this.instance.universe().factory().tuple(atom);
+    }
+
+    private Stream<Tuple> getTuples(String relationName) {
         var r = this.instance.findRelationByName(relationName);
         return Optional.ofNullable(this.instance.tuples(r))
-                .orElse(this.instance.universe().factory().noneOf(r.arity()));
+                .orElse(this.instance.universe().factory().noneOf(r.arity()))
+                .stream();
     }
 
     private String getTypeDef(Object o) {
@@ -177,62 +222,7 @@ public class SchemaGenerator {
         }
     }
 
-    private Map<String, String> getAssociationKeys(Object association) {
-        return getDataTypes(getKeysForClasses(Stream.of("oodm/Association.src", "oodm/Association.dst")
-                .flatMap(r -> this.instance.tuples(r).stream())
-                .filter(x -> x.atom(0) == association)
-                .map(x -> x.atom(1))
-                .collect(Collectors.toSet())), true);
-    }
-
-    private Map<String, String> getDataTypes(Set<Object> fields, boolean keys) {
-        return fields.stream()
-                .flatMap(f -> this.instance.tuples("oodm/Class.fields").stream()
-                        .filter(y -> y.atom(1) == f))
-                .collect(Collectors.toMap(
-                        x -> this.getRelationName(x.atom(1)),
-                        x -> "%s%s".formatted(this.getTypeDef(x.atom(2)), keys ? " NOT NULL" : "")));
-    }
-
-    private Set<Object> getKeysForClasses(Set<Object> cls) {
-        return cls.stream()
-                .flatMap(cl -> this.instance.tuples("oodm/Class.key").stream()
-                        .filter(y -> y.atom(0) == cl))
-                .map(cl -> cl.atom(1))
-                .collect(Collectors.toSet());
-    }
-
-    private Map<String, String> getForeignKeys(Object cls) {
-        // if this class is the "dst" of an FKE association, we need to
-        // add columns for all the keys of the "src" of that same association
-        return getDataTypes(getKeysForClasses(this.getTuples("oodm/Association.dst").stream()
-                .filter(dst -> dst.atom(1) == cls)
-                .filter(dst -> this.in("association_strategies/AStrat.FKEs", this.getTuple(dst.atom(0))))
-                .map(dst -> dst.atom(0))
-                .flatMap(assoc -> this.getTuples("oodm/Association.src").stream()
-                        .filter(src -> src.atom(0) == assoc))
-                .map(src -> src.atom(1))
-                .collect(Collectors.toSet())), true);
-    }
-
-    private Map<String, String> getParentFields(Object cls) {
-        // if this class is in a "CCR" inheritance relation, we need to
-        // add all the columns from the parent to this table
-        if (this.in("inheritance_strategies/IStrat.CCRs", getTuple(cls))) {
-            // get the parent
-            return this.getTuples("oodm/Class.parent").stream()
-                    .filter(p -> p.atom(0) == cls)
-                    .flatMap(p -> this.getTuples("oodm/Class.fields").stream()
-                            .filter(f -> f.atom(0) == p.atom(1)))
-                    .collect(Collectors.toMap(
-                            x -> this.getRelationName(x.atom(1)),
-                            x -> this.getTypeDef(x.atom(2))));
-        } else {
-            return Map.of();
-        }
-    }
-
-    private Tuple getTuple(Object atom) {
-        return this.instance.universe().factory().tuple(atom);
+    private Stream<Tuple> join(String relationName, Object atom, int i) {
+        return getTuples(relationName).filter(t -> t.atom(i) == atom);
     }
 }

@@ -9,15 +9,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="8d2d8eec-a092-4049-9d2c-98097af027f2" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/src/main/java/wikalloy/AlloySolutionIterator.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/wikalloy/SchemaGenerator.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Synthesizer/AlloyOMToAlloyDM.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Synthesizer/AlloyOMToAlloyDM.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Synthesizer/DataProvider.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Synthesizer/DataProvider.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/scala/edu/virginia/cs/DBTrademaker.scala" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/scala/edu/virginia/cs/DBTrademaker.scala" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/scala/edu/virginia/cs/Framework/Types/DBFormalSpecification.scala" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/scala/edu/virginia/cs/Framework/Types/DBFormalSpecification.scala" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../init_docker.sh" beforeDir="false" afterPath="$PROJECT_DIR$/../init_docker.sh" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../run_astronaut.sh" beforeDir="false" afterPath="$PROJECT_DIR$/../run_astronaut.sh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/wikalloy/SchemaGenerator.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/wikalloy/SchemaGenerator.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -79,28 +72,28 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Application.AlloySolutionIterator.executor": "Debug",
-    "Application.SchemaGenerator.executor": "Run",
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
-    "git-widget-placeholder": "update-2025",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "project.structure.last.edited": "Project",
-    "project.structure.proportion": "0.15",
-    "project.structure.side.proportion": "0.2",
-    "run.code.analysis.last.selected.profile": "pProject Default",
-    "settings.editor.selected.configurable": "sbt.project.settings.configurable",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Application.AlloySolutionIterator.executor&quot;: &quot;Debug&quot;,
+    &quot;Application.SchemaGenerator.executor&quot;: &quot;Run&quot;,
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;update-2025&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;project.structure.last.edited&quot;: &quot;Project&quot;,
+    &quot;project.structure.proportion&quot;: &quot;0.15&quot;,
+    &quot;project.structure.side.proportion&quot;: &quot;0.2&quot;,
+    &quot;run.code.analysis.last.selected.profile&quot;: &quot;pProject Default&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;sbt.project.settings.configurable&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="MoveMembersDialog.RECENTS_KEY">
       <recent name="edu.virginia.cs.DBTrademaker" />
@@ -169,6 +162,7 @@
       <updated>1753731238683</updated>
       <workItem from="1753731239811" duration="3337000" />
       <workItem from="1753800946054" duration="3276000" />
+      <workItem from="1754056954005" duration="1008000" />
     </task>
     <servers />
   </component>
