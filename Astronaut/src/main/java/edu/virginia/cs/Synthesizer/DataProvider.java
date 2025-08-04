@@ -520,6 +520,7 @@ public class DataProvider implements Serializable {
     }
 
     public void writeIntoFileMySQL(String filename) throws IOException {
+        // TODO: replace with the MysqlSchemaGenerator output
         File sqlFile;
         sqlFile = new File(filename);
         FileOutputStream oFile;

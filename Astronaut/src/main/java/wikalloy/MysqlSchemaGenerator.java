@@ -2,21 +2,19 @@ package wikalloy;
 
 import edu.mit.csail.sdg.translator.A4Solution;
 import kodkod.ast.LeafExpression;
-import kodkod.instance.Instance;
-import kodkod.instance.Tuple;
 
 import java.nio.file.Path;
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class MysqlSchemaGenerator {
-
-    private final Instance instance;
+public class MysqlSchemaGenerator extends AbstractKodkodGenerator {
 
     public MysqlSchemaGenerator(A4Solution sol) {
-        assert sol.satisfiable();
-        this.instance = sol.debugExtractKInstance();
+        super(sol);
     }
 
     public static void main(String[] args) {
@@ -196,17 +194,6 @@ public class MysqlSchemaGenerator {
                 .getFileName().toString();
     }
 
-    private Tuple getTuple(Object atom) {
-        return this.instance.universe().factory().tuple(atom);
-    }
-
-    private Stream<Tuple> getTuples(String relationName) {
-        var r = this.instance.findRelationByName(relationName);
-        return Optional.ofNullable(this.instance.tuples(r))
-                .orElse(this.instance.universe().factory().noneOf(r.arity()))
-                .stream();
-    }
-
     private String getTypeDef(Object o) {
         var t = getTuple(o);
         if (this.in("oodm/TBool", t)) {
@@ -226,22 +213,4 @@ public class MysqlSchemaGenerator {
         }
     }
 
-    private boolean in(String relation, Tuple t) {
-        var r = this.instance.findRelationByName(relation);
-        if (r == null) {
-            return false;
-        } else {
-            return Optional.ofNullable(this.instance.tuples(r))
-                    .orElse(this.instance.universe().factory().noneOf(r.arity()))
-                    .contains(t);
-        }
-    }
-
-    private Stream<Tuple> join(String relationName, Object atom, int i) {
-        return getTuples(relationName).filter(t -> t.atom(i) == atom);
-    }
-
-    private String name(Object atom) {
-        return atom.toString().replaceAll("[/$]", "_");
-    }
 }

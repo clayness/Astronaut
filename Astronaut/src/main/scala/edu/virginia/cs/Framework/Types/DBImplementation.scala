@@ -6,30 +6,17 @@ import org.w3c.dom.Element
 import java.util
 import scala.jdk.CollectionConverters._
 
-/**
- * Created by tang on 8/9/14.
- */
-
-// ImpelementationType here will be the file path of SQL schema script
-
 class DBImplementation(path: String) extends Serializable { //extends FrameworkTypeWrapper {
-
   private val implPath: String = path
-
   private var dataProvider: DataProvider = _
   private var reverseTAssociate: util.List[CodeNamePair] = _
   private var foreignKeys: util.List[CodeNamePair] = _
-  // HashMap[Association Name, pair[src, dst], src and dst are class name
   private var associations: util.Map[String, CodeNamePair] = _
   private var primaryKeys: util.List[CodeNamePair] = _
   private var fields: util.List[CodeNamePair] = _
   private var allFields: util.List[String] = _
   private var fieldsTable: util.List[CodeNamePair] = _
-
-
-  // this the reverse of "id" in implementation
   private var reverseIDs: util.List[CodeNamePair] = _
-
   private var sigs: util.List[Sig] = _
   private var ids: util.List[String] = _
   private var associationsForCreateSchemas: util.List[String] = _
@@ -180,6 +167,15 @@ class DBImplementation(path: String) extends Serializable { //extends FrameworkT
     }
   }
 
+  def getSingleAtom(singleTuple: Element, i: Int): String = {
+    val atoms = singleTuple.getElementsByTagName("atom")
+    val tableCode = atoms.item(i).asInstanceOf[Element]
+    var code = tableCode.getAttribute("label")
+    val tmp = code.split("/")
+    code = tmp(tmp.length - 1)
+    code
+  }
+
   def parseFK(element: Element): Unit = {
     val children = element.getElementsByTagName("tuple")
     for (j <- 0 until children.getLength) {
@@ -283,15 +279,6 @@ class DBImplementation(path: String) extends Serializable { //extends FrameworkT
         }
       }
     }
-  }
-
-  def getSingleAtom(singleTuple: Element, i: Int): String = {
-    val atoms = singleTuple.getElementsByTagName("atom")
-    val tableCode = atoms.item(i).asInstanceOf[Element]
-    var code = tableCode.getAttribute("label")
-    val tmp = code.split("/")
-    code = tmp(tmp.length - 1)
-    code
   }
 
   // chong: maybe elem._2.setFirst() cannot set the value to associations map

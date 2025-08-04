@@ -9,8 +9,14 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="8d2d8eec-a092-4049-9d2c-98097af027f2" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/src/main/java/wikalloy/AbstractKodkodGenerator.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/wikalloy/AbstractLoadGenerator.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/modules/Astronaut/Astronaut.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/modules/Astronaut/Astronaut.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/wikalloy/SchemaGenerator.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/wikalloy/MysqlSchemaGenerator.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/build.sbt" beforeDir="false" afterPath="$PROJECT_DIR$/build.sbt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Synthesizer/DataProvider.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Synthesizer/DataProvider.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/wikalloy/MysqlSchemaGenerator.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/wikalloy/MysqlSchemaGenerator.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/scala/edu/virginia/cs/Framework/Types/DBImplementation.scala" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/scala/edu/virginia/cs/Framework/Types/DBImplementation.scala" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -74,8 +80,10 @@
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
+    "Application.AbstractLoadGenerator.executor": "Run",
     "Application.AlloySolutionIterator.executor": "Debug",
-    "Application.MysqlSchemaGenerator.executor": "Run",
+    "Application.LoadGenerator.executor": "Run",
+    "Application.MysqlSchemaGenerator.executor": "Debug",
     "Application.SchemaGenerator.executor": "Run",
     "ModuleVcsDetector.initialDetectionPerformed": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
@@ -103,7 +111,22 @@
       <recent name="edu.virginia.cs.Framework.Types" />
     </key>
   </component>
-  <component name="RunManager" selected="Application.MysqlSchemaGenerator">
+  <component name="RunManager" selected="Application.AbstractLoadGenerator">
+    <configuration name="AbstractLoadGenerator" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="wikalloy.AbstractLoadGenerator" />
+      <module name="Astronaut" />
+      <option name="PROGRAM_PARAMETERS" value="models/decider.als" />
+      <option name="VM_PARAMETERS" value="--add-opens java.base/java.util=ALL-UNNAMED" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="wikalloy.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
     <configuration name="AlloySolutionIterator" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
       <option name="MAIN_CLASS_NAME" value="wikalloy.AlloySolutionIterator" />
       <module name="Astronaut" />
@@ -133,11 +156,13 @@
       </method>
     </configuration>
     <list>
+      <item itemvalue="Application.AbstractLoadGenerator" />
       <item itemvalue="Application.MysqlSchemaGenerator" />
       <item itemvalue="Application.AlloySolutionIterator" />
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Application.AbstractLoadGenerator" />
         <item itemvalue="Application.MysqlSchemaGenerator" />
         <item itemvalue="Application.AlloySolutionIterator" />
       </list>
@@ -164,7 +189,8 @@
       <workItem from="1753731239811" duration="3337000" />
       <workItem from="1753800946054" duration="3276000" />
       <workItem from="1754056954005" duration="3564000" />
-      <workItem from="1754067813236" duration="726000" />
+      <workItem from="1754067813236" duration="2997000" />
+      <workItem from="1754078983869" duration="7869000" />
     </task>
     <servers />
   </component>
@@ -174,7 +200,7 @@
   <component name="XDebuggerManager">
     <breakpoint-manager>
       <default-breakpoints>
-        <breakpoint enabled="true" type="java-exception">
+        <breakpoint type="java-exception">
           <properties>
             <option name="NOTIFY_CAUGHT" value="false" />
           </properties>
