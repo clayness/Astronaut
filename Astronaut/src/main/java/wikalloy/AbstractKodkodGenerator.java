@@ -5,6 +5,8 @@ import kodkod.instance.Instance;
 import kodkod.instance.Tuple;
 
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public abstract class AbstractKodkodGenerator {
@@ -48,5 +50,16 @@ public abstract class AbstractKodkodGenerator {
 
     protected String name(Object atom) {
         return atom.toString().replaceAll("[/$]", "_");
+    }
+
+    protected Set<Tuple> tc(final String relationName) {
+        var ts = this.getTuples(relationName).collect(Collectors.toSet());
+        //noinspection StatementWithEmptyBody
+        while (ts.addAll(ts.stream()
+                .flatMap(t -> this.join(relationName, t.atom(1), 0))
+                .collect(Collectors.toSet()))) {
+            /* no-op */
+        }
+        return ts;
     }
 }

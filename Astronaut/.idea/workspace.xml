@@ -9,14 +9,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="8d2d8eec-a092-4049-9d2c-98097af027f2" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/src/main/java/wikalloy/AbstractKodkodGenerator.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/wikalloy/AbstractLoadGenerator.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/modules/Astronaut/Astronaut.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/modules/Astronaut/Astronaut.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/build.sbt" beforeDir="false" afterPath="$PROJECT_DIR$/build.sbt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Synthesizer/DataProvider.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Synthesizer/DataProvider.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/wikalloy/MysqlSchemaGenerator.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/wikalloy/MysqlSchemaGenerator.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/scala/edu/virginia/cs/Framework/Types/DBImplementation.scala" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/scala/edu/virginia/cs/Framework/Types/DBImplementation.scala" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/wikalloy/AbstractKodkodGenerator.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/wikalloy/AbstractKodkodGenerator.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/wikalloy/AbstractLoadGenerator.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/wikalloy/AbstractLoadGenerator.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -190,7 +185,7 @@
       <workItem from="1753800946054" duration="3276000" />
       <workItem from="1754056954005" duration="3564000" />
       <workItem from="1754067813236" duration="2997000" />
-      <workItem from="1754078983869" duration="7869000" />
+      <workItem from="1754078983869" duration="8585000" />
     </task>
     <servers />
   </component>

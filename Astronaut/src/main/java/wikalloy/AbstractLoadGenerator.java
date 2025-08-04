@@ -2,7 +2,6 @@ package wikalloy;
 
 import com.google.gson.GsonBuilder;
 import edu.mit.csail.sdg.translator.A4Solution;
-import kodkod.instance.Tuple;
 
 import java.nio.file.Path;
 import java.util.*;
@@ -45,7 +44,6 @@ public class AbstractLoadGenerator extends AbstractKodkodGenerator {
         var instances = new ArrayList<Map<String, String>>();
         for (var m : oom) {
             for (int i = 0; i <= randy.nextInt(numInstances); i++) {
-                // clone the "class" map
                 var instance = new HashMap<>(m);
                 for (var kvp : m.entrySet()) {
                     switch (kvp.getValue()) {
@@ -70,8 +68,9 @@ public class AbstractLoadGenerator extends AbstractKodkodGenerator {
                 }).toList();
     }
 
-    private Stream<Object> getAllFields(Object cls) {
-        return Stream.concat(Stream.of(cls), this.tc(this.join("oodm/Class.parent", cls, 0).collect(Collectors.toSet())).stream()
+    private Stream<Object> getAllFields(final Object cls) {
+        return Stream.concat(Stream.of(cls), this.tc("oodm/Class.parent").stream()
+                        .filter(t -> cls == t.atom(0))
                         .map(t -> t.atom(1)))
                 .distinct()
                 .flatMap(t -> this.join("oodm/Class.fields", t, 0))
@@ -82,17 +81,6 @@ public class AbstractLoadGenerator extends AbstractKodkodGenerator {
         return this.join("oodm/Class.key", field, 1)
                 .findAny()
                 .isPresent();
-    }
-
-    private Set<Tuple> tc(Set<Tuple> ts) {
-        // compute the transitive closure of the set of pairs
-        var num = ts.size();
-        do {
-            ts.addAll(ts.stream()
-                    .flatMap(t -> this.join("oodm/Class.parent", t.atom(1), 0))
-                    .collect(Collectors.toSet()));
-        } while (num < ts.size());
-        return ts;
     }
 
     private int getKeyValue(Object key) {
