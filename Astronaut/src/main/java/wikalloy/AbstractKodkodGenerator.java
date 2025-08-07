@@ -8,6 +8,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 public abstract class AbstractKodkodGenerator {
     protected final Instance instance;
@@ -17,6 +18,15 @@ public abstract class AbstractKodkodGenerator {
         this.instance = solution.debugExtractKInstance();
     }
 
+    public AbstractKodkodGenerator(Instance instance) {
+        this.instance = instance;
+    }
+
+    protected Object getAtom(String s) {
+        return StreamSupport.stream(this.instance.universe().spliterator(), false)
+                .filter(o -> o.toString().equals(s))
+                .findFirst().orElse(null);
+    }
 
     protected Tuple getTuple(Object atom) {
         return this.instance.universe().factory().tuple(atom);
@@ -46,10 +56,6 @@ public abstract class AbstractKodkodGenerator {
 
     protected Stream<Tuple> join(String relationName, Object atom, int i) {
         return getTuples(relationName).filter(t -> t.atom(i) == atom);
-    }
-
-    protected String name(Object atom) {
-        return atom.toString().replaceAll("[/$]", "_");
     }
 
     protected Set<Tuple> tc(final String relationName) {

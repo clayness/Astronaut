@@ -6,17 +6,18 @@ import edu.mit.csail.sdg.translator.A4Solution;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 public class AbstractLoadGenerator extends AbstractKodkodGenerator {
     private static final int DEFAULT_NUM_INSTANCES = 10;
 
     private final Map<Object, AtomicInteger> keys = new HashMap<>();
     private final Random randy = new Random();
+    private final ObjectModel oodm;
 
-    public AbstractLoadGenerator(A4Solution solution) {
+    public AbstractLoadGenerator(A4Solution solution, ObjectModel oodm) {
         super(solution);
+        this.oodm = oodm;
     }
 
     public static void main(String[] args) {
@@ -28,59 +29,85 @@ public class AbstractLoadGenerator extends AbstractKodkodGenerator {
         if (!it.hasNext()) {
             throw new IllegalArgumentException("No solution found!");
         }
-        var gen = new AbstractLoadGenerator(it.next());
+        var sol = it.next();
+        var gen = new AbstractLoadGenerator(sol, new ObjectModelGenerator(sol).getObjectModel());
         var instances = gen.generateLoad(numInstances);
-        var gson = new GsonBuilder().setPrettyPrinting().create();
+        var gson = new GsonBuilder()
+                .setPrettyPrinting()
+                .registerTypeAdapter(AbstractLoad.class, new AbstractLoad.Adapter())
+                .registerTypeAdapter(AbstractLoad.Instance.class, new AbstractLoad.Instance.Adapter())
+                .create();
         System.out.println(gson.toJson(instances));
         System.exit(0);
     }
 
-    public List<Map<String, String>> generateLoad() {
+    public AbstractLoad generateLoad() {
         return this.generateLoad(DEFAULT_NUM_INSTANCES);
     }
 
-    public List<Map<String, String>> generateLoad(int numInstances) {
-        var oom = this.getObjectModel();
-        var instances = new ArrayList<Map<String, String>>();
-        for (var m : oom) {
+    public AbstractLoad generateLoad(int numInstances) {
+        var abl = new AbstractLoad();
+        for (var m : oodm.getClasses()) {
             for (int i = 0; i <= randy.nextInt(numInstances); i++) {
-                var instance = new HashMap<>(m);
-                for (var kvp : m.entrySet()) {
-                    switch (kvp.getValue()) {
-                        case "<KEY>" -> instance.put(kvp.getKey(), String.valueOf(this.getKeyValue(kvp.getKey())));
-                        case "<VAL>" -> instance.put(kvp.getKey(), this.getStrValue());
+                var instance = abl.newInstance(m.getName());
+                for (var f : m) {
+                    if (f.isKey()) {
+                        instance.set(f.name(), String.valueOf(this.getKeyValue(f.name())));
+                    } else {
+                        instance.set(f.name(), this.getStrValue());
                     }
                 }
-                instances.add(instance);
             }
         }
-        return instances;
+        for (var m : oodm.getAssociations()) {
+            var srcs = new ArrayList<AbstractLoad.Instance>();
+            var dsts = new ArrayList<AbstractLoad.Instance>();
+            StreamSupport.stream(abl.getInstances().spliterator(), false).forEach(i -> {
+                var type = i.getType();
+                if (type.equals(m.src().getName())) {
+                    srcs.add(i);
+                }
+                if (type.equals(m.dst().getName())) {
+                    dsts.add(i);
+                }
+            });
+            switch (m.mlt()) {
+                case ONE_TO_ONE: {
+                    var s = new ArrayList<>(srcs);
+                    dsts.forEach(d -> abl.newAssociation(m.name(), pick(s), d));
+                    break;
+                }
+                case ONE_TO_MANY: {
+                    var s = new ArrayList<>(srcs);
+                    dsts.forEach(d -> {
+                        for (int i = 0; i < randy.nextInt(s.size()); i++) {
+                            abl.newAssociation(m.name(), pick(s), d);
+                        }
+                    });
+                    break;
+                }
+                case MANY_TO_MANY: {
+                    for (int i = 0; i < randy.nextInt(dsts.size()); i++) {
+                        var d = pick(dsts);
+                        for (int j = 0; j < randy.nextInt(srcs.size()); j++) {
+                            abl.newAssociation(m.name(), rand(srcs), d);
+                        }
+                    }
+                    break;
+                }
+                default:
+                    throw new IllegalArgumentException("Invalid multiplicity: " + m.mlt());
+            }
+        }
+        return abl;
     }
 
-    public List<Map<String, String>> getObjectModel() {
-        return this.getTuples("oodm/Class.key")
-                .map(k -> k.atom(0)).distinct()
-                .map(c -> {
-                    var m = this.getAllFields(c).collect(Collectors.toMap(Object::toString,
-                            f -> this.isKey(f) ? "<KEY>" : "<VAL>"));
-                    m.put("type", c.toString());
-                    return m;
-                }).toList();
+    private <T> T pick(List<T> items) {
+        return items.remove(randy.nextInt(items.size()));
     }
 
-    private Stream<Object> getAllFields(final Object cls) {
-        return Stream.concat(Stream.of(cls), this.tc("oodm/Class.parent").stream()
-                        .filter(t -> cls == t.atom(0))
-                        .map(t -> t.atom(1)))
-                .distinct()
-                .flatMap(t -> this.join("oodm/Class.fields", t, 0))
-                .map(f -> f.atom(1));
-    }
-
-    private boolean isKey(Object field) {
-        return this.join("oodm/Class.key", field, 1)
-                .findAny()
-                .isPresent();
+    private <T> T rand(List<T> items) {
+        return items.get(randy.nextInt(items.size()));
     }
 
     private int getKeyValue(Object key) {

@@ -27,21 +27,21 @@ public class MysqlSchemaGenerator extends AbstractKodkodGenerator {
         }
     }
 
-    public String createTable(Map.Entry<Object, Set<Object>> mapping) {
+    public String createTable(Map.Entry<Object, Set<Object>> tableToClassOrAssoc) {
         var name = new HashSet<String>();
         var cols = new HashMap<String, String>();
         var keys = new HashSet<String>();
         // iterate each class / association to make sure
         // all the fields and keys are added
-        for (var o : mapping.getValue()) {
-            name.add(this.getRelationName(o));
-            var k = this.getKeys(o);
-            var c = this.getColumns(o);
-            var a = this.getAssociationKeys(o);
-            var f = this.getForeignKeys(o);
-            var p = this.getParentFields(o);
+        for (var classOrAssoc : tableToClassOrAssoc.getValue()) {
+            name.add(this.getRelationName(classOrAssoc));
+            var k = this.getKeys(classOrAssoc);
+            var c = this.getColumns(classOrAssoc);
+            var a = this.getAssociationKeys(classOrAssoc);
+            var f = this.getForeignKeys(classOrAssoc);
+            var p = this.getParentFields(classOrAssoc);
             // add the keys for any tables
-            keys.addAll(this.getKeys(o));
+            keys.addAll(this.getKeys(classOrAssoc));
             // add the keys for the associations
             keys.addAll(a.keySet());
             // add the association keys as columns
@@ -54,24 +54,24 @@ public class MysqlSchemaGenerator extends AbstractKodkodGenerator {
             // and are not null
             for (var kvp : c.entrySet()) {
                 if (k.contains(kvp.getKey())) {
-                    cols.put(kvp.getKey(), "%s NOT NULL".formatted(kvp.getValue()));
+                    cols.put(kvp.getKey(), "%s NOT NULL DEFAULT -1".formatted(kvp.getValue()));
                 } else {
                     cols.put(kvp.getKey(), kvp.getValue());
                 }
             }
         }
-        var tableName = name(mapping.getKey());
+        var tableName = tableToClassOrAssoc.getKey().toString();
         //noinspection StringBufferReplaceableByString
         var retval = new StringBuilder();
         // print the names of the classes / associations mapped to this table (for reference)
         retval.append("-- %s <- %s%n".formatted(
                 tableName, name.stream().sorted().collect(Collectors.joining(", "))));
-        retval.append("CREATE TABLE %s (%n    %s,%n    PRIMARY KEY (%s)%n  );".formatted(
+        retval.append("CREATE TABLE `%s` (%n    %s,%n    PRIMARY KEY (%s)%n  );".formatted(
                 tableName,
                 cols.entrySet().stream()
-                        .map(kvp -> "%s %s".formatted(kvp.getKey(), kvp.getValue()))
+                        .map(kvp -> "`%s` %s".formatted(kvp.getKey(), kvp.getValue()))
                         .collect(Collectors.joining(",\n    ")),
-                String.join(",", keys)));
+                keys.stream().map("`%s`"::formatted).collect(Collectors.joining(", "))));
         return retval.toString();
     }
 
@@ -133,7 +133,7 @@ public class MysqlSchemaGenerator extends AbstractKodkodGenerator {
                 .flatMap(f -> join("oodm/Class.fields", f, 1))
                 .collect(Collectors.toMap(
                         x -> this.getRelationName(x.atom(1)),
-                        x -> "%s%s".formatted(this.getTypeDef(x.atom(2)), keys ? " NOT NULL" : "")));
+                        x -> "%s%s".formatted(this.getTypeDef(x.atom(2)), keys ? " NOT NULL DEFAULT -1" : "")));
     }
 
     private Map<String, String> getForeignKeys(Object cls) {
@@ -196,7 +196,7 @@ public class MysqlSchemaGenerator extends AbstractKodkodGenerator {
 
     private String getTypeDef(Object o) {
         var t = getTuple(o);
-        if (this.in("oodm/TBool", t)) {
+        if /*--*/ (this.in("oodm/TBool", t)) {
             return "BOOLEAN";
         } else if (this.in("oodm/TInt", t)) {
             return "INTEGER";

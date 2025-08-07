@@ -15,7 +15,8 @@ class QueryGenerator {
     // some fields may have more than one instance
     // allInstances is a hashmap: HashMap[String, HashMap[String, ArrayList[CodeNamePair[String>>>>
     // HashMap[tableName, HashMap[instanceName, fields_value_pairs]]
-    var allInstances: util.Map[String, util.Map[String, util.List[CodeNamePair]]] = new util.HashMap[String, util.Map[String, util.List[CodeNamePair]]](1)
+    var allInstances: util.Map[String, util.Map[String, util.List[CodeNamePair]]] =
+      new util.HashMap[String, util.Map[String, util.List[CodeNamePair]]](1)
 
     if (absq != null) {
       allInstances = absq.getOodm.parseDocument()
@@ -274,6 +275,67 @@ class QueryGenerator {
     impl.getDataProvider.isClassAssociate(primaryClass)
   }
 
+  private def dataSchemaHasStatement(stmts: util.Map[String, util.Map[Integer, String]],
+                                     goToTable: String, idValue: Integer): Boolean = {
+    if (stmts.containsKey(goToTable)) {
+      if (stmts.get(goToTable).containsKey(idValue)) {
+        return true
+      }
+    }
+    false
+  }
+
+  private def getFieldValue(fieldValues: util.List[CodeNamePair], field: String, types: util.Map[String, String]): String = {
+    var value: String = null
+    for (pair <- fieldValues.asScala) {
+      if (pair.getFirst.split("_")(1).equalsIgnoreCase(field)) {
+        val tmp: String = pair.getSecond
+        // get the type of field, then handle the value of it
+        val fieldType = types.get(field)
+
+        value = fieldType match {
+          case "Int" =>
+            var intValue = Integer.valueOf(tmp).intValue()
+            val power = scala.math.pow(2, AppConfig.getIntScopeForTestCases - 1)
+            intValue = intValue + power.intValue() + 1
+            String.valueOf(intValue)
+          case "Real" =>
+            var intValue = Integer.valueOf(tmp).intValue()
+            val power = scala.math.pow(2, AppConfig.getIntScopeForTestCases - 1)
+            intValue = intValue + power.intValue() + 1
+            String.valueOf(intValue)
+          //case "Real" =>
+          case "Bool" => "0"
+          case "string" => "'" + tmp + "'"
+          case _ => tmp
+        }
+        return value
+      }
+    }
+    value
+  }
+
+  private def getPrimaryKeyByTableName(dbScheme: util.Map[String, util.List[CodeNamePair]], tableName: String): String = {
+    val table: util.List[CodeNamePair] = dbScheme.get(tableName)
+    //    var pair: CodeNamePair = null
+    for (pair <- table.asScala) {
+      if (pair.getFirst.equalsIgnoreCase("primaryKey")) {
+        return pair.getSecond
+      }
+    }
+    null
+  }
+
+  // looks up reverse t_associate data structure to find a target table for each object element, e.g. a class instance or an association
+  private def getTableNameByClassName(reverseTAss: util.List[CodeNamePair], className: String): String = {
+    for (elem <- reverseTAss.asScala) {
+      if (elem.getFirst.equalsIgnoreCase(className)) {
+        return elem.getSecond
+      }
+    }
+    null
+  }
+
   def specializeSelectQuery(absq: AbstractQuery, impl: DBImplementation, ins: util.Map[String, util.Map[String, util.List[CodeNamePair]]]): SpecializedQuery = {
     var selectPart = ""
     var fromPart = ""
@@ -355,16 +417,6 @@ class QueryGenerator {
     sq
   }
 
-  private def dataSchemaHasStatement(stmts: util.Map[String, util.Map[Integer, String]],
-                                     goToTable: String, idValue: Integer): Boolean = {
-    if (stmts.containsKey(goToTable)) {
-      if (stmts.get(goToTable).containsKey(idValue)) {
-        return true
-      }
-    }
-    false
-  }
-
   private def isAssociation(sigs: util.List[Sig], element: String): Boolean = {
     for (sig <- sigs.asScala) {
       if (sig.getCategory == 1 && sig.getSigName.equalsIgnoreCase(element)) {
@@ -380,57 +432,6 @@ class QueryGenerator {
         if (sig.isHasParent) {
           return sig.getParent
         }
-      }
-    }
-    null
-  }
-
-  private def getFieldValue(fieldValues: util.List[CodeNamePair], field: String, types: util.Map[String, String]): String = {
-    var value: String = null
-    for (pair <- fieldValues.asScala) {
-      if (pair.getFirst.split("_")(1).equalsIgnoreCase(field)) {
-        val tmp: String = pair.getSecond
-        // get the type of field, then handle the value of it
-        val fieldType = types.get(field)
-
-        value = fieldType match {
-          case "Int" =>
-            var intValue = Integer.valueOf(tmp).intValue()
-            val power = scala.math.pow(2, AppConfig.getIntScopeForTestCases - 1)
-            intValue = intValue + power.intValue() + 1
-            String.valueOf(intValue)
-          case "Real" =>
-            var intValue = Integer.valueOf(tmp).intValue()
-            val power = scala.math.pow(2, AppConfig.getIntScopeForTestCases - 1)
-            intValue = intValue + power.intValue() + 1
-            String.valueOf(intValue)
-          //case "Real" =>
-          case "Bool" => "0"
-          case "string" => "'" + tmp + "'"
-          case _ => tmp
-        }
-        return value
-      }
-    }
-    value
-  }
-
-  private def getPrimaryKeyByTableName(dbScheme: util.Map[String, util.List[CodeNamePair]], tableName: String): String = {
-    val table: util.List[CodeNamePair] = dbScheme.get(tableName)
-    //    var pair: CodeNamePair = null
-    for (pair <- table.asScala) {
-      if (pair.getFirst.equalsIgnoreCase("primaryKey")) {
-        return pair.getSecond
-      }
-    }
-    null
-  }
-
-  // looks up reverse t_associate data structure to find a target table for each object element, e.g. a class instance or an association
-  private def getTableNameByClassName(reverseTAss: util.List[CodeNamePair], className: String): String = {
-    for (elem <- reverseTAss.asScala) {
-      if (elem.getFirst.equalsIgnoreCase(className)) {
-        return elem.getSecond
       }
     }
     null
