@@ -9,15 +9,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="8d2d8eec-a092-4049-9d2c-98097af027f2" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/src/main/java/wikalloy/AbstractLoad.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/wikalloy/ConcreteLoad.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/wikalloy/ObjectModel.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/wikalloy/ObjectModelGenerator.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/wikalloy/AbstractKodkodGenerator.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/wikalloy/AbstractKodkodGenerator.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/wikalloy/AbstractLoad.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/wikalloy/AbstractLoad.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/wikalloy/AbstractLoadGenerator.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/wikalloy/AbstractLoadGenerator.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/wikalloy/MysqlSchemaGenerator.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/wikalloy/MysqlSchemaGenerator.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/scala/analysis/QueryGenerator.scala" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/scala/analysis/QueryGenerator.scala" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/wikalloy/ConcreteLoad.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/wikalloy/ConcreteLoad.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/wikalloy/ObjectModel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/wikalloy/ObjectModel.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -82,7 +78,7 @@
     "Application.ConcreteLoadGenerator.executor": "Run",
     "Application.LoadGenerator.executor": "Run",
     "Application.MysqlSchemaGenerator.executor": "Run",
-    "Application.ObjectModelGenerator.executor": "Debug",
+    "Application.ObjectModelGenerator.executor": "Run",
     "Application.SchemaGenerator.executor": "Run",
     "ModuleVcsDetector.initialDetectionPerformed": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
@@ -230,6 +226,7 @@
       <workItem from="1754359046389" duration="6433000" />
       <workItem from="1754405720792" duration="26957000" />
       <workItem from="1754526190728" duration="130000" />
+      <workItem from="1754526413202" duration="10045000" />
     </task>
     <servers />
   </component>
@@ -238,13 +235,6 @@
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint type="java-line">
-          <url>file://$PROJECT_DIR$/src/main/java/wikalloy/ConcreteLoad.java</url>
-          <line>105</line>
-          <option name="timeStamp" value="24" />
-        </line-breakpoint>
-      </breakpoints>
       <default-breakpoints>
         <breakpoint enabled="true" type="java-exception">
           <properties>

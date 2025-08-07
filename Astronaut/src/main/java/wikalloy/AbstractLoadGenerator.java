@@ -6,7 +6,6 @@ import edu.mit.csail.sdg.translator.A4Solution;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.StreamSupport;
 
 public class AbstractLoadGenerator extends AbstractKodkodGenerator {
     private static final int DEFAULT_NUM_INSTANCES = 10;
@@ -35,7 +34,7 @@ public class AbstractLoadGenerator extends AbstractKodkodGenerator {
         var gson = new GsonBuilder()
                 .setPrettyPrinting()
                 .registerTypeAdapter(AbstractLoad.class, new AbstractLoad.Adapter())
-                .registerTypeAdapter(AbstractLoad.Instance.class, new AbstractLoad.Instance.Adapter())
+                .registerTypeAdapter(AbstractLoad.AbstractInst.class, new AbstractLoad.AbstractInst.Adapter())
                 .create();
         System.out.println(gson.toJson(instances));
         System.exit(0);
@@ -50,7 +49,14 @@ public class AbstractLoadGenerator extends AbstractKodkodGenerator {
         for (var m : oodm.getClasses()) {
             for (int i = 0; i <= randy.nextInt(numInstances); i++) {
                 var instance = abl.newInstance(m.getName());
-                for (var f : m) {
+                // get the fields from this class and all its parents
+                var fields = new HashSet<>(m.getFields());
+                var p = m.getParent();
+                while (p != null) {
+                    fields.addAll(p.getFields());
+                    p = p.getParent();
+                }
+                for (var f : fields) {
                     if (f.isKey()) {
                         instance.set(f.name(), String.valueOf(this.getKeyValue(f.name())));
                     } else {
@@ -60,14 +66,14 @@ public class AbstractLoadGenerator extends AbstractKodkodGenerator {
             }
         }
         for (var m : oodm.getAssociations()) {
-            var srcs = new ArrayList<AbstractLoad.Instance>();
-            var dsts = new ArrayList<AbstractLoad.Instance>();
-            StreamSupport.stream(abl.getInstances().spliterator(), false).forEach(i -> {
+            var srcs = new ArrayList<AbstractLoad.AbstractInst>();
+            var dsts = new ArrayList<AbstractLoad.AbstractInst>();
+            abl.getInstances().forEach(i -> {
                 var type = i.getType();
-                if (type.equals(m.src().getName())) {
+                if (isAssignableTo(type, m.src().getName())) {
                     srcs.add(i);
                 }
-                if (type.equals(m.dst().getName())) {
+                if (isAssignableTo(type, m.dst().getName())) {
                     dsts.add(i);
                 }
             });
@@ -117,5 +123,20 @@ public class AbstractLoadGenerator extends AbstractKodkodGenerator {
 
     private String getStrValue() {
         return UUID.randomUUID().toString();
+    }
+
+    private boolean isAssignableTo(Object from, Object to) {
+        // if there is a superclass of the "from" that matches the "to",
+        // then we can make this assignment
+        if (from.equals(to)) {
+            return true;
+        } else {
+            var p = oodm.getClass(from).getParent();
+            if (p != null) {
+                return this.isAssignableTo(p.getName(), to);
+            } else {
+                return false;
+            }
+        }
     }
 }

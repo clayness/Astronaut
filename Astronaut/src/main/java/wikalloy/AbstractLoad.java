@@ -8,25 +8,37 @@ import java.util.*;
 
 public class AbstractLoad implements Serializable {
 
-    private final List<Instance> instances = new ArrayList<>();
-    private final List<InstanceAssociation> associations = new ArrayList<>();
+    private final Set<AbstractInst> instances = new HashSet<>();
+    private final Set<AbstractAssoc> associations = new HashSet<>();
 
-    public Instance newInstance(Object type) {
-        var i = new Instance(type);
+    public AbstractInst newInstance(Object type) {
+        var i = new AbstractInst(type);
         this.instances.add(i);
         return i;
     }
 
-    public void newAssociation(Object name, Instance src, Instance dst) {
-        this.associations.add(new InstanceAssociation(name, src, dst));
+    public void newAssociation(Object name, AbstractInst src, AbstractInst dst) {
+        this.associations.add(new AbstractAssoc(name, src, dst));
     }
 
-    public Iterable<Instance> getInstances() {
+    public Collection<AbstractInst> getInstances() {
         return instances;
     }
 
-    public record InstanceAssociation(Object name, Instance src, Instance dst) {
-        /* no-op, record class */
+    public Collection<AbstractAssoc> getAssociations() {
+        return associations;
+    }
+
+    public record AbstractAssoc(Object name, AbstractInst src, AbstractInst dst) {
+        @Override
+        public boolean equals(Object o) {
+            if (this == o)
+                return true;
+            if (o == null || getClass() != o.getClass())
+                return false;
+            AbstractAssoc that = (AbstractAssoc) o;
+            return name.equals(that.name) && src.equals(that.src) && dst.equals(that.dst);
+        }
     }
 
     public static class Adapter implements JsonSerializer<AbstractLoad> {
@@ -47,11 +59,11 @@ public class AbstractLoad implements Serializable {
         }
     }
 
-    public static class Instance implements Serializable {
-        private final Map<Object, List<Object>> values = new HashMap<>();
+    public static class AbstractInst implements Serializable {
+        private final Map<Object, Object> values = new HashMap<>();
         private final Object type;
 
-        private Instance(Object type) {
+        private AbstractInst(Object type) {
             this.type = type;
         }
 
@@ -60,31 +72,39 @@ public class AbstractLoad implements Serializable {
         }
 
         public void set(Object key, Object value) {
-            values.computeIfAbsent(key, (k) -> new ArrayList<>()).add(value);
+            values.put(key, value);
         }
 
-        public List<Object> get(Object key) {
+        public Object get(Object key) {
             return values.get(key);
         }
 
-        public Collection<Map.Entry<Object, List<Object>>> entrySet() {
+        public Collection<Map.Entry<Object, Object>> entrySet() {
             return values.entrySet();
         }
 
-        public static class Adapter implements JsonSerializer<Instance> {
+        public static class Adapter implements JsonSerializer<AbstractInst> {
             @Override
-            public JsonElement serialize(Instance src, Type typeOfSrc, JsonSerializationContext context) {
+            public JsonElement serialize(AbstractInst src, Type typeOfSrc, JsonSerializationContext context) {
                 JsonObject jsonObject = new JsonObject();
                 for (var entry : src.values.entrySet()) {
                     JsonArray jsonArray = new JsonArray();
-                    for (var value : entry.getValue()) {
-                        jsonArray.add(context.serialize(value));
-                    }
+                    jsonArray.add(context.serialize(entry.getValue()));
                     jsonObject.add(entry.getKey().toString(), context.serialize(jsonArray));
                 }
                 jsonObject.addProperty("type", src.type.toString());
                 return jsonObject;
             }
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o)
+                return true;
+            if (o == null || getClass() != o.getClass())
+                return false;
+            AbstractInst that = (AbstractInst) o;
+            return type.equals(that.type) && values.equals(that.values);
         }
     }
 }

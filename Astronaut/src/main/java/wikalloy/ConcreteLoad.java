@@ -1,18 +1,28 @@
 package wikalloy;
 
+import com.google.gson.GsonBuilder;
 import edu.mit.csail.sdg.translator.A4Solution;
 
 import java.nio.file.Path;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class ConcreteLoad extends AbstractKodkodGenerator {
+public class ConcreteLoad {
+
+    private final Set<ConcreteRow> rows = new HashSet<>();
+
+    public Collection<String> getInsertQueries() {
+        return rows.stream().map(r -> "INSERT INTO `%s` (%s) VALUES (%s);".formatted(r.table,
+                        r.columns.stream().map(v -> "`" + v + "`").collect(Collectors.joining(",")),
+                        r.values.stream().map(v -> "'" + v + "'").collect(Collectors.joining(","))))
+                .toList();
+    }
 
     public static void main(String[] args) {
+        var gson = new GsonBuilder()
+                .setPrettyPrinting()
+                .create();
         // get the arguments
         var oodmPath = Path.of(args[0]);
         var numInstances = args.length < 2 ? 10 : Integer.parseInt(args[1]);
@@ -30,22 +40,31 @@ public class ConcreteLoad extends AbstractKodkodGenerator {
         var mapPath = oodmPath.resolveSibling("map." + oodmPath.getFileName().toString());
         var mt = new AlloySolutionIterator(mapPath);
         int i = 0;
-        while (mt.hasNext()) {
+        while (mt.hasNext() && i < 10) {
             var sol1 = mt.next();
             var clg = new ConcreteLoad.Factory(sol1, oodm);
-            System.out.printf("--- OBJECT MODEL #%05d ---%n", (++i));
+            System.out.println("-------------------------------------------------------------");
+            System.out.printf("-------------------- OBJECT MODEL #%05d --------------------%n", (++i));
             System.out.println(clg.getDDL());
+            var cl = clg.create(instances);
+            System.out.println("-------------------    INSERT  LOAD    ----------------------");
+            System.out.println(String.join("\n", cl.getInsertQueries()));
+            System.out.println();
         }
+    }
+
+    public void addRow(Object table, Collection<Object> columns, Collection<Object> values) {
+        this.rows.add(new ConcreteRow(table, columns, values));
+    }
+
+    public record ConcreteRow(Object table, Collection<Object> columns, Collection<Object> values) {
+        /* no-op */
     }
 
     public static class Factory extends AbstractKodkodGenerator {
 
         private final ObjectModel oodm;
-        private final String ddl;
-
-        public String getDDL() {
-            return ddl;
-        }
+        private final Map<Object, Set<ObjectModel.ObjField>> fieldmap;
 
         public Factory(A4Solution solution, ObjectModel oodm) {
             super(solution);
@@ -55,24 +74,27 @@ public class ConcreteLoad extends AbstractKodkodGenerator {
             var clsmap = oodm.getClasses().stream()
                     .collect(Collectors.toMap(ObjectModel.ObjClass::getName, this::getClassFields));
             // merge all the fields with the same table
-            var grps = clsmap.entrySet().stream()
+            fieldmap = clsmap.entrySet().stream()
                     .collect(Collectors.groupingBy(e -> this.getClassTable(this.getAtom("x/" + e.getKey())),
                             Collectors.flatMapping(e -> e.getValue().stream(), Collectors.toSet())));
             // get the tables for the associations, too
             for (var objAssoc : oodm.getAssociations()) {
                 for (var am : this.getAssocFields(objAssoc).entrySet()) {
-                    grps.merge(am.getKey(), am.getValue(), (a, b) -> {
+                    fieldmap.merge(am.getKey(), am.getValue(), (a, b) -> {
                         a.addAll(b);
                         return a;
                     });
                 }
             }
+        }
+
+        private String getDDL() {
             StringBuilder sb = new StringBuilder();
-            for (var grp : grps.entrySet()) {
+            for (var grp : fieldmap.entrySet()) {
                 sb.append(createTableQuery(grp.getKey(), grp.getValue()));
                 sb.append("\n");
             }
-            this.ddl = sb.toString();
+            return sb.toString();
         }
 
         private String createTableQuery(Object table, Collection<ObjectModel.ObjField> columns) {
@@ -86,7 +108,22 @@ public class ConcreteLoad extends AbstractKodkodGenerator {
         }
 
         private String getSqlType(Object type) {
-            return "INT";
+            var t = getTuple(type);
+            if /*--*/ (this.in("oodm/TBool", t)) {
+                return "BOOLEAN";
+            } else if (this.in("oodm/TInt", t)) {
+                return "INTEGER";
+            } else if (this.in("oodm/TFloat", t)) {
+                return "FLOAT";
+            } else if (this.in("oodm/TString", t)) {
+                return "VARCHAR(63)";
+            } else if (this.in("oodm/TDate", t)) {
+                return "DATETIME";
+            } else if (this.in("oodm/TBlob", t)) {
+                return "BLOB";
+            } else {
+                throw new IllegalArgumentException("Could not determine field type for atom: " + type);
+            }
         }
 
         private String createInsertQuery(Object table, Collection<ObjectModel.ObjField> columns, Collection<Object> values) {
@@ -95,8 +132,114 @@ public class ConcreteLoad extends AbstractKodkodGenerator {
                     values.stream().map(v -> "'" + v + "'").collect(Collectors.joining(",")));
         }
 
-        public ConcreteLoad create(A4Solution sol, AbstractLoad abstractLoad) {
-            return null;
+        public ConcreteLoad create(AbstractLoad abstractLoad) {
+            var cl = new ConcreteLoad();
+            // for each abstract load, we need to convert to a concrete set of insert statements
+            // 1. start with the associations. if this is a merge table, we'll be inserting values
+            //    into the fields for both src and dst into the same table
+            var insts = new HashSet<>(abstractLoad.getInstances());
+            var assocs = new HashSet<>(abstractLoad.getAssociations());
+            for (var assoc : assocs) {
+                if (isMTA(oodm.getAssociation(assoc.name()))) {
+                    // if this assoc is a "merge table" association, the src and dst instances
+                    // are both in the same table
+                    var t = getClassTable(getAtom("x/" + assoc.src().getType()));
+                    var e = Stream.of(assoc.src(), assoc.dst())
+                            .map(AbstractLoad.AbstractInst::entrySet)
+                            .flatMap(Collection::stream)
+                            .collect(Collectors.toSet());
+                    addConcreteRow(cl, t, List.of(assoc.src().getType(), assoc.dst().getType()), e);
+                }
+                if (isFKE(oodm.getAssociation(assoc.name()))) {
+                    // if this is a "foreign key" association, the src and dst need to go in
+                    // their main tables, but the dst gets the keys from the src, too
+
+                    // add a row for the source table
+                    var st = getClassTable(getAtom("x/" + assoc.src().getType()));
+                    var se = assoc.src().entrySet();
+                    addConcreteRow(cl, st, List.of(assoc.src().getType()), se);
+
+                    // add a row for the dest table, including the keys from the source type
+                    var dt = getClassTable(getAtom("x/" + assoc.dst().getType()));
+                    var de = new HashSet<>(assoc.dst().entrySet());
+                    var sk = getAllKeys(oodm.getClass(assoc.src().getType())).stream()
+                            .map(ObjectModel.ObjField::name)
+                            .collect(Collectors.toSet());
+                    de.addAll(se.stream().filter(e -> sk.contains(e.getKey())).collect(Collectors.toSet()));
+                    addConcreteRow(cl, dt, List.of(assoc.dst().getType()), de);
+                }
+                if (isOAT(oodm.getAssociation(assoc.name()))) {
+                    // add a row for the source table
+                    var st = getClassTable(getAtom("x/" + assoc.src().getType()));
+                    var se = assoc.src().entrySet();
+                    addConcreteRow(cl, st, List.of(assoc.src().getType()), se);
+
+                    // add a row for the source table
+                    var dt = getClassTable(getAtom("x/" + assoc.dst().getType()));
+                    var de = assoc.dst().entrySet();
+                    addConcreteRow(cl, dt, List.of(assoc.dst().getType()), de);
+
+                    // add the association
+                    var at = getAssocTable(getAtom("x/" + assoc.name()));
+                    var ak = Stream.of(assoc.src(), assoc.dst())
+                            .map(AbstractLoad.AbstractInst::getType)
+                            .map(oodm::getClass)
+                            .map(this::getAllKeys)
+                            .flatMap(Collection::stream)
+                            .map(ObjectModel.ObjField::name)
+                            .collect(Collectors.toSet());
+                    var ae = Stream.of(assoc.src(), assoc.dst())
+                            .map(AbstractLoad.AbstractInst::entrySet)
+                            .flatMap(Collection::stream)
+                            .filter(e -> ak.contains(e.getKey()))
+                            .collect(Collectors.toSet());
+                    addConcreteRow(cl, at, List.of(), ae);
+                }
+                // remove the src / dst so they don't get added independently
+                insts.removeAll(List.of(assoc.src(), assoc.dst()));
+            }
+            // add the leftover instances
+            for (var inst : insts) {
+                var it = getClassTable(getAtom("x/" + inst.getType()));
+                var ie = inst.entrySet();
+                addConcreteRow(cl, it, List.of(inst.getType()), ie);
+            }
+            return cl;
+        }
+
+        private Collection<ObjectModel.ObjField> getAllKeys(ObjectModel.ObjClass objCls) {
+            // get the keys for this class and all its parents
+            var k = objCls.getKeys();
+            var p = objCls.getParent();
+            if (p != null) {
+                k.addAll(getAllKeys(p));
+            }
+            return k;
+        }
+
+        private void addConcreteRow(ConcreteLoad cl, Object table, Collection<Object> types, Collection<Map.Entry<Object, Object>> entries) {
+            for (var type : types) {
+                var oc = oodm.getClass(type);
+                if (isCRI(oc)) {
+                    // if this is a "class relation" inheritance type, then there is a different
+                    // table containing the fields from the parent, so we'll need to insert that
+                    var pc = oc.getParent().getName();
+                    var pt = getClassTable(this.getAtom("x/" + pc));
+                    addConcreteRow(cl, pt, List.of(pc), entries);
+                }
+            }
+            // get the fields for this table
+            var tf = fieldmap.get(table).stream()
+                    .map(ObjectModel.ObjField::name)
+                    .collect(Collectors.toSet());
+            var cols = new ArrayList<>();
+            var vals = new ArrayList<>();
+            entries.stream().filter(f -> tf.contains(f.getKey()))
+                    .forEach(f -> {
+                        cols.add(f.getKey());
+                        vals.add(f.getValue());
+                    });
+            cl.addRow(table, cols, vals);
         }
 
         private Map<Object, Set<ObjectModel.ObjField>> getAssocFields(ObjectModel.ObjAssoc objAssoc) {
@@ -104,11 +247,16 @@ public class ConcreteLoad extends AbstractKodkodGenerator {
                 // there is a table just for this assoc that has the
                 // keys from both source and dest in it
                 return Map.of(this.getAssocTable(this.getAtom("x/" + objAssoc.name())),
-                        Stream.of(objAssoc.dst(), objAssoc.src()).flatMap(c -> c.getKeys().stream())
+                        Stream.of(objAssoc.dst(), objAssoc.src())
+                                .map(this::getAllKeys)
+                                .flatMap(Collection::stream)
                                 .collect(Collectors.toSet()));
             } else {
                 // the dst table must include the src keys
-                return Map.of(this.getClassTable(this.getAtom("x/" + objAssoc.dst().getName())), objAssoc.src().getKeys());
+                return Map.of(this.getClassTable(this.getAtom("x/" + objAssoc.dst().getName())),
+                        getAllKeys(objAssoc.src()).stream()
+                                .map(f -> new ObjectModel.ObjField(f.name(), f.type(), false))
+                                .collect(Collectors.toSet()));
             }
         }
 
@@ -123,7 +271,7 @@ public class ConcreteLoad extends AbstractKodkodGenerator {
                     fields.addAll(this.getClassFields(objCls.getParent()));
                 } else {
                     // otherwise, add only the keys from the parent
-                    fields.addAll(objCls.getParent().getKeys());
+                    fields.addAll(getAllKeys(objCls.getParent()));
                 }
             }
             return fields;
@@ -131,7 +279,7 @@ public class ConcreteLoad extends AbstractKodkodGenerator {
 
         private Object getAssocTable(Object assoc) {
             return this.join("orm/orm.map", assoc, 1)
-                    .map(t -> t.atom(1))
+                    .map(t -> t.atom(0))
                     .findFirst().orElseThrow();
         }
 
@@ -143,6 +291,11 @@ public class ConcreteLoad extends AbstractKodkodGenerator {
 
         private boolean isSRI(ObjectModel.ObjClass objCls) {
             return this.join("inheritance_strategies/IStrat.SRIs", this.getAtom("x/" + objCls.getName()), 0)
+                    .findFirst().isPresent();
+        }
+
+        private boolean isCRI(ObjectModel.ObjClass objCls) {
+            return this.join("inheritance_strategies/IStrat.CRs", this.getAtom("x/" + objCls.getName()), 0)
                     .findFirst().isPresent();
         }
 
@@ -160,9 +313,10 @@ public class ConcreteLoad extends AbstractKodkodGenerator {
             return this.join("association_strategies/AStrat.OATs", this.getAtom("x/" + objAssoc.name()), 0)
                     .findFirst().isPresent();
         }
-    }
 
-    public ConcreteLoad(A4Solution solution, ObjectModel objectModel) {
-        super(solution);
+        private boolean isMTA(ObjectModel.ObjAssoc objAssoc) {
+            return this.join("association_strategies/AStrat.MTs", this.getAtom("x/" + objAssoc.name()), 0)
+                    .findFirst().isPresent();
+        }
     }
 }

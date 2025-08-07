@@ -5,7 +5,7 @@ import java.util.stream.Collectors;
 
 public class ObjectModel {
     private final Map<Object, ObjClass> classes = new HashMap<>();
-    private final List<ObjAssoc> associations = new ArrayList<>();
+    private final Map<Object, ObjAssoc> associations = new HashMap<>();
 
     public ObjClass addClass(Object name, ObjClass parent) {
         var cls = new ObjClass(name, parent);
@@ -26,11 +26,15 @@ public class ObjectModel {
     }
 
     public Collection<ObjAssoc> getAssociations() {
-        return associations;
+        return associations.values();
     }
 
     public void addAssociation(Object name, Object src, Object dst, ObjMult mlt) {
-        this.associations.add(new ObjAssoc(name, this.getClass(src), this.getClass(dst), mlt));
+        this.associations.put(name, new ObjAssoc(name, this.getClass(src), this.getClass(dst), mlt));
+    }
+
+    public ObjAssoc getAssociation(Object name) {
+        return this.associations.get(name);
     }
 
     public enum ObjMult {
@@ -86,5 +90,20 @@ public class ObjectModel {
 
     public record ObjField(Object name, Object type, boolean isKey) {
         /* no-op, record class */
+        @Override
+        public boolean equals(Object o) {
+            if (this == o)
+                return true;
+            if (o == null || getClass() != o.getClass())
+                return false;
+            // ignores the "is key" field
+            ObjField objField = (ObjField) o;
+            return name.equals(objField.name) && type.equals(objField.type);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(name, type);
+        }
     }
 }
