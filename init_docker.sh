@@ -23,6 +23,7 @@ else
     --network $NETWORK_NAME \
     -e ALLOW_EMPTY_PASSWORD=yes \
     -e MYSQL_ROOT_PASSWORD=$mysql_password \
+    -p 3306:3306 \
     -v data:/bitnami/mysql/data \
     bitnami/mysql:latest
 fi

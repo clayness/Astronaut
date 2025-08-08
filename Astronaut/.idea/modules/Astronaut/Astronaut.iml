@@ -33,6 +33,7 @@
     <orderEntry type="library" scope="PROVIDED" name="sbt: org.apache.spark:spark-core_2.13:4.0.0:jar" level="project" />
     <orderEntry type="library" name="sbt: org.alloytools.alloy:AlloyTools:5.1.0:jar" level="project" />
     <orderEntry type="library" name="sbt: com.google.code.gson:gson:2.13.1:jar" level="project" />
+    <orderEntry type="library" name="sbt: info.picocli:picocli:4.7.7:jar" level="project" />
     <orderEntry type="library" name="sbt: com.google.protobuf:protobuf-java:4.31.1:jar" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="sbt: org.scala-lang.modules:scala-parallel-collections_2.13:1.2.0:jar" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="sbt: org.apache.avro:avro:1.12.0:jar" level="project" />

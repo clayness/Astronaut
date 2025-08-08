@@ -9,11 +9,20 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="8d2d8eec-a092-4049-9d2c-98097af027f2" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/src/main/java/wikalloy/kodkod/KodkodAtom.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.bsp/sbt.json" beforeDir="false" afterPath="$PROJECT_DIR$/.bsp/sbt.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/modules/Astronaut/Astronaut.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/modules/Astronaut/Astronaut.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/build.sbt" beforeDir="false" afterPath="$PROJECT_DIR$/build.sbt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/wikalloy/AbstractKodkodGenerator.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/wikalloy/kodkod/KodkodInstance.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/wikalloy/AbstractLoad.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/wikalloy/AbstractLoad.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/wikalloy/AbstractLoadGenerator.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/wikalloy/AbstractLoadGenerator.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/wikalloy/AbstractLoadGenerator.java" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/wikalloy/ConcreteLoad.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/wikalloy/ConcreteLoad.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/wikalloy/MysqlSchemaGenerator.java" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/wikalloy/ObjectModel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/wikalloy/ObjectModel.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/wikalloy/ObjectModelGenerator.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../init_docker.sh" beforeDir="false" afterPath="$PROJECT_DIR$/../init_docker.sh" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -74,10 +83,12 @@
   "keyToString": {
     "Application.AbstractLoadGenerator.executor": "Run",
     "Application.AlloySolutionIterator.executor": "Debug",
+    "Application.ConcreteLoad.Runner.executor": "Run",
     "Application.ConcreteLoad.executor": "Run",
     "Application.ConcreteLoadGenerator.executor": "Run",
     "Application.LoadGenerator.executor": "Run",
     "Application.MysqlSchemaGenerator.executor": "Run",
+    "Application.ObjectModel.Factory.executor": "Run",
     "Application.ObjectModelGenerator.executor": "Run",
     "Application.SchemaGenerator.executor": "Run",
     "ModuleVcsDetector.initialDetectionPerformed": "true",
@@ -111,15 +122,14 @@
       <recent name="edu.virginia.cs.Framework.Types" />
     </key>
   </component>
-  <component name="RunManager" selected="Application.ConcreteLoad">
-    <configuration name="AbstractLoadGenerator" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
-      <option name="MAIN_CLASS_NAME" value="wikalloy.AbstractLoadGenerator" />
+  <component name="RunManager" selected="Application.ObjectModel.Factory">
+    <configuration name="ConcreteLoad.Runner" type="Application" factoryName="Application" temporary="true">
+      <option name="MAIN_CLASS_NAME" value="wikalloy.ConcreteLoad$Runner" />
       <module name="Astronaut" />
-      <option name="PROGRAM_PARAMETERS" value="models/decider.als" />
-      <option name="VM_PARAMETERS" value="--add-opens java.base/java.util=ALL-UNNAMED" />
+      <option name="PROGRAM_PARAMETERS" value="models/decider.als -m 100" />
       <extension name="coverage">
         <pattern>
-          <option name="PATTERN" value="wikalloy.*" />
+          <option name="PATTERN" value="wikalloy.kodkod.*" />
           <option name="ENABLED" value="true" />
         </pattern>
       </extension>
@@ -127,55 +137,13 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
-    <configuration name="ConcreteLoad" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
-      <option name="MAIN_CLASS_NAME" value="wikalloy.ConcreteLoad" />
+    <configuration name="ObjectModel.Factory" type="Application" factoryName="Application" temporary="true">
+      <option name="MAIN_CLASS_NAME" value="wikalloy.ObjectModel$Factory" />
       <module name="Astronaut" />
       <option name="PROGRAM_PARAMETERS" value="models/decider.als" />
       <extension name="coverage">
         <pattern>
-          <option name="PATTERN" value="wikalloy.*" />
-          <option name="ENABLED" value="true" />
-        </pattern>
-      </extension>
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
-    <configuration name="ConcreteLoadGenerator" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
-      <option name="MAIN_CLASS_NAME" value="wikalloy.ConcreteLoadGenerator" />
-      <module name="Astronaut" />
-      <option name="PROGRAM_PARAMETERS" value="models/decider.als" />
-      <extension name="coverage">
-        <pattern>
-          <option name="PATTERN" value="wikalloy.*" />
-          <option name="ENABLED" value="true" />
-        </pattern>
-      </extension>
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
-    <configuration name="MysqlSchemaGenerator" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
-      <option name="MAIN_CLASS_NAME" value="wikalloy.MysqlSchemaGenerator" />
-      <module name="Astronaut" />
-      <option name="PROGRAM_PARAMETERS" value="models/map.decider.als" />
-      <extension name="coverage">
-        <pattern>
-          <option name="PATTERN" value="wikalloy.*" />
-          <option name="ENABLED" value="true" />
-        </pattern>
-      </extension>
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
-    <configuration name="ObjectModelGenerator" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
-      <option name="MAIN_CLASS_NAME" value="wikalloy.ObjectModelGenerator" />
-      <module name="Astronaut" />
-      <option name="PROGRAM_PARAMETERS" value="models/decider.als" />
-      <extension name="coverage">
-        <pattern>
-          <option name="PATTERN" value="wikalloy.*" />
+          <option name="PATTERN" value="wikalloy.kodkod.*" />
           <option name="ENABLED" value="true" />
         </pattern>
       </extension>
@@ -184,19 +152,13 @@
       </method>
     </configuration>
     <list>
-      <item itemvalue="Application.ConcreteLoad" />
-      <item itemvalue="Application.ObjectModelGenerator" />
-      <item itemvalue="Application.ConcreteLoadGenerator" />
-      <item itemvalue="Application.AbstractLoadGenerator" />
-      <item itemvalue="Application.MysqlSchemaGenerator" />
+      <item itemvalue="Application.ConcreteLoad.Runner" />
+      <item itemvalue="Application.ObjectModel.Factory" />
     </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Application.ConcreteLoad" />
-        <item itemvalue="Application.ObjectModelGenerator" />
-        <item itemvalue="Application.AbstractLoadGenerator" />
-        <item itemvalue="Application.MysqlSchemaGenerator" />
-        <item itemvalue="Application.ConcreteLoadGenerator" />
+        <item itemvalue="Application.ObjectModel.Factory" />
+        <item itemvalue="Application.ConcreteLoad.Runner" />
       </list>
     </recent_temporary>
   </component>
@@ -226,7 +188,8 @@
       <workItem from="1754359046389" duration="6433000" />
       <workItem from="1754405720792" duration="26957000" />
       <workItem from="1754526190728" duration="130000" />
-      <workItem from="1754526413202" duration="10045000" />
+      <workItem from="1754526413202" duration="16926000" />
+      <workItem from="1754594383102" duration="5885000" />
     </task>
     <servers />
   </component>
