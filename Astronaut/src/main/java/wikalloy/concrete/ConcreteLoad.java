@@ -1,7 +1,10 @@
-package wikalloy;
+package wikalloy.concrete;
 
 import edu.mit.csail.sdg.translator.A4Solution;
 import picocli.CommandLine;
+import wikalloy.AbstractLoad;
+import wikalloy.AlloySolutionIterator;
+import wikalloy.ObjectModel;
 import wikalloy.kodkod.KodkodAtom;
 import wikalloy.kodkod.KodkodInstance;
 

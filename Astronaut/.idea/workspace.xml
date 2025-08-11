@@ -9,20 +9,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="8d2d8eec-a092-4049-9d2c-98097af027f2" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/src/main/java/wikalloy/kodkod/KodkodAtom.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.bsp/sbt.json" beforeDir="false" afterPath="$PROJECT_DIR$/.bsp/sbt.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/modules/Astronaut/Astronaut.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/modules/Astronaut/Astronaut.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/build.sbt" beforeDir="false" afterPath="$PROJECT_DIR$/build.sbt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/wikalloy/AbstractKodkodGenerator.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/wikalloy/kodkod/KodkodInstance.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/wikalloy/AbstractLoad.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/wikalloy/AbstractLoad.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/wikalloy/AbstractLoadGenerator.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/wikalloy/ConcreteLoad.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/wikalloy/ConcreteLoad.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/wikalloy/MysqlSchemaGenerator.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/wikalloy/ObjectModel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/wikalloy/ObjectModel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/wikalloy/ObjectModelGenerator.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../init_docker.sh" beforeDir="false" afterPath="$PROJECT_DIR$/../init_docker.sh" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -189,7 +176,7 @@
       <workItem from="1754405720792" duration="26957000" />
       <workItem from="1754526190728" duration="130000" />
       <workItem from="1754526413202" duration="16926000" />
-      <workItem from="1754594383102" duration="5885000" />
+      <workItem from="1754594383102" duration="6655000" />
     </task>
     <servers />
   </component>
