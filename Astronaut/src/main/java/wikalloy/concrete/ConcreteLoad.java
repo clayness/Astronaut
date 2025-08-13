@@ -1,36 +1,74 @@
 package wikalloy.concrete;
 
-import picocli.CommandLine;
-import wikalloy.AbstractLoad;
-import wikalloy.AlloySolutionIterator;
-import wikalloy.ObjectModel;
-
-import java.io.PrintWriter;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.time.Instant;
 import java.util.*;
-import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 public class ConcreteLoad {
 
-    private final Set<ConcreteRow> rows = new HashSet<>();
+    private final Set<ConcreteInsert> rows = new HashSet<>();
+    private final Set<ConcreteSelect> selects = new HashSet<>();
 
-    public void addRow(Object table, Collection<Object> columns, Collection<Object> values) {
-        this.rows.add(new ConcreteRow(table, columns, values));
+    public void addInsert(Object table, Collection<Object> columns, Collection<Object> values) {
+        this.rows.add(new ConcreteInsert(table, columns, values));
+    }
+
+    public void addSelect(Object table, Map<Object, Object> columns,
+                          Collection<Map.Entry<Object, Map<Object, Object>>> joins,
+                          Collection<ConcreteFilter> filters) {
+        this.selects.add(new ConcreteSelect(table, columns, joins, filters));
     }
 
     public Collection<String> getInsertQueries() {
-        return rows.stream().map(r -> "INSERT INTO `%s` (%s) VALUES (%s);".formatted(r.table,
+        return rows.stream().map(r -> "INSERT IGNORE INTO `%s` (%s) VALUES (%s);".formatted(r.table,
                         r.columns.stream().map(v -> "`" + v + "`").collect(Collectors.joining(",")),
                         r.values.stream().map(v -> "'" + v + "'").collect(Collectors.joining(","))))
                 .toList();
     }
 
-    public record ConcreteRow(Object table, Collection<Object> columns, Collection<Object> values) {
+    public Collection<String> getSelectQueries() {
+        return selects.stream().map(s -> {
+            var proj = s.columns.entrySet().stream()
+                    .map(c -> "`%s`.`%s`".formatted(c.getValue(), c.getKey()))
+                    .collect(Collectors.joining(","));
+            var from = new StringBuilder("`%s`".formatted(s.table));
+            for (var j : s.joins) {
+                if (!j.getValue().isEmpty()) {
+                    // either all of the fields will have a value or none of them will
+                    if (j.getValue().values().stream().allMatch(Objects::nonNull)) {
+                        from.append(" JOIN `%s` ON %s".formatted(j.getKey(),
+                                j.getValue().entrySet().stream()
+                                        .map((e) -> "`%s`.`%s` = `%s`.`%s`".formatted(e.getValue(), e.getKey(), s.table(), e.getKey()))
+                                        .collect(Collectors.joining(" AND "))));
+                    } else {
+                        from.append(" JOIN `%s` USING (%s)".formatted(j.getKey(),
+                                j.getValue().keySet().stream()
+                                        .map("`%s`"::formatted).collect(Collectors.joining(","))));
+
+                    }
+                }
+            }
+            var where = new StringBuilder();
+            if (!s.filters.isEmpty()) {
+                where.append(s.filters.stream()
+                        .map((f) -> "`%s` %s '%s'".formatted(f.column(), f.operator(), f.value()))
+                        .collect(Collectors.joining(" AND ")));
+            } else {
+                where.append("1 = 1");
+            }
+            return "SELECT DISTINCT %s FROM %s WHERE %s;".formatted(proj, from.toString(), where.toString());
+        }).toList();
+    }
+
+    private record ConcreteInsert(Object table, Collection<Object> columns, Collection<Object> values) {
         /* no-op */
     }
 
+    private record ConcreteSelect(Object table, Map<Object, Object> columns,
+                                  Collection<Map.Entry<Object, Map<Object, Object>>> joins,
+                                  Collection<ConcreteFilter> filters) {
+    }
+
+    public record ConcreteFilter(Object column, String operator, Object value) {
+        /* no-op */
+    }
 }

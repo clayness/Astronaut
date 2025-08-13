@@ -60,6 +60,16 @@ public class ObjectModel {
             this.fields.put(field.getAtom(), field);
         }
 
+        public Set<ObjField> getAllKeys() {
+            // get the keys for this class and all its parents
+            var k = this.getKeys();
+            var p = this.getParent();
+            if (p != null) {
+                k.addAll(p.getAllKeys());
+            }
+            return k;
+        }
+
         public ObjField getField(Object name) {
             return fields.get(name);
         }

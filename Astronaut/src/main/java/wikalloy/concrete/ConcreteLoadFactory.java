@@ -1,39 +1,17 @@
 package wikalloy.concrete;
 
 import edu.mit.csail.sdg.translator.A4Solution;
-import picocli.CommandLine;
-import wikalloy.AbstractLoad;
-import wikalloy.AlloySolutionIterator;
 import wikalloy.ObjectModel;
+import wikalloy.generic.AbstractLoad;
 import wikalloy.kodkod.KodkodAtom;
 import wikalloy.kodkod.KodkodInstance;
 
-import java.io.PrintWriter;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.time.Instant;
 import java.util.*;
-import java.util.concurrent.Callable;
+import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-public class ConcreteLoadFactory extends KodkodInstance implements Callable<Integer> {
-
-    @CommandLine.Parameters(index = "0", description = "The path to the OODM Alloy specification file.")
-    private Path oodmPath;
-
-    @CommandLine.Option(names = {"-l", "--num-loads"}, description = "The number of loads to generate.")
-    private int numLoads = 10;
-
-    @CommandLine.Option(names = {"-i", "--num-instances"}, description = "The maximum number of instances per abstract class.")
-    private int numInstances = 100;
-
-    @CommandLine.Option(names = {"-m", "--num-models"}, description = "The maximum number of models to generate.")
-    private int numModels = Integer.MAX_VALUE;
-
-    @CommandLine.Option(names = {"-o", "--output"}, description = "The path to the root output directory.")
-    private Path outputPath = Paths.get("", "out");
+public class ConcreteLoadFactory extends KodkodInstance {
 
     private final Map<Object, Set<ObjectModel.ObjField>> fieldmap;
     private final ObjectModel oodm;
@@ -47,7 +25,7 @@ public class ConcreteLoadFactory extends KodkodInstance implements Callable<Inte
                 .collect(Collectors.toMap(KodkodAtom::getAtom, this::getClassFields));
         // merge all the fields with the same table
         fieldmap = clsmap.entrySet().stream()
-                .collect(Collectors.groupingBy(e -> this.getClassTable(this.getAtom("x/" + e.getKey())),
+                .collect(Collectors.groupingBy(e -> this.getClassTable(e.getKey()),
                         Collectors.flatMapping(e -> e.getValue().stream(), Collectors.toSet())));
         // get the tables for the associations, too
         for (var objAssoc : oodm.getAssociations()) {
@@ -60,62 +38,24 @@ public class ConcreteLoadFactory extends KodkodInstance implements Callable<Inte
         }
     }
 
-    public static void main(String[] args) {
-        System.exit(new CommandLine(new ConcreteLoad.Runner()).execute(args));
-    }
-
-    @Override
-    public Integer call() throws Exception {
-        // create the output path
-        var runOutput = outputPath.resolve(Instant.now().toString().replaceAll("\\D", ""));
-        runOutput.toFile().mkdirs();
-        // get the object model
-        var it = new AlloySolutionIterator(oodmPath);
-        if (!it.hasNext()) {
-            throw new IllegalArgumentException("No solution found!");
-        }
-        var kkdm = it.next();
-        var oodm = new ObjectModel.Factory(kkdm).create();
-        // create a new abstract load generator from the object model
-        var alg = new AbstractLoad.Factory(kkdm, oodm);
-        var als = IntStream.range(0, numLoads).mapToObj(i -> alg.create(numInstances)).toArray(AbstractLoad[]::new);
-        // get the instances from the "map" model
-        var mapPath = oodmPath.resolveSibling("map." + oodmPath.getFileName().toString());
-        var mt = new AlloySolutionIterator(mapPath);
-        for (int j = 0; mt.hasNext() && j < numModels; j++) {
-            var sol1 = mt.next();
-            try (var pw = new PrintWriter(runOutput.resolve("MODL_%05d.xml".formatted(j)).toAbsolutePath().toFile())) {
-                sol1.writeXML(pw, null, null);
-            }
-            var clg = new ConcreteLoadFactory(sol1, oodm);
-            try (var pw = new PrintWriter(runOutput.resolve("MODL_%05d_CREATE.sql".formatted(j)).toAbsolutePath().toFile())) {
-                pw.println("/*-------------------------------------------------------------*/");
-                pw.printf("/*-------------------- OBJECT MODEL #%05d --------------------*/%n", j);
-                pw.println(String.join("\n", clg.getCreateQueries()));
-            }
-            for (int i = 0; i < numLoads; i++) {
-                var cl = clg.create(als[i]);
-                try (var pw = new PrintWriter(runOutput.resolve("MODL_%05d_LOAD_%05d_INSERT.sql".formatted(j, i)).toAbsolutePath().toFile())) {
-                    pw.println("/*-------------------    INSERT  LOAD    ----------------------*/");
-                    pw.println(String.join("\n", cl.getInsertQueries()));
-                }
-            }
-        }
-        return 0;
-    }
-
-    public ConcreteLoad create(AbstractLoad abstractLoad) {
+    public ConcreteLoad create(AbstractLoad al) {
         var cl = new ConcreteLoad();
+        createInserts(al, cl);
+        createSelects(al, cl);
+        return cl;
+    }
+
+    private void createInserts(AbstractLoad al, ConcreteLoad cl) {
         // for each abstract load, we need to convert to a concrete set of insert statements
         // 1. start with the associations. if this is a merge table, we'll be inserting values
         //    into the fields for both src and dst into the same table
-        var insts = new HashSet<>(abstractLoad.getInstances());
-        var assocs = new HashSet<>(abstractLoad.getAssociations());
+        var insts = new HashSet<>(al.getInstances());
+        var assocs = new HashSet<>(al.getAssociations());
         for (var assoc : assocs) {
             if (isAStrat(oodm.getAssociation(assoc.getAtom()), "MT")) {
                 // if this assoc is a "merge table" association, the src and dst instances
                 // are both in the same table
-                var t = getClassTable(getAtom("x/" + assoc.src().getAtom()));
+                var t = getClassTable(assoc.src().getAtom());
                 var e = Stream.of(assoc.src(), assoc.dst())
                         .map(AbstractLoad.AbstractInst::entrySet)
                         .flatMap(Collection::stream)
@@ -127,14 +67,14 @@ public class ConcreteLoadFactory extends KodkodInstance implements Callable<Inte
                 // their main tables, but the dst gets the keys from the src, too
 
                 // add a row for the source table
-                var st = getClassTable(getAtom("x/" + assoc.src().getAtom()));
+                var st = getClassTable(assoc.src().getAtom());
                 var se = assoc.src().entrySet();
                 addConcreteRow(cl, st, List.of(assoc.src().getAtom()), se);
 
                 // add a row for the dest table, including the keys from the source type
-                var dt = getClassTable(getAtom("x/" + assoc.dst().getAtom()));
+                var dt = getClassTable(assoc.dst().getAtom());
                 var de = new HashSet<>(assoc.dst().entrySet());
-                var sk = getAllKeys(oodm.getClass(assoc.src().getAtom())).stream()
+                var sk = oodm.getClass(assoc.src().getAtom()).getAllKeys().stream()
                         .map(KodkodAtom::getAtom)
                         .collect(Collectors.toSet());
                 de.addAll(se.stream().filter(e -> sk.contains(e.getKey())).collect(Collectors.toSet()));
@@ -142,21 +82,21 @@ public class ConcreteLoadFactory extends KodkodInstance implements Callable<Inte
             }
             if (isAStrat(oodm.getAssociation(assoc.getAtom()), "OAT")) {
                 // add a row for the source table
-                var st = getClassTable(getAtom("x/" + assoc.src().getAtom()));
+                var st = getClassTable(assoc.src().getAtom());
                 var se = assoc.src().entrySet();
                 addConcreteRow(cl, st, List.of(assoc.src().getAtom()), se);
 
                 // add a row for the source table
-                var dt = getClassTable(getAtom("x/" + assoc.dst().getAtom()));
+                var dt = getClassTable(assoc.dst().getAtom());
                 var de = assoc.dst().entrySet();
                 addConcreteRow(cl, dt, List.of(assoc.dst().getAtom()), de);
 
                 // add the association
-                var at = getAssocTable(getAtom("x/" + assoc.getAtom()));
+                var at = getAssocTable(assoc.getAtom());
                 var ak = Stream.of(assoc.src(), assoc.dst())
-                        .map(abstractInst -> abstractInst.getAtom())
+                        .map(KodkodAtom::getAtom)
                         .map(oodm::getClass)
-                        .map(this::getAllKeys)
+                        .map(ObjectModel.ObjClass::getAllKeys)
                         .flatMap(Collection::stream)
                         .map(KodkodAtom::getAtom)
                         .collect(Collectors.toSet());
@@ -172,14 +112,88 @@ public class ConcreteLoadFactory extends KodkodInstance implements Callable<Inte
         }
         // add the leftover instances
         for (var inst : insts) {
-            var it = getClassTable(getAtom("x/" + inst.getAtom()));
+            var it = getClassTable(inst.getAtom());
             var ie = inst.entrySet();
             addConcreteRow(cl, it, List.of(inst.getAtom()), ie);
         }
-        return cl;
     }
 
-    private Collection<String> getCreateQueries() {
+    private void createSelects(AbstractLoad al, ConcreteLoad cl) {
+        // get the queries from the abstract load and create a select query based on it
+        // for example, if the query is a "find by id" query (i.e., ElectronicProject.get(X)), we need
+        // to synthesize a select query that will join all tables involved in the inheritance
+        // hierarchy for that type, project to get all fields for the selected type, and filter
+        // the query based on the passed id. E.g,
+        //     select `Table$13`.`FProductId`,
+        //            `Table$13`.`FSize`,
+        //            `Table$9`.`FProductName`,
+        //            `Table$9`.`FDescription`,
+        //            `Table$9`.`FPrice`
+        //     from `Table$13`
+        //         inner join `Table$9$` on `Table$13`.`FProductId` = `Table$9`.`FProductId`
+        //     where `Table$13`.`FProductId` = 'X'
+        for (var aq : al.getQueries()) {
+            // get the type of the object to get the projection and the
+            // basic joins for those projections
+            var objClass = oodm.getClass(aq.getAtom());
+            var mainTable = this.getClassTable(aq.getAtom());
+            // list of "joins": the keys are the table, and the values are the set of
+            // key fields used in the "using" clause. for this, we assume the joins are
+            // chained so that each key field is joined against the previously joined table
+            var joins = new HashMap<Object, Map<Object, Object>>();
+            var p = objClass.getParent();
+            while (p != null) {
+                var pt = this.getClassTable(p.getAtom());
+                if (!pt.equals(mainTable)) {
+                    var usings = new HashMap<>();
+                    for (var k : p.getKeys()) {
+                        usings.put(k.getAtom(), null);
+                    }
+                    joins.putIfAbsent(pt, usings);
+                }
+                p = p.getParent();
+            }
+            // get the projection
+            var projection = this.getProjection(objClass);
+            // join based on the association (if there is one)
+            var assoc = aq.getAssociation();
+            if (assoc != null) {
+                if (isAStrat(assoc, "FKE")) {
+                    // if this is a "foreign key" association, we need to join against the table based on the "src" key
+                    var other = oodm.getClass((assoc.src().getAtom().equals(aq.getAtom()) ? assoc.dst() : assoc.src()).getAtom());
+                    var usings = new HashMap<>();
+                    for (var k : oodm.getClass(assoc.src().getAtom()).getKeys()) {
+                        usings.put(k.getAtom(), null);
+                    }
+                    joins.putIfAbsent(this.getClassTable(other.getAtom()), usings);
+                }
+                if (isAStrat(assoc, "OAT")) {
+                    // if there's a join table for this association, we need to join that table based on all the keys
+                    var at = this.getAssocTable(assoc.getAtom());
+                    joins.putIfAbsent(at,
+                            Stream.concat(oodm.getClass(assoc.src().getAtom()).getKeys().stream(), oodm.getClass(assoc.dst().getAtom()).getKeys().stream())
+                                    .map(KodkodAtom::getAtom)
+                                    .collect(Collectors.toMap(Function.identity(), e -> at)));
+                }
+            }
+            // get the filters (if there are any)
+            var af = aq.getFilters();
+            Collection<ConcreteLoad.ConcreteFilter> cf;
+            if (af.isEmpty()) {
+                cf = oodm.getClass(aq.getAtom()).getAllKeys().stream()
+                        .map(k -> new ConcreteLoad.ConcreteFilter(k.getAtom(), "<>", -1))
+                        .collect(Collectors.toSet());
+            } else {
+                cf = af.stream()
+                        .map(f -> new ConcreteLoad.ConcreteFilter(f.getAtom(), f.getOperator(), f.getValue()))
+                        .collect(Collectors.toSet());
+            }
+            // add the select statement to the concrete load
+            cl.addSelect(mainTable, projection, joins.entrySet(), cf);
+        }
+    }
+
+    public Collection<String> getCreateQueries() {
         return fieldmap.entrySet().stream()
                 .map(grp -> createTableQuery(grp.getKey(), grp.getValue()))
                 .toList();
@@ -192,7 +206,7 @@ public class ConcreteLoadFactory extends KodkodInstance implements Callable<Inte
                 // if this is a "class relation" inheritance type, then there is a different
                 // table containing the fields from the parent, so we'll need to insert that
                 var pc = oc.getParent().getAtom();
-                var pt = getClassTable(this.getAtom("x/" + pc));
+                var pt = getClassTable(pc);
                 addConcreteRow(cl, pt, List.of(pc), entries);
             }
         }
@@ -207,7 +221,7 @@ public class ConcreteLoadFactory extends KodkodInstance implements Callable<Inte
                     cols.add(f.getKey());
                     vals.add(f.getValue());
                 });
-        cl.addRow(table, cols, vals);
+        cl.addInsert(table, cols, vals);
     }
 
     private String createTableQuery(Object table, Collection<ObjectModel.ObjField> columns) {
@@ -220,36 +234,27 @@ public class ConcreteLoadFactory extends KodkodInstance implements Callable<Inte
                         .collect(Collectors.joining(", ")));
     }
 
-    private Collection<ObjectModel.ObjField> getAllKeys(ObjectModel.ObjClass objCls) {
-        // get the keys for this class and all its parents
-        var k = objCls.getKeys();
-        var p = objCls.getParent();
-        if (p != null) {
-            k.addAll(getAllKeys(p));
-        }
-        return k;
-    }
-
     private Map<Object, Set<ObjectModel.ObjField>> getAssocFields(ObjectModel.ObjAssoc objAssoc) {
         if (this.isAStrat(objAssoc, "OAT")) {
             // there is a table just for this assoc that has the
             // keys from both source and dest in it
-            return Map.of(this.getAssocTable(this.getAtom("x/" + objAssoc.getAtom())),
+            return Map.of(this.getAssocTable(objAssoc.getAtom()),
                     Stream.of(objAssoc.dst(), objAssoc.src())
-                            .map(this::getAllKeys)
+                            .map(ObjectModel.ObjClass::getAllKeys)
                             .flatMap(Collection::stream)
                             .collect(Collectors.toSet()));
         } else {
             // the dst table must include the src keys
-            return Map.of(this.getClassTable(this.getAtom("x/" + objAssoc.dst().getAtom())),
-                    getAllKeys(objAssoc.src()).stream()
+            return Map.of(this.getClassTable(objAssoc.dst().getAtom()),
+                    objAssoc.src().getAllKeys().stream()
                             .map(f -> new ObjectModel.ObjField(f.getAtom(), f.getDataType(), false))
                             .collect(Collectors.toSet()));
         }
     }
 
     private Object getAssocTable(Object assoc) {
-        return this.join("orm/orm.map", assoc, 1)
+        var atom = this.getAtom("x/" + assoc);
+        return this.join("orm/orm.map", atom, 1)
                 .map(t -> t.atom(0))
                 .findFirst().orElseThrow();
     }
@@ -265,14 +270,32 @@ public class ConcreteLoadFactory extends KodkodInstance implements Callable<Inte
                 fields.addAll(this.getClassFields(objCls.getParent()));
             } else {
                 // otherwise, add only the keys from the parent
-                fields.addAll(getAllKeys(objCls.getParent()));
+                fields.addAll(objCls.getParent().getAllKeys());
             }
         }
         return fields;
     }
 
+    private Map<Object, Object> getProjection(ObjectModel.ObjClass objCls) {
+        var proj = new HashMap<>();
+        for (var f : this.getClassFields(objCls)) {
+            proj.put(f.getAtom(), this.getClassTable(objCls.getAtom()));
+        }
+        if (this.isIStrat(objCls, "CR")) {
+            // if this is a "single relation" or a "concrete relation" situation, then all the
+            // fields we need will be on the main table for the class
+            var parentProj = this.getProjection(objCls.getParent());
+            for (var kvp : parentProj.entrySet()) {
+                proj.putIfAbsent(kvp.getKey(), kvp.getValue());
+            }
+            return proj;
+        }
+        return proj;
+    }
+
     private Object getClassTable(Object type) {
-        return this.join("orm/orm.main", type, 0)
+        var atom = this.getAtom("x/" + type);
+        return this.join("orm/orm.main", atom, 0)
                 .map(t -> t.atom(1))
                 .findFirst().orElseThrow();
     }
@@ -280,12 +303,12 @@ public class ConcreteLoadFactory extends KodkodInstance implements Callable<Inte
     private String getSqlType(Object type) {
         //@formatter:off
         return switch (type.toString()) {
-            case "oodm/TBool"   -> "BOOLEAN";
-            case "oodm/TInt"    -> "INTEGER";
-            case "oodm/TFloat"  -> "FLOAT";
-            case "oodm/TString" -> "VARCHAR(63)";
-            case "oodm/TDate"   -> "DATETIME";
-            case "oodm/TBlob"   -> "BLOB";
+            case "oodm/TBool$0"   -> "BOOLEAN";
+            case "oodm/TInt$0"    -> "INTEGER";
+            case "oodm/TFloat$0"  -> "FLOAT";
+            case "oodm/TString$0" -> "VARCHAR(63)";
+            case "oodm/TDate$0"   -> "DATETIME";
+            case "oodm/TBlob$0"   -> "BLOB";
             default -> throw new IllegalArgumentException("Could not determine field type for atom: " + type);
         };
         //@formatter:on
