@@ -1,9 +1,10 @@
 package wikalloy.concrete;
 
+import java.io.Serializable;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class ConcreteLoad {
+public class ConcreteLoad implements Serializable {
 
     private final Set<ConcreteInsert> rows = new HashSet<>();
     private final Set<ConcreteSelect> selects = new HashSet<>();
@@ -59,16 +60,18 @@ public class ConcreteLoad {
         }).toList();
     }
 
-    private record ConcreteInsert(Object table, Collection<Object> columns, Collection<Object> values) {
+    private record ConcreteInsert(Object table, Collection<Object> columns,
+                                  Collection<Object> values) implements Serializable {
         /* no-op */
     }
 
     private record ConcreteSelect(Object table, Map<Object, Object> columns,
                                   Collection<Map.Entry<Object, Map<Object, Object>>> joins,
-                                  Collection<ConcreteFilter> filters) {
+                                  Collection<ConcreteFilter> filters) implements Serializable {
+        /* no-op */
     }
 
-    public record ConcreteFilter(Object column, String operator, Object value) {
+    public record ConcreteFilter(Object column, String operator, Object value) implements Serializable {
         /* no-op */
     }
 }

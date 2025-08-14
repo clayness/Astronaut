@@ -50,8 +50,8 @@ public class AbstractLoadFactory extends KodkodInstance {
             }
         }
         for (var m : oodm.getAssociations()) {
-            var srcs = new ArrayList<AbstractLoad.AbstractInst>();
-            var dsts = new ArrayList<AbstractLoad.AbstractInst>();
+            var srcs = new ArrayList<AbstractInst>();
+            var dsts = new ArrayList<AbstractInst>();
             abl.getInstances().forEach(i -> {
                 var type = i.getAtom();
                 if (isAssignableTo(type, m.src().getAtom())) {
@@ -111,14 +111,17 @@ public class AbstractLoadFactory extends KodkodInstance {
                 case 2: {
                     // pick a random association, then pick either the source or destination instance.
                     // select the other side of the association based on the shared keys (e.g., ShippingCart.find(X).products)
-                    var assoc = rand(al.getAssociations().stream().toList());
-                    var ends = new ArrayList<>(List.of(assoc.src(), assoc.dst()));
-                    var inst = pick(ends);
-                    var keys = oodm.getClass(inst.getAtom()).getAllKeys().stream()
-                            .map(k -> new AbstractFilter(k.getAtom(), "=", inst.get(k.getAtom())))
-                            .collect(Collectors.toSet());
-                    var othr = ends.get(0);
-                    al.newQuery(othr.getAtom(), assoc, keys);
+                    var assocs = al.getAssociations();
+                    if (!assocs.isEmpty()) {
+                        var assoc = rand(assocs.stream().toList());
+                        var ends = new ArrayList<>(List.of(assoc.src(), assoc.dst()));
+                        var inst = pick(ends);
+                        var keys = oodm.getClass(inst.getAtom()).getAllKeys().stream()
+                                .map(k -> new AbstractFilter(k.getAtom(), "=", inst.get(k.getAtom())))
+                                .collect(Collectors.toSet());
+                        var othr = ends.get(0);
+                        al.newQuery(othr.getAtom(), assoc, keys);
+                    }
                     break;
                 }
             }

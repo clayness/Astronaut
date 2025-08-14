@@ -1,6 +1,8 @@
 package wikalloy.kodkod;
 
-public abstract class KodkodAtom {
+import java.io.Serializable;
+
+public abstract class KodkodAtom implements Serializable {
     private final Object atom;
 
     protected KodkodAtom(Object atom) {

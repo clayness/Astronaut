@@ -2,22 +2,22 @@ package wikalloy.generic;
 
 import wikalloy.kodkod.KodkodAtom;
 
+import java.io.Serializable;
 import java.util.Collection;
-import java.util.Map;
 
-public class AbstractQuery extends KodkodAtom {
+public class AbstractQuery extends KodkodAtom implements Serializable {
 
-    private final AbstractLoad.AbstractAssoc association;
+    private final AbstractAssoc association;
 
     private final Collection<AbstractFilter> filters;
 
-    public AbstractQuery(Object type, Collection<AbstractFilter> filters, AbstractLoad.AbstractAssoc association) {
+    public AbstractQuery(Object type, Collection<AbstractFilter> filters, AbstractAssoc association) {
         super(type);
         this.filters = filters;
         this.association = association;
     }
 
-    public AbstractLoad.AbstractAssoc getAssociation() {
+    public AbstractAssoc getAssociation() {
         return this.association;
     }
 

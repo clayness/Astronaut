@@ -2,7 +2,9 @@ package wikalloy.generic;
 
 import wikalloy.kodkod.KodkodAtom;
 
-public class AbstractFilter extends KodkodAtom {
+import java.io.Serializable;
+
+public class AbstractFilter extends KodkodAtom implements Serializable {
 
     private final String operator;
     private final Object value;

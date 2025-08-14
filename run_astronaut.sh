@@ -1,12 +1,15 @@
 #!/usr/bin/env bash
 
 docker run -it \
-  --network astronaut-network \
+  --network astronaut_spark-network \
   -v "$(pwd)/Astronaut/target/scala-2.13:/opt/spark-apps" \
   -v "$(pwd)/Astronaut/models:/opt/models" \
+  -v "$(pwd)/Astronaut/out/models:/opt/solutions" \
+  -v "$(pwd)/Astronaut/out:/opt/output" \
+  -p 4040:4040 \
   bitnami/spark:latest \
   spark-submit \
-  --class edu.virginia.cs.Main \
-  --master spark://astronaut-spark:7077 \
+  --class wikalloy.WikalloyRunner \
+  --master spark://spark-master:7077 \
   /opt/spark-apps/astronaut.jar \
-  mysql "/opt/models/$1"
+  "/opt/models/$1"

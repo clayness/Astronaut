@@ -1,12 +1,14 @@
 package wikalloy.concrete;
 
+import edu.mit.csail.sdg.alloy4.XMLNode;
+import edu.mit.csail.sdg.translator.A4SolutionReader;
 import picocli.CommandLine;
 import wikalloy.AlloySolutionIterator;
-import wikalloy.ObjectModel;
-import wikalloy.generic.AbstractLoad;
+import wikalloy.ObjectModelFactory;
 import wikalloy.generic.AbstractLoadFactory;
 
 import java.io.PrintWriter;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
@@ -41,6 +43,7 @@ public class ConcreteLoadRunner implements Callable<Integer> {
     public Integer call() throws Exception {
         // create the output path
         var runOutput = outputPath.resolve(Instant.now().toString().replaceAll("\\D", ""));
+        //noinspection ResultOfMethodCallIgnored
         runOutput.toFile().mkdirs();
         // get the object model
         var it = new AlloySolutionIterator(oodmPath);
@@ -48,27 +51,32 @@ public class ConcreteLoadRunner implements Callable<Integer> {
             throw new IllegalArgumentException("No solution found!");
         }
         var kkdm = it.next();
-        var oodm = new ObjectModel.Factory(kkdm).create();
+        var oodm = new ObjectModelFactory(kkdm).create();
         // create a new abstract load generator from the object model
         var alg = new AbstractLoadFactory(kkdm, oodm);
-        var als = IntStream.range(0, numLoads).mapToObj(i -> alg.create(numInstances, numQueries)).toArray(AbstractLoad[]::new);
+        var als = IntStream.range(0, numLoads).mapToObj(i -> alg.create(numInstances, numQueries)).toList();
         // get the instances from the "map" model
         var mapPath = oodmPath.resolveSibling("map." + oodmPath.getFileName().toString());
         var mt = new AlloySolutionIterator(mapPath);
         for (int j = 0; mt.hasNext() && j < numModels; j++) {
             var sol1 = mt.next();
-            try (var pw = new PrintWriter(runOutput.resolve("MODL_%05d.xml".formatted(j)).toAbsolutePath().toFile())) {
+            Path modelPath = runOutput.resolve("MODL_%05d.xml".formatted(j)).toAbsolutePath();
+            try (var pw = new PrintWriter(modelPath.toFile())) {
                 sol1.writeXML(pw, null, null);
             }
+            try (var pr = Files.newBufferedReader(modelPath)) {
+                sol1 = A4SolutionReader.read(null, new XMLNode(pr));
+            }
             var clg = new ConcreteLoadFactory(sol1, oodm);
+            var cim = clg.create(als);
             try (var pw = new PrintWriter(runOutput.resolve("MODL_%05d_CREATE.sql".formatted(j)).toAbsolutePath().toFile())) {
                 pw.println("/*-------------------------------------------------------------*/");
                 pw.printf("/*-------------------- OBJECT MODEL #%05d --------------------*/%n", j);
-                pw.println(String.join("\n", clg.getCreateQueries()));
+                pw.println(String.join("\n", cim.getCreateQueries()));
             }
-            for (int i = 0; i < numLoads; i++) {
-                var cl = clg.create(als[i]);
-                try (var pw = new PrintWriter(runOutput.resolve("MODL_%05d_LOAD_%05d.sql".formatted(j, i)).toAbsolutePath().toFile())) {
+            int i = 0;
+            for (var cl : cim.getConcreteLoads()) {
+                try (var pw = new PrintWriter(runOutput.resolve("MODL_%05d_LOAD_%05d.sql".formatted(j, (++i))).toAbsolutePath().toFile())) {
                     pw.println("/*-------------------    INSERT  LOAD    ----------------------*/");
                     pw.println(String.join("\n", cl.getInsertQueries()));
                     pw.println("/*-------------------    SELECT  LOAD    ----------------------*/");

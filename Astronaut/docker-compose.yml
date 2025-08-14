@@ -1,0 +1,120 @@
+services:
+  spark-master:
+    image: bitnami/spark:latest
+    container_name: spark-master
+    environment:
+      - SPARK_MODE=master
+      - SPARK_RPC_AUTHENTICATION_ENABLED=no
+      - SPARK_RPC_ENCRYPTION_ENABLED=no
+      - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
+      - SPARK_SSL_ENABLED=no
+    ports:
+      - "8080:8080" # Spark Master UI
+      - "7077:7077" # Spark Master internal communication
+    networks:
+      - spark-network
+    volumes:
+      - ./models:/opt/models
+      - ./out/models/:/opt/solutions
+
+  spark-worker-1:
+    image: bitnami/spark:latest
+    container_name: spark-worker-1
+    environment:
+      - SPARK_MODE=worker
+      - SPARK_MASTER_URL=spark://spark-master:7077
+      - SPARK_WORKER_CORES=1 # Adjust cores as needed
+      - SPARK_WORKER_MEMORY=1g # Adjust memory as needed
+      - SPARK_RPC_AUTHENTICATION_ENABLED=no
+      - SPARK_RPC_ENCRYPTION_ENABLED=no
+      - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
+      - SPARK_SSL_ENABLED=no
+    depends_on:
+      - spark-master
+    ports:
+      - "8081:8081"
+    networks:
+      - spark-network
+    volumes:
+      - ./models:/opt/models
+      - ./out/models:/opt/solutions
+
+  spark-worker-2:
+    image: bitnami/spark:latest
+    container_name: spark-worker-2
+    environment:
+      - SPARK_MODE=worker
+      - SPARK_MASTER_URL=spark://spark-master:7077
+      - SPARK_WORKER_CORES=1 # Adjust cores as needed
+      - SPARK_WORKER_MEMORY=1g # Adjust memory as needed
+      - SPARK_RPC_AUTHENTICATION_ENABLED=no
+      - SPARK_RPC_ENCRYPTION_ENABLED=no
+      - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
+      - SPARK_SSL_ENABLED=no
+    depends_on:
+      - spark-master
+    ports:
+      - "8082:8081"
+    networks:
+      - spark-network
+    volumes:
+      - ./models:/opt/models
+      - ./out/models:/opt/solutions
+
+  spark-worker-3:
+    image: bitnami/spark:latest
+    container_name: spark-worker-3
+    environment:
+      - SPARK_MODE=worker
+      - SPARK_MASTER_URL=spark://spark-master:7077
+      - SPARK_WORKER_CORES=1 # Adjust cores as needed
+      - SPARK_WORKER_MEMORY=1g # Adjust memory as needed
+      - SPARK_RPC_AUTHENTICATION_ENABLED=no
+      - SPARK_RPC_ENCRYPTION_ENABLED=no
+      - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
+      - SPARK_SSL_ENABLED=no
+    depends_on:
+      - spark-master
+    ports:
+      - "8083:8081"
+    networks:
+      - spark-network
+    volumes:
+      - ./models:/opt/models
+      - ./out/models:/opt/solutions
+
+  spark-worker-4:
+    image: bitnami/spark:latest
+    container_name: spark-worker-4
+    environment:
+      - SPARK_MODE=worker
+      - SPARK_MASTER_URL=spark://spark-master:7077
+      - SPARK_WORKER_CORES=1 # Adjust cores as needed
+      - SPARK_WORKER_MEMORY=1g # Adjust memory as needed
+      - SPARK_RPC_AUTHENTICATION_ENABLED=no
+      - SPARK_RPC_ENCRYPTION_ENABLED=no
+      - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
+      - SPARK_SSL_ENABLED=no
+    depends_on:
+      - spark-master
+    ports:
+      - "8084:8081"
+    networks:
+      - spark-network
+    volumes:
+      - ./models:/opt/models
+      - ./out/models:/opt/solutions
+
+  mysql:
+    image: bitnami/mysql:latest
+    container_name: mysql-db
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQLPASS}
+    ports:
+      - "3306:3306"
+    networks:
+      - spark-network
+
+networks:
+  spark-network:
+    driver: bridge

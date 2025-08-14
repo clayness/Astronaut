@@ -1,7 +1,11 @@
 package wikalloy.concrete;
 
 import edu.mit.csail.sdg.translator.A4Solution;
+import wikalloy.ObjAssoc;
+import wikalloy.ObjectClass;
+import wikalloy.ObjField;
 import wikalloy.ObjectModel;
+import wikalloy.generic.AbstractInst;
 import wikalloy.generic.AbstractLoad;
 import wikalloy.kodkod.KodkodAtom;
 import wikalloy.kodkod.KodkodInstance;
@@ -13,7 +17,7 @@ import java.util.stream.Stream;
 
 public class ConcreteLoadFactory extends KodkodInstance {
 
-    private final Map<Object, Set<ObjectModel.ObjField>> fieldmap;
+    private final Map<Object, Set<ObjField>> fieldmap;
     private final ObjectModel oodm;
 
     public ConcreteLoadFactory(A4Solution solution, ObjectModel oodm) {
@@ -38,6 +42,17 @@ public class ConcreteLoadFactory extends KodkodInstance {
         }
     }
 
+    public ConcreteImpl create(Collection<AbstractLoad> loads) {
+        return new ConcreteImpl(this.fieldmap.entrySet().stream()
+                .collect(Collectors.toMap(Map.Entry::getKey,
+                        e -> e.getValue().stream()
+                                .map(ConcreteImpl.ConcreteField::new)
+                                .collect(Collectors.toSet()))),
+                loads.stream()
+                        .map(this::create)
+                        .collect(Collectors.toList()));
+    }
+
     public ConcreteLoad create(AbstractLoad al) {
         var cl = new ConcreteLoad();
         createInserts(al, cl);
@@ -57,7 +72,7 @@ public class ConcreteLoadFactory extends KodkodInstance {
                 // are both in the same table
                 var t = getClassTable(assoc.src().getAtom());
                 var e = Stream.of(assoc.src(), assoc.dst())
-                        .map(AbstractLoad.AbstractInst::entrySet)
+                        .map(AbstractInst::entrySet)
                         .flatMap(Collection::stream)
                         .collect(Collectors.toSet());
                 addConcreteRow(cl, t, List.of(assoc.src().getAtom(), assoc.dst().getAtom()), e);
@@ -96,12 +111,12 @@ public class ConcreteLoadFactory extends KodkodInstance {
                 var ak = Stream.of(assoc.src(), assoc.dst())
                         .map(KodkodAtom::getAtom)
                         .map(oodm::getClass)
-                        .map(ObjectModel.ObjClass::getAllKeys)
+                        .map(ObjectClass::getAllKeys)
                         .flatMap(Collection::stream)
                         .map(KodkodAtom::getAtom)
                         .collect(Collectors.toSet());
                 var ae = Stream.of(assoc.src(), assoc.dst())
-                        .map(AbstractLoad.AbstractInst::entrySet)
+                        .map(AbstractInst::entrySet)
                         .flatMap(Collection::stream)
                         .filter(e -> ak.contains(e.getKey()))
                         .collect(Collectors.toSet());
@@ -193,12 +208,6 @@ public class ConcreteLoadFactory extends KodkodInstance {
         }
     }
 
-    public Collection<String> getCreateQueries() {
-        return fieldmap.entrySet().stream()
-                .map(grp -> createTableQuery(grp.getKey(), grp.getValue()))
-                .toList();
-    }
-
     private void addConcreteRow(ConcreteLoad cl, Object table, Collection<Object> types, Collection<Map.Entry<Object, Object>> entries) {
         for (var type : types) {
             var oc = oodm.getClass(type);
@@ -224,30 +233,20 @@ public class ConcreteLoadFactory extends KodkodInstance {
         cl.addInsert(table, cols, vals);
     }
 
-    private String createTableQuery(Object table, Collection<ObjectModel.ObjField> columns) {
-        return "CREATE TABLE `%s` (%n   %s,%n   PRIMARY KEY (%s)%n);".formatted(table,
-                columns.stream().map(f -> "`%s` %s%s".formatted(
-                                f.getAtom(), this.getSqlType(f.getDataType()), f.isKey() ? " NOT NULL DEFAULT -1" : ""))
-                        .collect(Collectors.joining(",\n   ")),
-                columns.stream().filter(ObjectModel.ObjField::isKey)
-                        .map(f -> "`" + f.getAtom() + "`")
-                        .collect(Collectors.joining(", ")));
-    }
-
-    private Map<Object, Set<ObjectModel.ObjField>> getAssocFields(ObjectModel.ObjAssoc objAssoc) {
+    private Map<Object, Set<ObjField>> getAssocFields(ObjAssoc objAssoc) {
         if (this.isAStrat(objAssoc, "OAT")) {
             // there is a table just for this assoc that has the
             // keys from both source and dest in it
             return Map.of(this.getAssocTable(objAssoc.getAtom()),
                     Stream.of(objAssoc.dst(), objAssoc.src())
-                            .map(ObjectModel.ObjClass::getAllKeys)
+                            .map(ObjectClass::getAllKeys)
                             .flatMap(Collection::stream)
                             .collect(Collectors.toSet()));
         } else {
             // the dst table must include the src keys
             return Map.of(this.getClassTable(objAssoc.dst().getAtom()),
                     objAssoc.src().getAllKeys().stream()
-                            .map(f -> new ObjectModel.ObjField(f.getAtom(), f.getDataType(), false))
+                            .map(f -> new ObjField(f.getAtom(), f.getDataType(), false))
                             .collect(Collectors.toSet()));
         }
     }
@@ -259,7 +258,7 @@ public class ConcreteLoadFactory extends KodkodInstance {
                 .findFirst().orElseThrow();
     }
 
-    private Set<ObjectModel.ObjField> getClassFields(ObjectModel.ObjClass objCls) {
+    private Set<ObjField> getClassFields(ObjectClass objCls) {
         // get the fields from this class, since those certainly go
         var fields = new HashSet<>(objCls.getFields());
         // get any fields from the parent
@@ -276,7 +275,7 @@ public class ConcreteLoadFactory extends KodkodInstance {
         return fields;
     }
 
-    private Map<Object, Object> getProjection(ObjectModel.ObjClass objCls) {
+    private Map<Object, Object> getProjection(ObjectClass objCls) {
         var proj = new HashMap<>();
         for (var f : this.getClassFields(objCls)) {
             proj.put(f.getAtom(), this.getClassTable(objCls.getAtom()));
@@ -295,23 +294,9 @@ public class ConcreteLoadFactory extends KodkodInstance {
 
     private Object getClassTable(Object type) {
         var atom = this.getAtom("x/" + type);
-        return this.join("orm/orm.main", atom, 0)
-                .map(t -> t.atom(1))
+        return this.join("orm/orm.main", atom, 1)
+                .map(t -> t.atom(2))
                 .findFirst().orElseThrow();
-    }
-
-    private String getSqlType(Object type) {
-        //@formatter:off
-        return switch (type.toString()) {
-            case "oodm/TBool$0"   -> "BOOLEAN";
-            case "oodm/TInt$0"    -> "INTEGER";
-            case "oodm/TFloat$0"  -> "FLOAT";
-            case "oodm/TString$0" -> "VARCHAR(63)";
-            case "oodm/TDate$0"   -> "DATETIME";
-            case "oodm/TBlob$0"   -> "BLOB";
-            default -> throw new IllegalArgumentException("Could not determine field type for atom: " + type);
-        };
-        //@formatter:on
     }
 
     private boolean isAStrat(KodkodAtom kkObj, String strat) {

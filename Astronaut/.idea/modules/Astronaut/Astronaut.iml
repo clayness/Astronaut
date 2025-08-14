@@ -32,10 +32,12 @@
     <orderEntry type="library" name="sbt: com.typesafe:config:1.4.4:jar" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="sbt: org.apache.spark:spark-core_2.13:4.0.0:jar" level="project" />
     <orderEntry type="library" name="sbt: org.alloytools.alloy:AlloyTools:5.1.0:jar" level="project" />
-    <orderEntry type="library" name="sbt: com.google.code.gson:gson:2.13.1:jar" level="project" />
     <orderEntry type="library" name="sbt: info.picocli:picocli:4.7.7:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.scala-lang.modules:scala-parallel-collections_2.13:1.2.0:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.apache.logging.log4j:log4j-api:2.25.1:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.apache.logging.log4j:log4j-core:2.25.1:jar" level="project" />
+    <orderEntry type="library" name="sbt: org.apache.logging.log4j:log4j-api-scala_2.13:13.1.0:jar" level="project" />
     <orderEntry type="library" name="sbt: com.google.protobuf:protobuf-java:4.31.1:jar" level="project" />
-    <orderEntry type="library" scope="PROVIDED" name="sbt: org.scala-lang.modules:scala-parallel-collections_2.13:1.2.0:jar" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="sbt: org.apache.avro:avro:1.12.0:jar" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="sbt: org.apache.avro:avro-mapred:1.12.0:jar" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="sbt: com.twitter:chill_2.13:0.10.0:jar" level="project" />
@@ -97,7 +99,6 @@
     <orderEntry type="library" scope="PROVIDED" name="sbt: net.sf.py4j:py4j:0.10.9.9:jar" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="sbt: org.apache.spark:spark-tags_2.13:4.0.0:jar" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="sbt: org.apache.commons:commons-crypto:1.1.0:jar" level="project" />
-    <orderEntry type="library" name="sbt: com.google.errorprone:error_prone_annotations:2.38.0:jar" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="sbt: com.fasterxml.jackson.core:jackson-core:2.18.2:jar" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="sbt: org.slf4j:slf4j-api:2.0.16:jar" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="sbt: org.apache.avro:avro-ipc:1.12.0:jar" level="project" />
@@ -118,8 +119,6 @@
     <orderEntry type="library" scope="PROVIDED" name="sbt: org.slf4j:jul-to-slf4j:2.0.16:jar" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="sbt: org.slf4j:jcl-over-slf4j:2.0.16:jar" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="sbt: org.apache.logging.log4j:log4j-slf4j2-impl:2.24.3:jar" level="project" />
-    <orderEntry type="library" scope="PROVIDED" name="sbt: org.apache.logging.log4j:log4j-api:2.24.3:jar" level="project" />
-    <orderEntry type="library" scope="PROVIDED" name="sbt: org.apache.logging.log4j:log4j-core:2.24.3:jar" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="sbt: org.apache.logging.log4j:log4j-1.2-api:2.24.3:jar" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="sbt: org.apache.logging.log4j:log4j-layout-template-json:2.24.3:jar" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="sbt: org.apache.curator:curator-framework:5.7.1:jar" level="project" />
@@ -154,6 +153,7 @@
     <orderEntry type="library" scope="PROVIDED" name="sbt: org.tukaani:xz:1.9:jar" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="sbt: io.netty:netty-tcnative-classes:2.0.70.Final:jar" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="sbt: io.netty:netty-tcnative-boringssl-static:2.0.70.Final:windows-x86_64:jar" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="sbt: com.google.code.gson:gson:2.10.1:jar" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="sbt: org.apache.curator:curator-client:5.7.1:jar" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="sbt: org.json4s:json4s-ast_2.13:4.0.7:jar" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="sbt: org.json4s:json4s-scalap_2.13:4.0.7:jar" level="project" />
@@ -165,6 +165,7 @@
     <orderEntry type="library" scope="PROVIDED" name="sbt: com.google.guava:failureaccess:1.0.1:jar" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="sbt: com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava:jar" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="sbt: org.checkerframework:checker-qual:3.33.0:jar" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="sbt: com.google.errorprone:error_prone_annotations:2.18.0:jar" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="sbt: com.google.j2objc:j2objc-annotations:2.8:jar" level="project" />
   </component>
 </module>

@@ -9,16 +9,82 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="8d2d8eec-a092-4049-9d2c-98097af027f2" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/src/main/java/wikalloy/concrete/ConcreteLoadRunner.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/wikalloy/generic/AbstractFilter.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/wikalloy/generic/AbstractLoadFactory.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/wikalloy/generic/AbstractLoadRunner.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/wikalloy/generic/AbstractQuery.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docker-compose.yml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/wikalloy/MeasurementResult.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/wikalloy/ObjAssoc.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/wikalloy/ObjField.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/wikalloy/ObjectClass.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/wikalloy/ObjectModelFactory.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/wikalloy/concrete/ConcreteImpl.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/wikalloy/generic/AbstractAssoc.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/wikalloy/generic/AbstractInst.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/scala/wikalloy/SparkAnalyzer.scala" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/scala/wikalloy/WikalloyAnalyzer.scala" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/modules/Astronaut/Astronaut.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/modules/Astronaut/Astronaut.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/wikalloy/AbstractLoad.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/wikalloy/generic/AbstractLoad.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/build.sbt" beforeDir="false" afterPath="$PROJECT_DIR$/build.sbt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Evaluator/ScriptRunner.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Framework/Types/AbstractLoad.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Framework/Types/AbstractQuery.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Framework/Types/ConcreteLoad.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Framework/Types/ConcreteQuery.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Framework/Types/DBConcreteMeasurementFunction.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Framework/Types/DBConcreteMeasurementFunctionSet.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Framework/Types/DBConcreteSpaceMeasurementFunction.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Framework/Types/DBConcreteTimeMeasurementFunction.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Framework/Types/DBFormalAbstractMeasurementFunction.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Framework/Types/DBFormalAbstractMeasurementFunctionSet.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Framework/Types/DBFormalAbstractTimeMeasurementFunction.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Framework/Types/DBFormalConcreteMeasurementFunction.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Framework/Types/DBFormalConcreteMeasurementFunctionSet.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Framework/Types/DBFormalConcreteSpaceMeasurementFunction.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Framework/Types/DBFormalConcreteTimeMeasurementFunction.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Framework/Types/DBMeasurementResult.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Framework/Types/DBSpaceMeasurementResult.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Framework/Types/DBTimeMeasurementResult.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Framework/Types/FormalAbstractLoadSet.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Framework/Types/MeasurementFunctionByDB.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Framework/Types/MySQLMeasurementFunction.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Framework/Types/ObjectOfDM.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Framework/Types/ObjectSpec.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Framework/Types/PostgresMeasurementFunction.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Framework/Types/SpecializedQuery.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Synthesizer/AlloyOMToAlloyDM.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Synthesizer/CodeNamePair.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Synthesizer/DataProvider.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Synthesizer/Evaluator.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Synthesizer/FrontParser.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Synthesizer/LoadSynthesizer.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Synthesizer/MetricValue.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Synthesizer/ORMParser.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Synthesizer/PrintOrder.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Synthesizer/Sig.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Synthesizer/SmartBridge.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/edu/virginia/cs/Uniq/DeleteUniq.java" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/wikalloy/ObjectModel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/wikalloy/ObjectModel.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/wikalloy/concrete/ConcreteLoad.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/wikalloy/concrete/ConcreteLoad.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/wikalloy/concrete/ConcreteLoadFactory.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/wikalloy/concrete/ConcreteLoadFactory.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/wikalloy/concrete/ConcreteLoadRunner.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/wikalloy/concrete/ConcreteLoadRunner.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/wikalloy/generic/AbstractFilter.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/wikalloy/generic/AbstractFilter.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/wikalloy/generic/AbstractLoad.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/wikalloy/generic/AbstractLoad.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/wikalloy/generic/AbstractLoadFactory.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/wikalloy/generic/AbstractLoadFactory.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/wikalloy/generic/AbstractLoadRunner.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/wikalloy/generic/AbstractQuery.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/wikalloy/generic/AbstractQuery.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/wikalloy/kodkod/KodkodAtom.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/wikalloy/kodkod/KodkodAtom.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/application.conf" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/application.conf" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/scala/analysis/QueryGenerator.scala" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/scala/analysis/SparkAnalyzer.scala" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/scala/edu/virginia/cs/AppConfig.scala" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/scala/wikalloy/WikalloyConfig.scala" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/scala/edu/virginia/cs/DBTrademaker.scala" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/scala/edu/virginia/cs/Framework/AstronautFramework.scala" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/scala/edu/virginia/cs/Framework/Types/DBFormalImplementation.scala" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/scala/edu/virginia/cs/Framework/Types/DBFormalSpecification.scala" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/scala/edu/virginia/cs/Framework/Types/DBImplementation.scala" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/scala/edu/virginia/cs/Framework/Types/DBSpecification.scala" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/scala/edu/virginia/cs/Main.scala" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/scala/wikalloy/WikalloyRunner.scala" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../init_docker.sh" beforeDir="false" afterPath="$PROJECT_DIR$/../init_docker.sh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../run_astronaut.sh" beforeDir="false" afterPath="$PROJECT_DIR$/../run_astronaut.sh" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -39,6 +105,11 @@
               <path>
                 <item name="" type="6a2764b6:ExternalProjectsStructure$RootNode" />
                 <item name="Astronaut" type="f1a62948:ProjectNode" />
+              </path>
+              <path>
+                <item name="" type="6a2764b6:ExternalProjectsStructure$RootNode" />
+                <item name="Astronaut" type="f1a62948:ProjectNode" />
+                <item name="sbt tasks" type="d9357504:SbtViewContributor$SbtTasksGroupNode" />
               </path>
             </expand>
             <select />
@@ -88,6 +159,7 @@
     "Application.ObjectModel.Factory.executor": "Run",
     "Application.ObjectModelGenerator.executor": "Run",
     "Application.SchemaGenerator.executor": "Run",
+    "Application.WikalloyRunner.executor": "Debug",
     "ModuleVcsDetector.initialDetectionPerformed": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.git.unshallow": "true",
@@ -102,10 +174,13 @@
     "project.structure.proportion": "0.15",
     "project.structure.side.proportion": "0.2",
     "run.code.analysis.last.selected.profile": "pProject Default",
-    "settings.editor.selected.configurable": "preferences.pluginManager",
+    "settings.editor.selected.configurable": "bigdataide_conn_settings",
     "vue.rearranger.settings.migration": "true"
   },
   "keyToStringList": {
+    "DatabaseDriversLRU": [
+      "mysql"
+    ],
     "com.intellij.ide.scratch.ScratchImplUtil$2/New Scratch File": [
       "JSON"
     ]
@@ -116,15 +191,20 @@
       <recent name="wikalloy.generic.AbstractLoadRunner" />
       <recent name="edu.virginia.cs.DBTrademaker" />
     </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/src/main/scala/wikalloy" />
+    </key>
     <key name="MoveClassesOrPackagesDialog.RECENTS_KEY">
+      <recent name="wikalloy" />
       <recent name="edu.virginia.cs.Framework.Types" />
     </key>
     <key name="MoveInnerDialog.RECENTS_KEY">
+      <recent name="wikalloy" />
       <recent name="wikalloy.generic" />
       <recent name="wikalloy.concrete" />
     </key>
   </component>
-  <component name="RunManager" selected="Application.ConcreteLoadRunner">
+  <component name="RunManager" selected="Application.WikalloyRunner">
     <configuration name="ConcreteLoadRunner" type="Application" factoryName="Application" temporary="true">
       <option name="MAIN_CLASS_NAME" value="wikalloy.concrete.ConcreteLoadRunner" />
       <module name="Astronaut" />
@@ -140,7 +220,7 @@
       </method>
     </configuration>
     <configuration name="ObjectModel.Factory" type="Application" factoryName="Application" temporary="true">
-      <option name="MAIN_CLASS_NAME" value="wikalloy.ObjectModel$Factory" />
+      <option name="MAIN_CLASS_NAME" value="wikalloy.ObjectModelFactory" />
       <module name="Astronaut" />
       <option name="PROGRAM_PARAMETERS" value="models/decider.als" />
       <extension name="coverage">
@@ -153,12 +233,28 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
+    <configuration name="WikalloyRunner" type="Application" factoryName="Application" temporary="true">
+      <option name="MAIN_CLASS_NAME" value="wikalloy.WikalloyRunner" />
+      <module name="Astronaut" />
+      <option name="PROGRAM_PARAMETERS" value="$PROJECT_DIR$/../../propter/join-simplifier/models/orm/flagship.als" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="wikalloy.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
     <list>
+      <item itemvalue="Application.WikalloyRunner" />
       <item itemvalue="Application.ConcreteLoadRunner" />
       <item itemvalue="Application.ObjectModel.Factory" />
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Application.WikalloyRunner" />
         <item itemvalue="Application.ConcreteLoadRunner" />
         <item itemvalue="Application.ObjectModel.Factory" />
       </list>
@@ -192,7 +288,7 @@
       <workItem from="1754526190728" duration="130000" />
       <workItem from="1754526413202" duration="16926000" />
       <workItem from="1754594383102" duration="6655000" />
-      <workItem from="1754935852428" duration="23247000" />
+      <workItem from="1754935852428" duration="52650000" />
     </task>
     <servers />
   </component>
