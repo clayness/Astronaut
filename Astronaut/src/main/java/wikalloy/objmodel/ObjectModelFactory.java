@@ -1,4 +1,4 @@
-package wikalloy;
+package wikalloy.objmodel;
 
 import edu.mit.csail.sdg.translator.A4Solution;
 import wikalloy.kodkod.KodkodInstance;
@@ -16,13 +16,13 @@ public class ObjectModelFactory extends KodkodInstance {
         return oodm;
     }
 
-    private ObjectClass addClass(ObjectModel oodm, Object kkCls) {
+    private ObjClass addClass(ObjectModel oodm, Object kkCls) {
         // make sure we haven't done this one before
         if (oodm.hasClass(kkCls)) {
             return oodm.getClass(kkCls);
         }
         // check to see if this class has a parent
-        ObjectClass p = null;
+        ObjClass p = null;
         var kkp = this.join("oodm/Class.parent", kkCls, 0)
                 .map(t -> t.atom(1))
                 .findFirst()
@@ -37,7 +37,7 @@ public class ObjectModelFactory extends KodkodInstance {
         return objCls;
     }
 
-    private void addFields(final ObjectClass objCls, final Object kkCls) {
+    private void addFields(final ObjClass objCls, final Object kkCls) {
         this.join("oodm/Class.fields", kkCls, 0)
                 .distinct()
                 .map(f -> new ObjField(f.atom(1), f.atom(2), this.isKey(kkCls, f.atom(1))))

@@ -34,7 +34,7 @@ public abstract class KodkodInstance {
     }
 
     protected boolean inX(KodkodAtom kkObj, String relationName) {
-        return this.join(relationName, this.getAtom("x/" + kkObj.getAtom()), 0)
+        return this.join(relationName, this.getAtom("x/" + kkObj.getAtom()), 1)
                 .findFirst().isPresent();
     }
 

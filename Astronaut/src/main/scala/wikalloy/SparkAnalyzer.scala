@@ -1,12 +1,15 @@
 package wikalloy
 
 import edu.mit.csail.sdg.alloy4.XMLNode
-import edu.mit.csail.sdg.translator.A4SolutionReader
+import edu.mit.csail.sdg.translator.{A2KSolution, A4Solution, A4SolutionReader}
 import org.apache.logging.log4j.scala.Logging
 import org.apache.spark.{SparkConf, SparkContext}
 import wikalloy.concrete.{ConcreteImpl, ConcreteLoadFactory}
 import wikalloy.generic.AbstractLoad
+import wikalloy.kodkod.BooleanFeatureExtractor
+import wikalloy.objmodel.ObjectModel
 
+import java.io.PrintWriter
 import java.nio.file.{Files, Path}
 import java.sql.DriverManager
 import scala.collection.mutable.ListBuffer
@@ -34,17 +37,20 @@ class SparkAnalyzer extends Serializable with Logging {
     val rdd = sc.parallelize(solutions)
     // map the RDD across the Spark cluster, running the analysis
     // function on each pair
-    val collectedResult = rdd.map(p => {
-      // get the models from the mapping specification and generate
-      // concrete loads for each one
-      val sol1 = Using(Files.newBufferedReader(Path.of(p))) { pr => A4SolutionReader.read(null, new XMLNode(pr)) }.get
-      val e = new ConcreteLoadFactory(sol1, oodm).create(abstractLoads.asJava);
-      logger.info(s"Generated concrete loads for $p")
-      computeMetricsForImpl(Path.of(p), e)
-    }).collect()
-
+    val collectedResult = rdd.map(p => measure(p, abstractLoads, oodm)).collect()
+    // stop the Spark cluster
     sc.stop()
+    // return the result
     collectedResult.toList
+  }
+
+  private def measure(p: String, abstractLoads: List[AbstractLoad], oodm: ObjectModel) = {
+    // get the models from the mapping specification and generate
+    // concrete loads for each one
+    val sol1 = Using(Files.newBufferedReader(Path.of(p))) { pr => A4SolutionReader.read(null, new XMLNode(pr)) }.get
+    // generate the concrete loads
+    val e = new ConcreteLoadFactory(sol1, oodm).create(abstractLoads.asJava);
+    computeMetricsForImpl(Path.of(p), e)
   }
 
   private def computeMetricsForImpl(solution: Path, impl: ConcreteImpl): MeasurementResult = {
@@ -86,7 +92,7 @@ class SparkAnalyzer extends Serializable with Logging {
           try {
             conn.createStatement().execute(q)
           } catch {
-            case NonFatal(e) => logger.warn(s"Error executing select query: ${e.getMessage}\n   Query: $q")
+            case NonFatal(e) => logger.warn(s"[${cl.getUUID}] Error executing select query: ${e.getMessage}\n   Query: $q")
           }
         }
         val endSelect = System.currentTimeMillis()
@@ -108,6 +114,7 @@ class SparkAnalyzer extends Serializable with Logging {
           val tableName = rs.getString("TABLE_NAME")
           conn.createStatement().execute(s"TRUNCATE TABLE `$dbname`.`$tableName`")
         }
+        logger.debug(s"[$solution][${cl.getUUID}] concrete load tested.")
       }
       // drop the database
       conn.createStatement().execute(s"DROP DATABASE $dbname")
@@ -115,8 +122,9 @@ class SparkAnalyzer extends Serializable with Logging {
       val insertTimesList = insertTimes.toList
       val selectTimesList = selectTimes.toList
       val storageSizeList = storageSize.toList
+      logger.info(s"[$solution] concrete load testing finished.")
       new MeasurementResult(
-        solution.getFileName.toString,
+        solution.toString,
         endCreate - begCreate,
         insertTimesList.sum.toDouble,
         selectTimesList.sum.toDouble,

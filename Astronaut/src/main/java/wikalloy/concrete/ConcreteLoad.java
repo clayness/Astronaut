@@ -6,8 +6,13 @@ import java.util.stream.Collectors;
 
 public class ConcreteLoad implements Serializable {
 
+    private final UUID uuid;
     private final Set<ConcreteInsert> rows = new HashSet<>();
     private final Set<ConcreteSelect> selects = new HashSet<>();
+
+    public ConcreteLoad(UUID uuid) {
+        this.uuid = uuid;
+    }
 
     public void addInsert(Object table, Collection<Object> columns, Collection<Object> values) {
         this.rows.add(new ConcreteInsert(table, columns, values));
@@ -51,13 +56,17 @@ public class ConcreteLoad implements Serializable {
             var where = new StringBuilder();
             if (!s.filters.isEmpty()) {
                 where.append(s.filters.stream()
-                        .map((f) -> "`%s` %s '%s'".formatted(f.column(), f.operator(), f.value()))
+                        .map((f) -> "`%s`.`%s` %s '%s'".formatted(f.table(), f.column(), f.operator(), f.value()))
                         .collect(Collectors.joining(" AND ")));
             } else {
                 where.append("1 = 1");
             }
             return "SELECT DISTINCT %s FROM %s WHERE %s;".formatted(proj, from.toString(), where.toString());
         }).toList();
+    }
+
+    public UUID getUUID() {
+        return this.uuid;
     }
 
     private record ConcreteInsert(Object table, Collection<Object> columns,
@@ -71,7 +80,7 @@ public class ConcreteLoad implements Serializable {
         /* no-op */
     }
 
-    public record ConcreteFilter(Object column, String operator, Object value) implements Serializable {
+    public record ConcreteFilter(Object table, Object column, String operator, Object value) implements Serializable {
         /* no-op */
     }
 }

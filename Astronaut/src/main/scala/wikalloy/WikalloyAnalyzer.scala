@@ -1,9 +1,12 @@
 package wikalloy
 
+import edu.mit.csail.sdg.translator.{A2KSolution, A4Solution}
 import org.apache.logging.log4j.scala.Logging
 import wikalloy.generic.AbstractLoadFactory
+import wikalloy.kodkod.{AlloySolutionIterator, BooleanFeatureExtractor}
+import wikalloy.objmodel.ObjectModelFactory
 
-import java.io.PrintWriter
+import java.io.{FileWriter, PrintWriter}
 import java.nio.file.Path
 import scala.util.Using
 import scala.util.control.Breaks.{break, breakable}
@@ -15,7 +18,7 @@ class WikalloyAnalyzer extends Logging {
       throw new IllegalArgumentException("No specification path(s) provided.")
     // iterate the list of specs
     for (spec <- args) {
-      logger.info(s"Starting spec: $spec")
+      logger.info(s"=============================== Starting spec: $spec ===============================")
       // get the absolute path to the OODM spec
       val oodmSpecPath = Path.of(spec).toAbsolutePath
       // synthesize the models for the mapping spec
@@ -45,10 +48,10 @@ class WikalloyAnalyzer extends Logging {
 
         // iterate the results and print each result to the output file
         Using(new PrintWriter(outPath.toFile)) { pw =>
-          pw.printf("%20s,%12s,%12s,%12s,%12s%n",
+          pw.printf("%s,%s,%s,%s,%s%n",
             "Solution", "CreateTime", "InsertTime", "SelectTime", "StorageSize")
           for (mr <- evaluatedResults) {
-            pw.printf("%20s,%12d,%12.2f,%12.2f,%12.2f%n",
+            pw.printf("%s,%d,%f,%f,%f%n",
               mr.name(),
               mr.createTime(),
               mr.insertTime(),
@@ -78,11 +81,14 @@ class WikalloyAnalyzer extends Logging {
           if (!asi.hasNext) {
             break()
           }
+          val sol = asi.next()
           val modelPath = modelFolderPath.resolve(f"MODL_$i%06d.xml").toAbsolutePath
           Using(new PrintWriter(modelPath.toFile)) { pw =>
-            asi.next().writeXML(pw, null, null)
+            sol.writeXML(pw, null, null)
             ret = ret :+ modelPath
           }
+          // write out the feature string for the solution file
+          writeFeatureString(modelPath, sol)
         }
       }
       // log the time taken to synthesize all the results
@@ -93,6 +99,13 @@ class WikalloyAnalyzer extends Logging {
       modelFolderPath.toFile.listFiles.filter(_.getName.endsWith(".xml")).foreach(f => ret = ret :+ f.toPath.toAbsolutePath)
     }
     ret
+  }
+
+  private def writeFeatureString(path: Path, sol1: A4Solution): Unit = {
+    Using(new PrintWriter(new FileWriter(path.resolveSibling("features.csv").toFile, true))) { pw =>
+      val features = String.join(",", new BooleanFeatureExtractor().extractFeatures(sol1, new A2KSolution(sol1).bounds()))
+      pw.append(s"$path,$features\n")
+    }
   }
 
   private def prepareModelFolder(specPath: Path): (Path, Boolean) = {

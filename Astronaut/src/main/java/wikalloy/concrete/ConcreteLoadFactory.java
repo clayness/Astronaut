@@ -1,10 +1,10 @@
 package wikalloy.concrete;
 
 import edu.mit.csail.sdg.translator.A4Solution;
-import wikalloy.ObjAssoc;
-import wikalloy.ObjectClass;
-import wikalloy.ObjField;
-import wikalloy.ObjectModel;
+import wikalloy.objmodel.ObjAssoc;
+import wikalloy.objmodel.ObjClass;
+import wikalloy.objmodel.ObjField;
+import wikalloy.objmodel.ObjectModel;
 import wikalloy.generic.AbstractInst;
 import wikalloy.generic.AbstractLoad;
 import wikalloy.kodkod.KodkodAtom;
@@ -17,8 +17,10 @@ import java.util.stream.Stream;
 
 public class ConcreteLoadFactory extends KodkodInstance {
 
+    private final Map<Object, Object> assocmap = new HashMap<>();
     private final Map<Object, Set<ObjField>> fieldmap;
     private final ObjectModel oodm;
+    private final Map<Object, Object> tablemap = new HashMap<>();
 
     public ConcreteLoadFactory(A4Solution solution, ObjectModel oodm) {
         super(solution);
@@ -54,7 +56,7 @@ public class ConcreteLoadFactory extends KodkodInstance {
     }
 
     public ConcreteLoad create(AbstractLoad al) {
-        var cl = new ConcreteLoad();
+        var cl = new ConcreteLoad(al.getUUID());
         createInserts(al, cl);
         createSelects(al, cl);
         return cl;
@@ -111,7 +113,7 @@ public class ConcreteLoadFactory extends KodkodInstance {
                 var ak = Stream.of(assoc.src(), assoc.dst())
                         .map(KodkodAtom::getAtom)
                         .map(oodm::getClass)
-                        .map(ObjectClass::getAllKeys)
+                        .map(ObjClass::getAllKeys)
                         .flatMap(Collection::stream)
                         .map(KodkodAtom::getAtom)
                         .collect(Collectors.toSet());
@@ -170,38 +172,65 @@ public class ConcreteLoadFactory extends KodkodInstance {
             }
             // get the projection
             var projection = this.getProjection(objClass);
+            // get the filters (if there are any) -- we get them early, because
+            // we may need to attach them to the joined tables instead
+            var af = new HashSet<>(aq.getFilters());
+            var cf = new HashSet<ConcreteLoad.ConcreteFilter>();
             // join based on the association (if there is one)
             var assoc = aq.getAssociation();
             if (assoc != null) {
+                var srcClass = oodm.getClass(assoc.src().getAtom());
+                var dstClass = oodm.getClass(assoc.dst().getAtom());
+                var tgtClass = assoc.src().getAtom().equals(aq.getAtom()) ? srcClass : dstClass;
+                var othClass = assoc.src().getAtom().equals(aq.getAtom()) ? dstClass : srcClass;
+                var otherTable = this.getClassTable(othClass.getAtom());
+                var okeys = othClass.getKeys().stream().map(KodkodAtom::getAtom).collect(Collectors.toSet());
                 if (isAStrat(assoc, "FKE")) {
                     // if this is a "foreign key" association, we need to join against the table based on the "src" key
-                    var other = oodm.getClass((assoc.src().getAtom().equals(aq.getAtom()) ? assoc.dst() : assoc.src()).getAtom());
                     var usings = new HashMap<>();
-                    for (var k : oodm.getClass(assoc.src().getAtom()).getKeys()) {
+                    for (var k : srcClass.getKeys()) {
                         usings.put(k.getAtom(), null);
                     }
-                    joins.putIfAbsent(this.getClassTable(other.getAtom()), usings);
+                    joins.putIfAbsent(otherTable, usings);
+                    // if there are filters that are related to the keys of the other table,
+                    // we need to build those filters so they use the other table projection
+                    af.removeIf(f -> {
+                        if (okeys.contains(f.getAtom())) {
+                            cf.add(new ConcreteLoad.ConcreteFilter(otherTable, f.getAtom(), f.getOperator(), f.getValue()));
+                            return true;
+                        } else {
+                            return false;
+                        }
+                    });
                 }
                 if (isAStrat(assoc, "OAT")) {
-                    // if there's a join table for this association, we need to join that table based on all the keys
+                    // if there's a join table for this association, we need to join that
+                    // table based on the keys in the target class
                     var at = this.getAssocTable(assoc.getAtom());
-                    joins.putIfAbsent(at,
-                            Stream.concat(oodm.getClass(assoc.src().getAtom()).getKeys().stream(), oodm.getClass(assoc.dst().getAtom()).getKeys().stream())
-                                    .map(KodkodAtom::getAtom)
-                                    .collect(Collectors.toMap(Function.identity(), e -> at)));
+                    joins.putIfAbsent(at, tgtClass.getKeys().stream()
+                            .map(KodkodAtom::getAtom)
+                            .collect(Collectors.toMap(Function.identity(), e -> at)));
+                    // if there are filters that are related to the keys of the other table,
+                    // we need to build those filters so they use the join table projection
+                    af.removeIf(f -> {
+                        if (okeys.contains(f.getAtom())) {
+                            cf.add(new ConcreteLoad.ConcreteFilter(at, f.getAtom(), f.getOperator(), f.getValue()));
+                            return true;
+                        } else {
+                            return false;
+                        }
+                    });
                 }
             }
-            // get the filters (if there are any)
-            var af = aq.getFilters();
-            Collection<ConcreteLoad.ConcreteFilter> cf;
+            // load any remaining filters
             if (af.isEmpty()) {
-                cf = oodm.getClass(aq.getAtom()).getAllKeys().stream()
-                        .map(k -> new ConcreteLoad.ConcreteFilter(k.getAtom(), "<>", -1))
-                        .collect(Collectors.toSet());
+                cf.addAll(oodm.getClass(aq.getAtom()).getAllKeys().stream()
+                        .map(k -> new ConcreteLoad.ConcreteFilter(mainTable, k.getAtom(), "<>", -1))
+                        .collect(Collectors.toSet()));
             } else {
-                cf = af.stream()
-                        .map(f -> new ConcreteLoad.ConcreteFilter(f.getAtom(), f.getOperator(), f.getValue()))
-                        .collect(Collectors.toSet());
+                cf.addAll(af.stream()
+                        .map(f -> new ConcreteLoad.ConcreteFilter(mainTable, f.getAtom(), f.getOperator(), f.getValue()))
+                        .collect(Collectors.toSet()));
             }
             // add the select statement to the concrete load
             cl.addSelect(mainTable, projection, joins.entrySet(), cf);
@@ -239,7 +268,7 @@ public class ConcreteLoadFactory extends KodkodInstance {
             // keys from both source and dest in it
             return Map.of(this.getAssocTable(objAssoc.getAtom()),
                     Stream.of(objAssoc.dst(), objAssoc.src())
-                            .map(ObjectClass::getAllKeys)
+                            .map(ObjClass::getAllKeys)
                             .flatMap(Collection::stream)
                             .collect(Collectors.toSet()));
         } else {
@@ -252,13 +281,15 @@ public class ConcreteLoadFactory extends KodkodInstance {
     }
 
     private Object getAssocTable(Object assoc) {
-        var atom = this.getAtom("x/" + assoc);
-        return this.join("orm/orm.map", atom, 1)
-                .map(t -> t.atom(0))
-                .findFirst().orElseThrow();
+        return this.assocmap.computeIfAbsent(assoc, x -> {
+            var atom = this.getAtom("x/" + assoc);
+            return this.join("orm/orm.map", atom, 2)
+                    .map(t -> t.atom(1))
+                    .findFirst().orElseThrow();
+        });
     }
 
-    private Set<ObjField> getClassFields(ObjectClass objCls) {
+    private Set<ObjField> getClassFields(ObjClass objCls) {
         // get the fields from this class, since those certainly go
         var fields = new HashSet<>(objCls.getFields());
         // get any fields from the parent
@@ -275,7 +306,7 @@ public class ConcreteLoadFactory extends KodkodInstance {
         return fields;
     }
 
-    private Map<Object, Object> getProjection(ObjectClass objCls) {
+    private Map<Object, Object> getProjection(ObjClass objCls) {
         var proj = new HashMap<>();
         for (var f : this.getClassFields(objCls)) {
             proj.put(f.getAtom(), this.getClassTable(objCls.getAtom()));
@@ -293,10 +324,12 @@ public class ConcreteLoadFactory extends KodkodInstance {
     }
 
     private Object getClassTable(Object type) {
-        var atom = this.getAtom("x/" + type);
-        return this.join("orm/orm.main", atom, 1)
-                .map(t -> t.atom(2))
-                .findFirst().orElseThrow();
+        return tablemap.computeIfAbsent(type, x -> {
+            var atom = this.getAtom("x/" + x);
+            return this.join("orm/orm.main", atom, 1)
+                    .map(t -> t.atom(2))
+                    .findFirst().orElseThrow();
+        });
     }
 
     private boolean isAStrat(KodkodAtom kkObj, String strat) {

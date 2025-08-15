@@ -6,6 +6,7 @@ docker run -it \
   -v "$(pwd)/Astronaut/models:/opt/models" \
   -v "$(pwd)/Astronaut/out/models:/opt/solutions" \
   -v "$(pwd)/Astronaut/out:/opt/output" \
+  -v "$(pwd)/Astronaut/src/main/resources/log4j2.properties:/opt/bitnami/spark/conf/log4j2.properties" \
   -p 4040:4040 \
   bitnami/spark:latest \
   spark-submit \

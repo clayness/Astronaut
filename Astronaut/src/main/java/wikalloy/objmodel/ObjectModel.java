@@ -1,4 +1,4 @@
-package wikalloy;
+package wikalloy.objmodel;
 
 import java.io.Serializable;
 import java.util.Collection;
@@ -6,15 +6,15 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class ObjectModel implements Serializable {
-    private final Map<Object, ObjectClass> classes = new HashMap<>();
+    private final Map<Object, ObjClass> classes = new HashMap<>();
     private final Map<Object, ObjAssoc> associations = new HashMap<>();
 
     public void addAssociation(Object name, Object src, Object dst, ObjMult mlt) {
         this.associations.put(name, new ObjAssoc(name, this.getClass(src), this.getClass(dst), mlt));
     }
 
-    public ObjectClass addClass(Object name, ObjectClass parent) {
-        var cls = new ObjectClass(name, parent);
+    public ObjClass addClass(Object name, ObjClass parent) {
+        var cls = new ObjClass(name, parent);
         this.classes.put(cls.getAtom(), cls);
         return cls;
     }
@@ -27,11 +27,11 @@ public class ObjectModel implements Serializable {
         return associations.values();
     }
 
-    public ObjectClass getClass(Object name) {
+    public ObjClass getClass(Object name) {
         return this.classes.get(name);
     }
 
-    public Collection<ObjectClass> getClasses() {
+    public Collection<ObjClass> getClasses() {
         return classes.values();
     }
 

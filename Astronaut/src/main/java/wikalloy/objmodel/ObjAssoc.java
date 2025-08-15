@@ -1,4 +1,4 @@
-package wikalloy;
+package wikalloy.objmodel;
 
 import wikalloy.kodkod.KodkodAtom;
 
@@ -6,18 +6,18 @@ import java.io.Serializable;
 import java.util.Objects;
 
 public final class ObjAssoc extends KodkodAtom implements Serializable {
-    private final ObjectClass dst;
+    private final ObjClass dst;
     private final ObjectModel.ObjMult mlt;
-    private final ObjectClass src;
+    private final ObjClass src;
 
-    public ObjAssoc(Object atom, ObjectClass src, ObjectClass dst, ObjectModel.ObjMult mlt) {
+    public ObjAssoc(Object atom, ObjClass src, ObjClass dst, ObjectModel.ObjMult mlt) {
         super(atom);
         this.src = src;
         this.dst = dst;
         this.mlt = mlt;
     }
 
-    public ObjectClass dst() {
+    public ObjClass dst() {
         return dst;
     }
 
@@ -41,7 +41,7 @@ public final class ObjAssoc extends KodkodAtom implements Serializable {
         return mlt;
     }
 
-    public ObjectClass src() {
+    public ObjClass src() {
         return src;
     }
 }

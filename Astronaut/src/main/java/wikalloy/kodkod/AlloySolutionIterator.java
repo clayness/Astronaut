@@ -1,4 +1,4 @@
-package wikalloy;
+package wikalloy.kodkod;
 
 import edu.mit.csail.sdg.alloy4.A4Reporter;
 import edu.mit.csail.sdg.ast.Module;

@@ -1,13 +1,17 @@
 package wikalloy.generic;
 
 import java.io.Serializable;
-import java.util.*;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.UUID;
 
 public class AbstractLoad implements Serializable {
 
     private final Set<AbstractInst> instances = new HashSet<>();
     private final Set<AbstractAssoc> associations = new HashSet<>();
     private final Set<AbstractQuery> queries = new HashSet<>();
+    private final UUID uuid = UUID.randomUUID();
 
     public Collection<AbstractAssoc> getAssociations() {
         return associations;
@@ -15,6 +19,10 @@ public class AbstractLoad implements Serializable {
 
     public Collection<AbstractInst> getInstances() {
         return instances;
+    }
+
+    public UUID getUUID() {
+        return this.uuid;
     }
 
     public void newAssociation(Object name, AbstractInst src, AbstractInst dst) {

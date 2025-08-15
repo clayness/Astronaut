@@ -1,7 +1,7 @@
 package wikalloy.generic;
 
 import edu.mit.csail.sdg.translator.A4Solution;
-import wikalloy.ObjectModel;
+import wikalloy.objmodel.ObjectModel;
 import wikalloy.kodkod.KodkodInstance;
 
 import java.time.LocalDate;

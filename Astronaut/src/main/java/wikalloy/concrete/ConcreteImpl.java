@@ -1,6 +1,6 @@
 package wikalloy.concrete;
 
-import wikalloy.ObjField;
+import wikalloy.objmodel.ObjField;
 
 import java.io.Serializable;
 import java.util.Collection;

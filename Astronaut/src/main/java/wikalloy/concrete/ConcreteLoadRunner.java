@@ -3,8 +3,8 @@ package wikalloy.concrete;
 import edu.mit.csail.sdg.alloy4.XMLNode;
 import edu.mit.csail.sdg.translator.A4SolutionReader;
 import picocli.CommandLine;
-import wikalloy.AlloySolutionIterator;
-import wikalloy.ObjectModelFactory;
+import wikalloy.kodkod.AlloySolutionIterator;
+import wikalloy.objmodel.ObjectModelFactory;
 import wikalloy.generic.AbstractLoadFactory;
 
 import java.io.PrintWriter;

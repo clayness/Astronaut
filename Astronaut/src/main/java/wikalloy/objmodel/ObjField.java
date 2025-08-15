@@ -1,4 +1,4 @@
-package wikalloy;
+package wikalloy.objmodel;
 
 import wikalloy.kodkod.KodkodAtom;
 

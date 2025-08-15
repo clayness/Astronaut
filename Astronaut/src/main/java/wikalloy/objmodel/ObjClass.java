@@ -1,4 +1,4 @@
-package wikalloy;
+package wikalloy.objmodel;
 
 import wikalloy.kodkod.KodkodAtom;
 
@@ -9,11 +9,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class ObjectClass extends KodkodAtom implements Serializable {
+public class ObjClass extends KodkodAtom implements Serializable {
     private final Map<Object, ObjField> fields = new HashMap<>();
-    private final ObjectClass parent;
+    private final ObjClass parent;
 
-    public ObjectClass(Object name, ObjectClass parent) {
+    public ObjClass(Object name, ObjClass parent) {
         super(name);
         this.parent = parent;
     }
@@ -40,7 +40,7 @@ public class ObjectClass extends KodkodAtom implements Serializable {
         return this.fields.values();
     }
 
-    public ObjectClass getParent() {
+    public ObjClass getParent() {
         return parent;
     }
 
