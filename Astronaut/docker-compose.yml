@@ -14,10 +14,9 @@ services:
     networks:
       - spark-network
     volumes:
-      - ./models:/opt/models
-      - ./out/models/:/opt/solutions
-      - ./out:/opt/output
       - ./src/main/resources/log4j2.properties:/opt/bitnami/spark/conf/log4j2.properties
+      - ./target/scala-2.13/astronaut.jar:/opt/shared/astronaut.jar
+      - ./out:/opt/shared
 
   spark-worker-1:
     image: bitnami/spark:latest
@@ -38,10 +37,9 @@ services:
     networks:
       - spark-network
     volumes:
-      - ./models:/opt/models
-      - ./out/models:/opt/solutions
-      - ./out:/opt/output
       - ./src/main/resources/log4j2.properties:/opt/bitnami/spark/conf/log4j2.properties
+      - ./target/scala-2.13/astronaut.jar:/opt/shared/astronaut.jar
+      - ./out:/opt/shared
 
   spark-worker-2:
     image: bitnami/spark:latest
@@ -62,10 +60,9 @@ services:
     networks:
       - spark-network
     volumes:
-      - ./models:/opt/models
-      - ./out/models:/opt/solutions
-      - ./out:/opt/output
       - ./src/main/resources/log4j2.properties:/opt/bitnami/spark/conf/log4j2.properties
+      - ./target/scala-2.13/astronaut.jar:/opt/shared/astronaut.jar
+      - ./out:/opt/shared
 
   spark-worker-3:
     image: bitnami/spark:latest
@@ -86,10 +83,9 @@ services:
     networks:
       - spark-network
     volumes:
-      - ./models:/opt/models
-      - ./out/models:/opt/solutions
-      - ./out:/opt/output
       - ./src/main/resources/log4j2.properties:/opt/bitnami/spark/conf/log4j2.properties
+      - ./target/scala-2.13/astronaut.jar:/opt/shared/astronaut.jar
+      - ./out:/opt/shared
 
   spark-worker-4:
     image: bitnami/spark:latest
@@ -110,16 +106,16 @@ services:
     networks:
       - spark-network
     volumes:
-      - ./models:/opt/models
-      - ./out/models:/opt/solutions
-      - ./out:/opt/output
       - ./src/main/resources/log4j2.properties:/opt/bitnami/spark/conf/log4j2.properties
+      - ./target/scala-2.13/astronaut.jar:/opt/shared/astronaut.jar
+      - ./out:/opt/shared
 
   mysql:
     image: bitnami/mysql:latest
     container_name: mysql-db
     environment:
-      - MYSQL_ROOT_PASSWORD=${MYSQLPASS}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASS}
     ports:
       - "3306:3306"
     networks:

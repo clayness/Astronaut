@@ -1,0 +1,34 @@
+master:
+  replicaCount: 1
+  resources:
+    requests:
+      cpu: 500m
+      memory: 1Gi
+  extraVolumes:
+    - name: kkmltradeoff-data
+      persistentVolumeClaim:
+        claimName: kkmltradeoff-pvc
+  extraVolumeMounts:
+    - name: kkmltradeoff-data
+      mountPath: /opt/shared
+  extraConfigMaps:
+    - name: spark-log4j2-config
+      mountPath: /opt/bitnami/spark/conf/log4j2.properties
+      subPath: log4j2.properties
+worker:
+  replicaCount: 2
+  resources:
+    requests:
+      cpu: 500m
+      memory: 1Gi
+  extraVolumes:
+    - name: kkmltradeoff-data
+      persistentVolumeClaim:
+        claimName: kkmltradeoff-pvc
+  extraVolumeMounts:
+    - name: kkmltradeoff-data
+      mountPath: /opt/shared
+  extraConfigMaps:
+    - name: spark-log4j2-config
+      mountPath: /opt/bitnami/spark/conf/log4j2.properties
+      subPath: log4j2.properties

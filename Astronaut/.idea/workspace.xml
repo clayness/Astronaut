@@ -9,29 +9,18 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="8d2d8eec-a092-4049-9d2c-98097af027f2" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/src/main/java/edu/mit/csail/sdg/translator/A2KSolution.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/wikalloy/kodkod/BooleanFeatureExtractor.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/wikalloy/kodkod/RelationOrder.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/resources/log4j2.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/azurefile-pv.yaml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/azurefile-pvc.yaml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/run_azure.sh" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/spark-log4j2-config.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/docker-compose.yml" beforeDir="false" afterPath="$PROJECT_DIR$/docker-compose.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/wikalloy/AlloySolutionIterator.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/wikalloy/kodkod/AlloySolutionIterator.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/wikalloy/ObjAssoc.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/wikalloy/objmodel/ObjAssoc.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/wikalloy/ObjField.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/wikalloy/objmodel/ObjField.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/wikalloy/ObjectClass.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/wikalloy/objmodel/ObjClass.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/wikalloy/ObjectModel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/wikalloy/objmodel/ObjectModel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/wikalloy/ObjectModelFactory.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/wikalloy/objmodel/ObjectModelFactory.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/wikalloy/concrete/ConcreteImpl.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/wikalloy/concrete/ConcreteImpl.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/wikalloy/concrete/ConcreteLoad.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/wikalloy/concrete/ConcreteLoad.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/wikalloy/concrete/ConcreteLoadFactory.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/wikalloy/concrete/ConcreteLoadFactory.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/wikalloy/concrete/ConcreteLoadRunner.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/wikalloy/concrete/ConcreteLoadRunner.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/wikalloy/generic/AbstractLoad.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/wikalloy/generic/AbstractLoad.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/wikalloy/generic/AbstractLoadFactory.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/wikalloy/generic/AbstractLoadFactory.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/wikalloy/kodkod/KodkodInstance.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/wikalloy/kodkod/KodkodInstance.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/resources/application.conf" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/application.conf" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/log4j2.properties" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/log4j2.properties" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/scala/wikalloy/SparkAnalyzer.scala" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/scala/wikalloy/SparkAnalyzer.scala" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/scala/wikalloy/WikalloyAnalyzer.scala" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/scala/wikalloy/WikalloyAnalyzer.scala" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../run_astronaut.sh" beforeDir="false" afterPath="$PROJECT_DIR$/../run_astronaut.sh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../run_astronaut.sh" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -239,7 +228,7 @@
       <workItem from="1754526190728" duration="130000" />
       <workItem from="1754526413202" duration="16926000" />
       <workItem from="1754594383102" duration="6655000" />
-      <workItem from="1754935852428" duration="65063000" />
+      <workItem from="1754935852428" duration="88030000" />
     </task>
     <servers />
   </component>

@@ -1,15 +1,13 @@
 package wikalloy
 
 import edu.mit.csail.sdg.alloy4.XMLNode
-import edu.mit.csail.sdg.translator.{A2KSolution, A4Solution, A4SolutionReader}
+import edu.mit.csail.sdg.translator.A4SolutionReader
 import org.apache.logging.log4j.scala.Logging
 import org.apache.spark.{SparkConf, SparkContext}
 import wikalloy.concrete.{ConcreteImpl, ConcreteLoadFactory}
 import wikalloy.generic.AbstractLoad
-import wikalloy.kodkod.BooleanFeatureExtractor
 import wikalloy.objmodel.ObjectModel
 
-import java.io.PrintWriter
 import java.nio.file.{Files, Path}
 import java.sql.DriverManager
 import scala.collection.mutable.ListBuffer
@@ -130,8 +128,6 @@ class SparkAnalyzer extends Serializable with Logging {
         selectTimesList.sum.toDouble,
         storageSizeList.sum)
     }.getOrElse(new MeasurementResult(solution.getFileName.toString, -1, -1, -1, -1))
-    printf("%20s,%12d,%12.2f,%12.2f,%12.2f%n", mr.name(), mr.createTime(), mr.insertTime(), mr.selectTime(), mr.space())
     mr
   }
-
 }

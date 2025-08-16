@@ -39,7 +39,7 @@ class WikalloyAnalyzer extends Logging {
       // invokes the load synthesizer and the Spark analyzer (distributed, may take some time)
       logger.info("Starting Spark analysis.")
       val cis = getMappingModels(oodmSpecPath).map(p =>
-          Path.of("/opt/solutions/").resolve(Path.of(WikalloyConfig.getSolutionFolder).toAbsolutePath.relativize(p)))
+          Path.of("/opt/shared/solutions/").resolve(Path.of(WikalloyConfig.getSolutionFolder).toAbsolutePath.relativize(p)))
         .map(_.toAbsolutePath.toString)
       val evaluatedResults = new SparkAnalyzer().analyze(cis, als, oodm)
       if (evaluatedResults.nonEmpty) {
